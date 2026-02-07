@@ -1186,39 +1186,16 @@ const PrintableQuotation = ({
 };
 
 // --- SIDEBAR COMPONENT ---
-const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggleDarkMode, companyLogo, mobileMode, toggleMobileMode, isOpen, onClose }) => {
-    // Only used for internal desktop collapse state if needed, but for now we rely on mobileMode/isOpen
-    // or we can add a mini-sidebar toggle for desktop later. 
-    // For this request, we'll assume standard sidebar behavior:
-    // Mobile: Hidden by default, slides in when open.
-    // Desktop: Always visible (w-64).
+const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggleDarkMode, companyLogo, mobileMode, toggleMobileMode, isOpen, onClose, onCreateNew }) => {
+    const [isHovered, setIsHovered] = useState(false);
 
-    const sidebarClasses = `
-        fixed top-0 left-0 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
-        transition-all duration-300 ease-in-out z-50 flex flex-col shadow-2xl md:shadow-none
-        ${mobileMode ? (isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64') : 'translate-x-0 w-20 md:w-64'}
-    `;
+    // Mobile Overlay
+    if (mobileMode && !isOpen) return null;
 
-    const NavItem = ({ id, icon: Icon, label }) => {
-        const isActive = activeTab === id;
-        return (
-            <button
-                onClick={() => {
-                    setActiveTab(id);
-                    if (mobileMode) onClose();
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded-xl mb-1
-                ${isActive
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400'
-                    }`}
-            >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-blue-500'}`} />
-                <span className={`${mobileMode ? 'block' : 'hidden md:block'}`}>{label}</span>
-                {/* Tooltip for collapsed desktop (md:hidden) could be added here if w-20 is strictly icon-only */}
-            </button>
-        );
-    };
+    // Width Logic: 
+    // Mobile: w-64 (fixed when open)
+    // Desktop: w-20 (collapsed) -> w-64 (hover)
+    const sidebarWidth = mobileMode ? 'w-64' : (isHovered ? 'w-64' : 'w-20');
 
     return (
         <>
@@ -1230,72 +1207,136 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggl
                 />
             )}
 
-            <aside className={sidebarClasses}>
-                {/* Logo Area */}
-                <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30">
-                            {companyLogo ? (
-                                <img src={companyLogo} alt="Logo" className="w-full h-full object-cover rounded-lg" />
-                            ) : (
-                                <Zap className="w-5 h-5" />
-                            )}
-                        </div>
-                        <span className={`font-bold text-lg tracking-tight whitespace-nowrap dark:text-slate-100 ${mobileMode ? 'block' : 'hidden md:block'}`}>
-                            SmartQuote
-                        </span>
+            <div
+                className={`fixed left-0 top-0 h-full bg-white dark:bg-slate-900 shadow-xl z-50 transition-all duration-300 ease-in-out flex flex-col border-r border-slate-200 dark:border-slate-800 ${sidebarWidth} ${mobileMode && !isOpen ? '-translate-x-full' : 'translate-x-0'}`}
+                onMouseEnter={() => !mobileMode && setIsHovered(true)}
+                onMouseLeave={() => !mobileMode && setIsHovered(false)}
+            >
+                {/* Header / Logo */}
+                <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-slate-800 shrink-0 overflow-hidden whitespace-nowrap">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30 mr-3">
+                        <Zap className="w-6 h-6" />
                     </div>
+                    <span className={`font-bold text-lg tracking-tight transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                        SmartQuote
+                    </span>
                     {mobileMode && (
-                        <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                        <button onClick={onClose} className="ml-auto p-1 text-slate-400">
                             <X className="w-5 h-5" />
                         </button>
                     )}
                 </div>
 
                 {/* Navigation */}
-                <div className="flex-1 overflow-y-auto py-6 px-3">
-                    <p className={`px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 ${mobileMode ? 'block' : 'hidden md:block'}`}>
-                        Menu Principal
-                    </p>
-                    <nav className="space-y-1">
-                        <NavItem id="cotizaciones-list" icon={FileText} label="Cotizaciones" />
-                        <NavItem id="clientes" icon={Users} label="Clientes" />
-                        <NavItem id="contratos" icon={ScrollText} label="Contratos" />
-                    </nav>
+                <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3 overflow-x-hidden">
 
-                    <div className="my-6 border-t border-slate-100 dark:border-slate-800 mx-2"></div>
+                    {/* Cotizaciones Group */}
+                    <div className="flex flex-col gap-1">
+                        <button
+                            onClick={() => setActiveTab('cotizaciones-list')}
+                            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
+                            ${activeTab.startsWith('cotizaciones')
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
+                                }`}
+                        >
+                            <FileText className={`w-6 h-6 shrink-0 ${activeTab.startsWith('cotizaciones') ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
+                            <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                                Cotizaciones
+                            </span>
+                        </button>
 
-                    <p className={`px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 ${mobileMode ? 'block' : 'hidden md:block'}`}>
-                        Sistema
-                    </p>
-                    <nav className="space-y-1">
-                        <NavItem id="configuracion" icon={Settings} label="Configuración" />
-                    </nav>
-                </div>
+                        {/* Sub-item: Nueva Cotización (Only visible when expanded) */}
+                        {(!mobileMode && isHovered) || mobileMode ? (
+                            <button
+                                onClick={onCreateNew}
+                                className={`ml-12 text-sm text-left text-slate-500 hover:text-blue-600 transition-colors py-1 ${!mobileMode && !isHovered ? 'hidden' : 'block'}`}
+                            >
+                                • Nueva Cotización
+                            </button>
+                        ) : null}
+                    </div>
 
-                {/* Footer / Profile */}
-                <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                    <button
+                        onClick={() => setActiveTab('clientes')}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
+                        ${activeTab === 'clientes'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
+                            }`}
+                    >
+                        <Users className={`w-6 h-6 shrink-0 ${activeTab === 'clientes' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
+                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                            Clientes
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('contratos')}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
+                        ${activeTab === 'contratos'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
+                            }`}
+                    >
+                        <ScrollText className={`w-6 h-6 shrink-0 ${activeTab === 'contratos' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
+                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                            Contratos
+                        </span>
+                    </button>
+
+                    <div className="my-2 border-t border-slate-100 dark:border-slate-800 mx-2"></div>
+
+                    <button
+                        onClick={() => setActiveTab('configuracion')}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
+                        ${activeTab === 'configuracion'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
+                            }`}
+                    >
+                        <Settings className={`w-6 h-6 shrink-0 ${activeTab === 'configuracion' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
+                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                            Configuración
+                        </span>
+                    </button>
+
                     <button
                         onClick={toggleDarkMode}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 rounded-xl transition-all mb-2"
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600"
                     >
-                        {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        <span className={`${mobileMode ? 'block' : 'hidden md:block'}`}>
-                            {darkMode ? 'Modo Claro' : 'Modo Oscuro'}
+                        {darkMode ? <Sun className="w-6 h-6 shrink-0" /> : <Moon className="w-6 h-6 shrink-0" />}
+                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                            Modo Oscuro
                         </span>
                     </button>
 
-                    <button
-                        onClick={onLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        <span className={`${mobileMode ? 'block' : 'hidden md:block'}`}>
-                            Cerrar Sesión
-                        </span>
-                    </button>
                 </div>
-            </aside>
+
+                {/* Profile Card */}
+                <div className={`p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 shrink-0 overflow-hidden whitespace-nowrap transition-all duration-300 ${!mobileMode && !isHovered ? 'px-2' : 'px-4'}`}>
+                    <div className={`flex items-center gap-3 ${!mobileMode && !isHovered ? 'justify-center' : ''}`}>
+                        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 p-1 shrink-0 overflow-hidden">
+                            {companyLogo ? (
+                                <img src={companyLogo} className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                                <Building2 className="w-full h-full text-slate-400 p-1" />
+                            )}
+                        </div>
+                        <div className={`flex-1 min-w-0 transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0 hidden' : 'opacity-100 block'}`}>
+                            <p className="text-sm font-bold truncate">Usuario</p>
+                            <p className="text-xs text-slate-500 truncate">{userEmail}</p>
+                        </div>
+                        <button
+                            onClick={onLogout}
+                            className={`text-slate-400 hover:text-red-500 transition-colors ${!mobileMode && !isHovered ? 'hidden' : 'block'}`}
+                            title="Cerrar Sesión"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </>
     );
 };
@@ -2325,6 +2366,17 @@ const App = () => {
                     toggleMobileMode={toggleMobileMode}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
+                    onCreateNew={() => {
+                        setClient({ name: '', phone: '', email: '', address: '' });
+                        setItems([]);
+                        setTerms(localStorage.getItem('defaultTerms') || '');
+                        setQuotationDate(new Date().toISOString().split('T')[0]);
+                        setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                        setEditingQuotationId(null);
+                        fetchNextFolio(session.user.id);
+                        setActiveTab('cotizaciones-new');
+                        if (mobileMode) setSidebarOpen(false);
+                    }}
                 />
 
                 {/* Mobile Header */}
