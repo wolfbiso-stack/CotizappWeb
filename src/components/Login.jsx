@@ -10,10 +10,16 @@ const Login = ({ onLogin }) => {
     const handleGoogleLogin = async () => {
         try {
             setLoading(true);
+            const redirectUrl = window.location.hostname === "localhost"
+                ? "http://localhost:5173/CotizappWeb/"
+                : "https://wolfbiso-stack.github.io/CotizappWeb";
+
+            console.log('Intentando redirigir a:', redirectUrl);
+
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: "https://wolfbiso-stack.github.io/CotizappWeb"
+                    redirectTo: redirectUrl
                 }
             });
             if (error) throw error;

@@ -1428,8 +1428,6 @@ const App = () => {
                 telefono: client.phone,
                 empresa: '', // TODO: Add company field to client if needed
                 correo: client.email,
-                empresa: '', // TODO: Add company field to client if needed
-                correo: client.email,
                 fecha: quotationDate,
                 fecha_vencimiento: expirationDate,
                 ajuste_nombre: null,
