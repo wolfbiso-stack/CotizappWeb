@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -1187,32 +1187,116 @@ const PrintableQuotation = ({
 
 // --- SIDEBAR COMPONENT ---
 const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggleDarkMode, companyLogo, mobileMode, toggleMobileMode, isOpen, onClose }) => {
-    const [expanded, setExpanded] = useState(false);
+    // Only used for internal desktop collapse state if needed, but for now we rely on mobileMode/isOpen
+    // or we can add a mini-sidebar toggle for desktop later. 
+    // For this request, we'll assume standard sidebar behavior:
+    // Mobile: Hidden by default, slides in when open.
+    // Desktop: Always visible (w-64).
 
-    // Mobile Overlay
-    if (mobileMode && !isOpen) return null;
+    const sidebarClasses = `
+        fixed top-0 left-0 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
+        transition-all duration-300 ease-in-out z-50 flex flex-col shadow-2xl md:shadow-none
+        ${mobileMode ? (isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64') : 'translate-x-0 w-20 md:w-64'}
+    `;
+
+    const NavItem = ({ id, icon: Icon, label }) => {
+        const isActive = activeTab === id;
+        return (
+            <button
+                onClick={() => {
+                    setActiveTab(id);
+                    if (mobileMode) onClose();
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded-xl mb-1
+                ${isActive
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400'
+                    }`}
+            >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-blue-500'}`} />
+                <span className={`${mobileMode ? 'block' : 'hidden md:block'}`}>{label}</span>
+                {/* Tooltip for collapsed desktop (md:hidden) could be added here if w-20 is strictly icon-only */}
+            </button>
+        );
+    };
 
     return (
-        <div className={`fixed left-0 top-0 h-full border-r z-50 flex flex-col bg-white text-slate-800 ${mobileMode ? 'w-64' : 'w-20'}`}>
-            <div className="p-4 border-b">
-                <h1 className="font-bold">SmartQuote</h1>
-                {mobileMode && <button onClick={onClose} className="absolute top-2 right-2">X</button>}
-            </div>
+        <>
+            {/* Mobile Overlay */}
+            {mobileMode && isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
+                    onClick={onClose}
+                />
+            )}
 
-            <nav className="flex-1 p-2 flex flex-col gap-2">
-                <button onClick={() => setActiveTab('cotizaciones-list')} className="p-2 hover:bg-gray-100 rounded text-left">Cotizaciones</button>
-                <button onClick={() => setActiveTab('clientes')} className="p-2 hover:bg-gray-100 rounded text-left">Clientes</button>
-                <button onClick={() => setActiveTab('contratos')} className="p-2 hover:bg-gray-100 rounded text-left">Contratos</button>
-            </nav>
+            <aside className={sidebarClasses}>
+                {/* Logo Area */}
+                <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30">
+                            {companyLogo ? (
+                                <img src={companyLogo} alt="Logo" className="w-full h-full object-cover rounded-lg" />
+                            ) : (
+                                <Zap className="w-5 h-5" />
+                            )}
+                        </div>
+                        <span className={`font-bold text-lg tracking-tight whitespace-nowrap dark:text-slate-100 ${mobileMode ? 'block' : 'hidden md:block'}`}>
+                            SmartQuote
+                        </span>
+                    </div>
+                    {mobileMode && (
+                        <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
 
-            <div className="p-4 border-t">
-                <button onClick={toggleDarkMode} className="p-2 hover:bg-gray-100 w-full text-left mb-2">Tema</button>
-                <button onClick={toggleMobileMode} className="p-2 hover:bg-gray-100 w-full text-left mb-2">
-                    {mobileMode ? 'Modo PC' : 'Modo Móvil'}
-                </button>
-                <button onClick={onLogout} className="p-2 hover:bg-red-100 w-full text-left text-red-600">Salir</button>
-            </div>
-        </div>
+                {/* Navigation */}
+                <div className="flex-1 overflow-y-auto py-6 px-3">
+                    <p className={`px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 ${mobileMode ? 'block' : 'hidden md:block'}`}>
+                        Menu Principal
+                    </p>
+                    <nav className="space-y-1">
+                        <NavItem id="cotizaciones-list" icon={FileText} label="Cotizaciones" />
+                        <NavItem id="clientes" icon={Users} label="Clientes" />
+                        <NavItem id="contratos" icon={ScrollText} label="Contratos" />
+                    </nav>
+
+                    <div className="my-6 border-t border-slate-100 dark:border-slate-800 mx-2"></div>
+
+                    <p className={`px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 ${mobileMode ? 'block' : 'hidden md:block'}`}>
+                        Sistema
+                    </p>
+                    <nav className="space-y-1">
+                        <NavItem id="configuracion" icon={Settings} label="Configuración" />
+                    </nav>
+                </div>
+
+                {/* Footer / Profile */}
+                <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                    <button
+                        onClick={toggleDarkMode}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 rounded-xl transition-all mb-2"
+                    >
+                        {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        <span className={`${mobileMode ? 'block' : 'hidden md:block'}`}>
+                            {darkMode ? 'Modo Claro' : 'Modo Oscuro'}
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        <span className={`${mobileMode ? 'block' : 'hidden md:block'}`}>
+                            Cerrar Sesión
+                        </span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 };
 
