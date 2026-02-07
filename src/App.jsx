@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, Smartphone, Monitor, Menu } from 'lucide-react';
+import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut } from 'lucide-react';
 import Login from './components/Login';
 import { supabase } from '../utils/supabase';
 
@@ -1317,9 +1317,9 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggl
                     >
                         <div className="w-6 h-6 flex items-center justify-center shrink-0">
                             {mobileMode ? (
-                                <Monitor className="w-5 h-5" />
+                                <Settings className="w-5 h-5" />
                             ) : (
-                                <Smartphone className="w-5 h-5" />
+                                <Phone className="w-5 h-5" />
                             )}
                         </div>
                         <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
@@ -2388,7 +2388,7 @@ const App = () => {
                             onClick={() => setSidebarOpen(true)}
                             className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-700'}`}
                         >
-                            <Menu className="w-6 h-6" />
+                            <Settings className="w-6 h-6" />
                         </button>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
