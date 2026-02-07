@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut } from 'lucide-react';
+import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, Smartphone, Monitor, Menu } from 'lucide-react';
 import Login from './components/Login';
 import { supabase } from '../utils/supabase';
 
@@ -1146,154 +1146,213 @@ const PrintableQuotation = ({
 };
 
 // --- SIDEBAR COMPONENT ---
-const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggleDarkMode, companyLogo }) => {
+const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggleDarkMode, companyLogo, mobileMode, toggleMobileMode, isOpen, onClose }) => {
     const [expanded, setExpanded] = useState(false);
     const [cotizacionesOpen, setCotizacionesOpen] = useState(true);
 
+    // Determine if sidebar is visible/expanded
+    const isSidebarVisible = mobileMode ? isOpen : true;
+    const isExpanded = mobileMode ? true : expanded;
+
+    // Mobile Overlay
+    if (mobileMode && !isOpen) return null;
+
     return (
-        <div
-            className={`fixed left-0 top-0 h-full border-r transition-all duration-300 z-50 flex flex-col ${expanded ? 'w-64' : 'w-20'
-                } ${darkMode
-                    ? 'bg-slate-900 text-slate-100 border-slate-700'
-                    : 'bg-white text-slate-800 border-gray-200'
-                }`}
-            onMouseEnter={() => setExpanded(true)}
-            onMouseLeave={() => setExpanded(false)}
-        >
-            {/* Top Section */}
-            <div className="flex-1 flex flex-col overflow-y-auto">
-                {/* Logo */}
-                <div className="h-16 flex items-center justify-center border-b border-gray-100 relative">
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
-                        <Zap className="w-6 h-6" />
-                    </div>
-                    <div className={`ml-3 font-bold text-xl tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                        SmartQuote
-                    </div>
-                </div>
+        <>
+            {/* Mobile Overlay Backdrop */}
+            {mobileMode && isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
+                    onClick={onClose}
+                />
+            )}
 
-                {/* Navigation */}
-                <nav className="mt-8 flex flex-col gap-2 px-3 flex-1">
+            <div
+                className={`fixed left-0 top-0 h-full border-r transition-all duration-300 z-50 flex flex-col 
+                ${mobileMode
+                        ? 'w-72 bg-white text-slate-800' // Mobile specific
+                        : `${expanded ? 'w-64' : 'w-20'} ${darkMode ? 'bg-slate-900 text-slate-100 border-slate-700' : 'bg-white text-slate-800 border-gray-200'}`
+                    }
+                ${mobileMode && darkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : ''}
+                `}
+                onMouseEnter={() => !mobileMode && setExpanded(true)}
+                onMouseLeave={() => !mobileMode && setExpanded(false)}
+            >
+                {/* Mobile Close Button */}
+                {mobileMode && (
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100/10 transition-colors"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                )}
 
-                    {/* Cotizaciones Item with Submenu */}
-                    <div>
+                {/* Top Section */}
+                <div className="flex-1 flex flex-col overflow-y-auto">
+                    {/* Logo */}
+                    <div className="h-16 flex items-center justify-center border-b border-gray-100/10 relative shrink-0">
+                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
+                            <Zap className="w-6 h-6" />
+                        </div>
+                        <div className={`ml-3 font-bold text-xl tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                            SmartQuote
+                        </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="mt-8 flex flex-col gap-2 px-3 flex-1">
+
+                        {/* Cotizaciones Item with Submenu */}
+                        <div>
+                            <button
+                                onClick={() => {
+                                    setActiveTab('cotizaciones-list');
+                                    setCotizacionesOpen(true);
+                                    if (mobileMode) onClose();
+                                }}
+                                className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 group ${activeTab.startsWith('cotizaciones') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-gray-50/5 hover:text-inherit'}`}
+                            >
+                                <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                                    <FileText className={`w-5 h-5 ${activeTab.startsWith('cotizaciones') ? 'text-blue-600' : 'text-slate-500 group-hover:text-inherit'}`} />
+                                </div>
+                                <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                    Cotizaciones
+                                </span>
+                            </button>
+
+                            {/* Submenu */}
+                            <div className={`overflow-hidden transition-all duration-300 ${isExpanded && cotizacionesOpen ? 'max-h-20 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveTab('cotizaciones-new');
+                                        if (mobileMode) onClose();
+                                    }}
+                                    className={`w-full flex items-center p-2 pl-12 rounded-lg transition-all duration-200 text-sm ${activeTab === 'cotizaciones-new' ? 'text-blue-600 font-bold bg-blue-50/10' : 'text-slate-500 hover:text-blue-600'}`}
+                                >
+                                    <span className="whitespace-nowrap">• Nueva Cotización</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Standard Items */}
                         <button
                             onClick={() => {
-                                setActiveTab('cotizaciones-list');
-                                setCotizacionesOpen(true);
+                                setActiveTab('clientes');
+                                if (mobileMode) onClose();
                             }}
-                            className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 group ${activeTab.startsWith('cotizaciones') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-gray-50 hover:text-slate-900'}`}
+                            className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${activeTab === 'clientes' ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-gray-50/5 hover:text-inherit'}`}
                         >
                             <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                                <FileText className={`w-5 h-5 ${activeTab.startsWith('cotizaciones') ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-900'}`} />
+                                <User className={`w-5 h-5 ${activeTab === 'clientes' ? 'text-blue-600' : 'text-slate-500 group-hover:text-inherit'}`} />
                             </div>
-                            <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                                Cotizaciones
+                            <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                Clientes
                             </span>
                         </button>
 
-                        {/* Submenu */}
-                        <div className={`overflow-hidden transition-all duration-300 ${expanded && cotizacionesOpen ? 'max-h-20 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('cotizaciones-new');
-                                }}
-                                className={`w-full flex items-center p-2 pl-12 rounded-lg transition-all duration-200 text-sm ${activeTab === 'cotizaciones-new' ? 'text-blue-600 font-bold bg-blue-50/50' : 'text-slate-500 hover:text-blue-600'}`}
-                            >
-                                <span className="whitespace-nowrap">• Nueva Cotización</span>
-                            </button>
-                        </div>
-                    </div>
+                        <button
+                            onClick={() => {
+                                setActiveTab('contratos');
+                                if (mobileMode) onClose();
+                            }}
+                            className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${activeTab === 'contratos' ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-gray-50/5 hover:text-inherit'}`}
+                        >
+                            <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                                <ScrollText className={`w-5 h-5 ${activeTab === 'contratos' ? 'text-blue-600' : 'text-slate-500 group-hover:text-inherit'}`} />
+                            </div>
+                            <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                Contratos
+                            </span>
+                        </button>
 
-                    {/* Standard Items */}
+                    </nav>
+                </div>
+
+                {/* Bottom Section */}
+                <div className={`border-t p-3 ${darkMode ? 'border-slate-800 bg-slate-900/50' : 'border-gray-100 bg-gray-50'}`}>
+                    {/* Settings */}
                     <button
-                        onClick={() => setActiveTab('clientes')}
-                        className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${activeTab === 'clientes' ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-gray-50 hover:text-slate-900'}`}
+                        onClick={() => {
+                            setActiveTab('configuracion');
+                            if (mobileMode) onClose();
+                        }}
+                        className={`flex items-center p-3 rounded-lg transition-all duration-200 mb-2 w-full hover:shadow-sm group ${activeTab === 'configuracion' ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-white hover:text-slate-900'}`}
                     >
                         <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                            <User className={`w-5 h-5 ${activeTab === 'clientes' ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-900'}`} />
+                            <Settings className={`w-5 h-5 ${activeTab === 'configuracion' ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-900'}`} />
                         </div>
-                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                            Clientes
+                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                            Configuración
                         </span>
                     </button>
 
+                    {/* Dark Mode Toggle */}
                     <button
-                        onClick={() => setActiveTab('contratos')}
-                        className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${activeTab === 'contratos' ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-gray-50 hover:text-slate-900'}`}
+                        onClick={toggleDarkMode}
+                        className={`flex items-center p-3 rounded-lg transition-all duration-200 mb-2 w-full hover:shadow-sm group ${darkMode
+                            ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            : 'text-slate-500 hover:bg-white hover:text-slate-900'
+                            }`}
                     >
                         <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                            <ScrollText className={`w-5 h-5 ${activeTab === 'contratos' ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-900'}`} />
+                            {darkMode ? (
+                                <Sun className="w-5 h-5 text-yellow-400" />
+                            ) : (
+                                <Moon className="w-5 h-5 text-slate-500 group-hover:text-slate-900" />
+                            )}
                         </div>
-                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                            Contratos
+                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                            {darkMode ? 'Modo Claro' : 'Modo Oscuro'}
                         </span>
                     </button>
 
-                </nav>
-            </div>
-
-            {/* Bottom Section */}
-            <div className="border-t border-gray-100 p-3 bg-gray-50">
-                {/* Settings */}
-                <button
-                    onClick={() => setActiveTab('configuracion')}
-                    className={`flex items-center p-3 rounded-lg transition-all duration-200 mb-2 w-full hover:shadow-sm group ${activeTab === 'configuracion' ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-500 hover:bg-white hover:text-slate-900'}`}
-                >
-                    <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                        <Settings className={`w-5 h-5 ${activeTab === 'configuracion' ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-900'}`} />
-                    </div>
-                    <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                        Configuración
-                    </span>
-                </button>
-
-                {/* Dark Mode Toggle */}
-                <button
-                    onClick={toggleDarkMode}
-                    className={`flex items-center p-3 rounded-lg transition-all duration-200 mb-2 w-full hover:shadow-sm group ${darkMode
-                        ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                        : 'text-slate-500 hover:bg-white hover:text-slate-900'
-                        }`}
-                >
-                    <div className="w-6 h-6 flex items-center justify-center shrink-0">
-                        {darkMode ? (
-                            <Sun className="w-5 h-5 text-yellow-400" />
-                        ) : (
-                            <Moon className="w-5 h-5 text-slate-500 group-hover:text-slate-900" />
-                        )}
-                    </div>
-                    <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                        {darkMode ? 'Modo Claro' : 'Modo Oscuro'}
-                    </span>
-                </button>
-
-                {/* User Profile */}
-                <div className={`flex items-center p-2 rounded-lg mt-2 shadow-sm relative group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200 border'}`}>
-                    <div className="w-10 h-10 rounded-full border border-gray-100 shrink-0 overflow-hidden flex items-center justify-center bg-white">
-                        {companyLogo ? (
-                            <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
-                        ) : (
-                            <img src={`https://ui-avatars.com/api/?name=${userEmail?.[0] || 'U'}&background=eff6ff&color=3b82f6`} alt="User" className="w-full h-full object-cover" />
-                        )}
-                    </div>
-                    <div className={`ml-3 overflow-hidden transition-all duration-300 ${expanded ? 'opacity-100 w-32' : 'opacity-0 w-0'}`}>
-                        <p className={`text-sm font-bold truncate ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>Usuario</p>
-                        <p className="text-xs text-slate-500 truncate">{userEmail}</p>
-                    </div>
-
-                    {/* Explicit Logout Button */}
+                    {/* Mobile/PC Toggle */}
                     <button
-                        onClick={onLogout}
-                        className={`absolute right-2 p-1.5 rounded-md transition-colors ${expanded ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-slate-700' : 'text-slate-400 hover:text-red-500 hover:bg-slate-100'}`}
-                        title="Cerrar Sesión"
+                        onClick={toggleMobileMode}
+                        className={`flex items-center p-3 rounded-lg transition-all duration-200 mb-2 w-full hover:shadow-sm group ${mobileMode ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-white hover:text-slate-900'
+                            }`}
+                        title={mobileMode ? "Cambiar a Modo PC" : "Cambiar a Modo Móvil"}
                     >
-                        <LogOut className="w-4 h-4" />
+                        <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                            {mobileMode ? (
+                                <Monitor className="w-5 h-5" />
+                            ) : (
+                                <Smartphone className="w-5 h-5" />
+                            )}
+                        </div>
+                        <span className={`ml-3 font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                            {mobileMode ? 'Modo PC' : 'Modo Móvil'}
+                        </span>
                     </button>
+
+                    {/* User Profile */}
+                    <div className={`flex items-center p-2 rounded-lg mt-2 shadow-sm relative group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200 border'}`}>
+                        <div className="w-10 h-10 rounded-full border border-gray-100 shrink-0 overflow-hidden flex items-center justify-center bg-white">
+                            {companyLogo ? (
+                                <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+                            ) : (
+                                <img src={`https://ui-avatars.com/api/?name=${userEmail?.[0] || 'U'}&background=eff6ff&color=3b82f6`} alt="User" className="w-full h-full object-cover" />
+                            )}
+                        </div>
+                        <div className={`ml-3 overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-32' : 'opacity-0 w-0'}`}>
+                            <p className={`text-sm font-bold truncate ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>Usuario</p>
+                            <p className="text-xs text-slate-500 truncate">{userEmail}</p>
+                        </div>
+
+                        {/* Explicit Logout Button */}
+                        <button
+                            onClick={onLogout}
+                            className={`absolute right-2 p-1.5 rounded-md transition-colors ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-slate-700' : 'text-slate-400 hover:text-red-500 hover:bg-slate-100'}`}
+                            title="Cerrar Sesión"
+                        >
+                            <LogOut className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -1311,6 +1370,30 @@ const App = () => {
     // State
     const [session, setSession] = useState(null);
     const [loadingAuth, setLoadingAuth] = useState(true);
+
+    // Mobile Mode State
+    const [mobileMode, setMobileMode] = useState(window.innerWidth < 768);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            // Optional: Auto-switch if user resizes window, or keep manual?
+            // Let's keep manual control respected if set, but initially detect.
+            // For now, simple auto-detect on resize might be annoying if user manually toggled.
+            // Let's just stick to initial detection on load (already in useState) 
+            // and maybe update if it gets really small/large?
+            // Actually, let's allow responsive auto-switching but respect manual toggle if we add a "userPreference" state.
+            // For simplicity as requested: "detect when opening... integrate button".
+            // So we'll update on resize to keep it responsive.
+            setMobileMode(window.innerWidth < 768);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const toggleMobileMode = () => setMobileMode(!mobileMode);
+
     const [activeTab, setActiveTabState] = useState(() => {
         return localStorage.getItem('activeTab') || 'cotizaciones-list';
     });
@@ -2282,7 +2365,7 @@ const App = () => {
     if (!session) return <Login />;
 
     return (
-        <div className={`min-h-screen flex ${darkMode ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
+        <div className={`min-h-screen ${darkMode ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
             <Sidebar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -2291,9 +2374,33 @@ const App = () => {
                 darkMode={darkMode}
                 toggleDarkMode={toggleDarkMode}
                 companyLogo={company.logo_uri}
+                mobileMode={mobileMode}
+                toggleMobileMode={toggleMobileMode}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
 
-            <div className={`flex-1 ml-20 transition-all duration-300 ${darkMode ? 'bg-slate-800' : ''}`}>
+            {/* Mobile Header */}
+            {mobileMode && (
+                <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-700'}`}
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
+                                <Zap className="w-5 h-5" />
+                            </div>
+                            <span className={`font-bold text-lg tracking-tight ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>SmartQuote</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className={`transition-all duration-300 ${mobileMode ? 'ml-0' : 'ml-20'} ${darkMode ? 'bg-slate-800' : ''}`}>
                 {activeTab === 'cotizaciones-list' && (
                     <QuotationList
                         quotations={quotations}
