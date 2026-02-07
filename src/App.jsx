@@ -6,6 +6,45 @@ import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText
 import Login from './components/Login';
 import { supabase } from '../utils/supabase';
 
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null, errorInfo: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        this.setState({ error, errorInfo });
+        console.error("Uncaught error:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="p-8 text-center">
+                    <h1 className="text-2xl font-bold text-red-600 mb-4">Algo salió mal.</h1>
+                    <details className="whitespace-pre-wrap text-left bg-gray-100 p-4 rounded overflow-auto text-xs text-red-800">
+                        {this.state.error && this.state.error.toString()}
+                        <br />
+                        {this.state.errorInfo && this.state.errorInfo.componentStack}
+                    </details>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                        Recargar Página
+                    </button>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
 // Utility function to format currency with thousand separators
 const formatCurrency = (amount) => {
     return amount.toLocaleString('en-US', {
@@ -2183,339 +2222,341 @@ const App = () => {
     if (!session) return <Login />;
 
     return (
-        <div className={`min-h-screen ${darkMode ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
-            <Sidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                onLogout={handleLogout}
-                userEmail={session.user.email}
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-                companyLogo={company.logo_uri}
-                mobileMode={mobileMode}
-                toggleMobileMode={toggleMobileMode}
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-            />
+        <ErrorBoundary>
+            <div className={`min-h-screen ${darkMode ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
+                <Sidebar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    onLogout={handleLogout}
+                    userEmail={session.user.email}
+                    darkMode={darkMode}
+                    toggleDarkMode={toggleDarkMode}
+                    companyLogo={company.logo_uri}
+                    mobileMode={mobileMode}
+                    toggleMobileMode={toggleMobileMode}
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                />
 
-            {/* Mobile Header */}
-            {mobileMode && (
-                <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setSidebarOpen(true)}
-                            className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-700'}`}
-                        >
-                            <span>Menu</span>
-                        </button>
-                        <div className="flex items-center gap-2">
-                            <span className={`font-bold text-lg tracking-tight ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>SmartQuote</span>
+                {/* Mobile Header */}
+                {mobileMode && (
+                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setSidebarOpen(true)}
+                                className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-700'}`}
+                            >
+                                <span>Menu</span>
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <span className={`font-bold text-lg tracking-tight ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>SmartQuote</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            <div className={`transition-all duration-300 ${mobileMode ? 'ml-0' : 'ml-20'} ${darkMode ? 'bg-slate-800' : ''}`}>
-                {activeTab === 'cotizaciones-list' && (
-                    <QuotationList
-                        quotations={quotations}
-                        onCreateNew={() => {
-                            setClient({ name: '', phone: '', email: '', address: '' });
-                            setItems([]);
-                            setTerms(localStorage.getItem('defaultTerms') || '');
-                            setQuotationDate(new Date().toISOString().split('T')[0]);
-                            setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-                            setEditingQuotationId(null);
-                            fetchNextFolio(session.user.id);
-                            setActiveTab('cotizaciones-new');
-                        }}
-                        onView={viewQuotation}
-                        onEdit={loadQuotationForEdit}
-                        onDelete={deleteQuotation}
-                        darkMode={darkMode}
-                    />
                 )}
 
-                {activeTab === 'cotizaciones-new' && (
-                    <div className="w-full px-4 md:px-8 py-8 pb-20">
-                        {/* Header */}
-                        <div className={`flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-6 ${darkMode ? 'border-slate-600' : ''}`}>
-                            <div>
-                                <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                                    Generador de <span className="text-blue-600">Cotizaciones</span>
-                                </h1>
-                                <p className={`mt-1 ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowPreview(true)}
-                                    className="btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
-                                    title="Vista Previa"
-                                >
-                                    <Eye className="w-5 h-5" />
-                                    <span className="hidden sm:inline">Vista Previa</span>
-                                </button>
-                                <button
-                                    onClick={saveQuotation}
-                                    className="btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    {editingQuotationId ? 'Actualizar' : 'Guardar'}
-                                </button>
-                                <button
-                                    onClick={generatePDF}
-                                    disabled={isGenerating}
-                                    className={`btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <Download className="w-5 h-5" />
-                                    {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                                </button>
-                            </div>
-                        </div>
+                <div className={`transition-all duration-300 ${mobileMode ? 'ml-0' : 'ml-20'} ${darkMode ? 'bg-slate-800' : ''}`}>
+                    {activeTab === 'cotizaciones-list' && (
+                        <QuotationList
+                            quotations={quotations}
+                            onCreateNew={() => {
+                                setClient({ name: '', phone: '', email: '', address: '' });
+                                setItems([]);
+                                setTerms(localStorage.getItem('defaultTerms') || '');
+                                setQuotationDate(new Date().toISOString().split('T')[0]);
+                                setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                                setEditingQuotationId(null);
+                                fetchNextFolio(session.user.id);
+                                setActiveTab('cotizaciones-new');
+                            }}
+                            onView={viewQuotation}
+                            onEdit={loadQuotationForEdit}
+                            onDelete={deleteQuotation}
+                            darkMode={darkMode}
+                        />
+                    )}
 
-                        {/* Full Width Editor */}
-                        <div className="w-full max-w-5xl mx-auto space-y-6">
-                            {/* Company Data Auto-filled */}
-                            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1">
-                                        {company.logo_uri ? (
-                                            <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
-                                        ) : (
-                                            <Building2 className="w-6 h-6" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-blue-900">Emisor: {company.nombre || 'Nombre de tu Empresa'}</p>
-                                        <p className="text-xs text-blue-700">Los datos se tomarán de tu configuración.</p>
-                                    </div>
+                    {activeTab === 'cotizaciones-new' && (
+                        <div className="w-full px-4 md:px-8 py-8 pb-20">
+                            {/* Header */}
+                            <div className={`flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-6 ${darkMode ? 'border-slate-600' : ''}`}>
+                                <div>
+                                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                                        Generador de <span className="text-blue-600">Cotizaciones</span>
+                                    </h1>
+                                    <p className={`mt-1 ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
                                 </div>
-                                <button onClick={() => setActiveTab('configuracion')} className="text-blue-600 text-xs font-bold hover:underline">Editar</button>
-                            </div>
-
-                            {/* Quotation Details (Folio, Date, Expiration) */}
-                            <div className={`p-6 rounded-xl shadow-lg border text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                                <h3 className={`font-bold flex items-center gap-2 mb-4 ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
-                                    <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div>
-                                        <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
-                                        <input
-                                            type="text"
-                                            value={folio}
-                                            readOnly
-                                            className={`w-full border rounded-lg p-3 text-sm font-bold text-center ${darkMode ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-slate-100 border-slate-200 text-blue-600'}`}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Cotización</label>
-                                        <input
-                                            type="date"
-                                            value={quotationDate}
-                                            onChange={(e) => setQuotationDate(e.target.value)}
-                                            className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Vencimiento</label>
-                                        <input
-                                            type="date"
-                                            value={expirationDate}
-                                            onChange={(e) => setExpirationDate(e.target.value)}
-                                            className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Client Section with Selector */}
-                            <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                                    <h3 className={`font-bold flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
-                                        <User className="w-5 h-5 text-gray-500" /> Datos del Cliente
-                                    </h3>
-                                    <select
-                                        className={`border rounded-lg text-sm block p-2 outline-none w-full md:w-64 focus:ring-blue-500 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
-                                        onChange={(e) => handleSelectClient(e.target.value)}
-                                        defaultValue=""
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowPreview(true)}
+                                        className="btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                                        title="Vista Previa"
                                     >
-                                        <option value="" disabled>Seleccionar Cliente Guardado...</option>
-                                        {savedClients.map(c => (
-                                            <option key={c.id} value={c.id}>{c.nombre} {c.empresa ? `(${c.empresa})` : ''}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input
-                                        type="text"
-                                        placeholder="Nombre del Cliente"
-                                        value={client.name}
-                                        onChange={(e) => updateClient('name', e.target.value)}
-                                        className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Teléfono"
-                                        value={client.phone}
-                                        onChange={(e) => updateClient('phone', e.target.value)}
-                                        className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                    />
-                                    <input
-                                        type="email"
-                                        placeholder="Correo Electrónico"
-                                        value={client.email}
-                                        onChange={(e) => updateClient('email', e.target.value)}
-                                        className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Dirección / Ciudad"
-                                        value={client.address}
-                                        onChange={(e) => updateClient('address', e.target.value)}
-                                        className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                    />
-                                </div>
-                            </div>
-                            <ItemsTable
-                                items={items}
-                                onAddItem={addItem}
-                                onRemoveItem={removeItem}
-                                onUpdateItem={updateItem}
-                                darkMode={darkMode}
-                            />
-
-                            {/* Global IVA Switch */}
-                            <div className={`p-4 rounded-xl flex items-center justify-end gap-3 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-                                <span className={`font-bold text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>Desglosar IVA (16%)</span>
-                                <button
-                                    onClick={() => setIncludeIva(!includeIva)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${includeIva ? 'bg-blue-600' : 'bg-gray-200'}`}
-                                >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIva ? 'translate-x-6' : 'translate-x-1'}`} />
-                                </button>
-                            </div>
-
-                            <TermsInput value={terms} onChange={setTerms} darkMode={darkMode} />
-                        </div>
-                    </div>
-                )}
-                {activeTab === 'clientes' && (
-                    <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={darkMode} />
-                )}
-                {activeTab === 'configuracion' && (
-                    <SettingsView
-                        companyData={company}
-                        onCompanyChange={updateCompany}
-                        onSave={saveCompanySettings}
-                        darkMode={darkMode}
-                    />
-                )}
-                {activeTab === 'contratos' && (
-                    <ContractsView darkMode={darkMode} company={company} />
-                )}
-
-                {/* Global Preview Modal */}
-                {showPreview && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-                            {/* Modal Header */}
-                            <div className={`p-4 border-b flex justify-between items-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                                <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>
-                                    <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
-                                </h3>
-                                <div className="flex items-center gap-2">
+                                        <Eye className="w-5 h-5" />
+                                        <span className="hidden sm:inline">Vista Previa</span>
+                                    </button>
+                                    <button
+                                        onClick={saveQuotation}
+                                        className="btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                                    >
+                                        <Download className="w-5 h-5" />
+                                        {editingQuotationId ? 'Actualizar' : 'Guardar'}
+                                    </button>
                                     <button
                                         onClick={generatePDF}
                                         disabled={isGenerating}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        className={`btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        <Download className="w-4 h-4" />
+                                        <Download className="w-5 h-5" />
                                         {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setShowPreview(false);
-                                            if (viewingQuotation) {
-                                                setViewingQuotation(null);
-                                            }
-                                        }}
-                                        className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                                    >
-                                        <X className="w-6 h-6" />
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Modal Content - Scrollable */}
-                            <div className={`overflow-auto p-8 flex justify-center ${darkMode ? 'bg-slate-900/50' : 'bg-slate-200/50'}`} ref={previewContainerRef}>
-                                <div
-                                    className="bg-white shadow-xl origin-top transition-transform duration-200"
-                                    style={{
-                                        transform: `scale(${previewScale})`,
-                                        width: '900px',
-                                        height: 'auto'
-                                    }}
-                                >
-                                    <div ref={quotationRef}>
-                                        <PrintableQuotation
-                                            company={company}
-                                            client={viewingQuotation ? {
-                                                name: viewingQuotation.nombre_cliente,
-                                                phone: viewingQuotation.telefono,
-                                                email: viewingQuotation.correo,
-                                                address: ''
-                                            } : client}
-                                            items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
-                                                id: index + 1,
-                                                qty: art.cantidad,
-                                                desc: art.articulo,
-                                                price: art.precioUnitario,
-                                                discount: art.descuento || 0,
-                                                tax: 0
-                                            })) : items}
-                                            terms={viewingQuotation ? viewingQuotation.terminos : terms}
-                                            folio={viewingQuotation ? viewingQuotation.folio : folio}
-                                            includeIva={includeIva}
-                                        />
+                            {/* Full Width Editor */}
+                            <div className="w-full max-w-5xl mx-auto space-y-6">
+                                {/* Company Data Auto-filled */}
+                                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1">
+                                            {company.logo_uri ? (
+                                                <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
+                                            ) : (
+                                                <Building2 className="w-6 h-6" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-blue-900">Emisor: {company.nombre || 'Nombre de tu Empresa'}</p>
+                                            <p className="text-xs text-blue-700">Los datos se tomarán de tu configuración.</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setActiveTab('configuracion')} className="text-blue-600 text-xs font-bold hover:underline">Editar</button>
+                                </div>
 
+                                {/* Quotation Details (Folio, Date, Expiration) */}
+                                <div className={`p-6 rounded-xl shadow-lg border text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                                    <h3 className={`font-bold flex items-center gap-2 mb-4 ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                                        <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
+                                            <input
+                                                type="text"
+                                                value={folio}
+                                                readOnly
+                                                className={`w-full border rounded-lg p-3 text-sm font-bold text-center ${darkMode ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-slate-100 border-slate-200 text-blue-600'}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Cotización</label>
+                                            <input
+                                                type="date"
+                                                value={quotationDate}
+                                                onChange={(e) => setQuotationDate(e.target.value)}
+                                                className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Vencimiento</label>
+                                            <input
+                                                type="date"
+                                                value={expirationDate}
+                                                onChange={(e) => setExpirationDate(e.target.value)}
+                                                className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Client Section with Selector */}
+                                <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                                        <h3 className={`font-bold flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                                            <User className="w-5 h-5 text-gray-500" /> Datos del Cliente
+                                        </h3>
+                                        <select
+                                            className={`border rounded-lg text-sm block p-2 outline-none w-full md:w-64 focus:ring-blue-500 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
+                                            onChange={(e) => handleSelectClient(e.target.value)}
+                                            defaultValue=""
+                                        >
+                                            <option value="" disabled>Seleccionar Cliente Guardado...</option>
+                                            {savedClients.map(c => (
+                                                <option key={c.id} value={c.id}>{c.nombre} {c.empresa ? `(${c.empresa})` : ''}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Nombre del Cliente"
+                                            value={client.name}
+                                            onChange={(e) => updateClient('name', e.target.value)}
+                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Teléfono"
+                                            value={client.phone}
+                                            onChange={(e) => updateClient('phone', e.target.value)}
+                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                        />
+                                        <input
+                                            type="email"
+                                            placeholder="Correo Electrónico"
+                                            value={client.email}
+                                            onChange={(e) => updateClient('email', e.target.value)}
+                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Dirección / Ciudad"
+                                            value={client.address}
+                                            onChange={(e) => updateClient('address', e.target.value)}
+                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                        />
+                                    </div>
+                                </div>
+                                <ItemsTable
+                                    items={items}
+                                    onAddItem={addItem}
+                                    onRemoveItem={removeItem}
+                                    onUpdateItem={updateItem}
+                                    darkMode={darkMode}
+                                />
+
+                                {/* Global IVA Switch */}
+                                <div className={`p-4 rounded-xl flex items-center justify-end gap-3 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                    <span className={`font-bold text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>Desglosar IVA (16%)</span>
+                                    <button
+                                        onClick={() => setIncludeIva(!includeIva)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${includeIva ? 'bg-blue-600' : 'bg-gray-200'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIva ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                <TermsInput value={terms} onChange={setTerms} darkMode={darkMode} />
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'clientes' && (
+                        <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={darkMode} />
+                    )}
+                    {activeTab === 'configuracion' && (
+                        <SettingsView
+                            companyData={company}
+                            onCompanyChange={updateCompany}
+                            onSave={saveCompanySettings}
+                            darkMode={darkMode}
+                        />
+                    )}
+                    {activeTab === 'contratos' && (
+                        <ContractsView darkMode={darkMode} company={company} />
+                    )}
+
+                    {/* Global Preview Modal */}
+                    {showPreview && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                            <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                {/* Modal Header */}
+                                <div className={`p-4 border-b flex justify-between items-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                    <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>
+                                        <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={generatePDF}
+                                            disabled={isGenerating}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowPreview(false);
+                                                if (viewingQuotation) {
+                                                    setViewingQuotation(null);
+                                                }
+                                            }}
+                                            className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                                        >
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Modal Content - Scrollable */}
+                                <div className={`overflow-auto p-8 flex justify-center ${darkMode ? 'bg-slate-900/50' : 'bg-slate-200/50'}`} ref={previewContainerRef}>
+                                    <div
+                                        className="bg-white shadow-xl origin-top transition-transform duration-200"
+                                        style={{
+                                            transform: `scale(${previewScale})`,
+                                            width: '900px',
+                                            height: 'auto'
+                                        }}
+                                    >
+                                        <div ref={quotationRef}>
+                                            <PrintableQuotation
+                                                company={company}
+                                                client={viewingQuotation ? {
+                                                    name: viewingQuotation.nombre_cliente,
+                                                    phone: viewingQuotation.telefono,
+                                                    email: viewingQuotation.correo,
+                                                    address: ''
+                                                } : client}
+                                                items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
+                                                    id: index + 1,
+                                                    qty: art.cantidad,
+                                                    desc: art.articulo,
+                                                    price: art.precioUnitario,
+                                                    discount: art.descuento || 0,
+                                                    tax: 0
+                                                })) : items}
+                                                terms={viewingQuotation ? viewingQuotation.terminos : terms}
+                                                folio={viewingQuotation ? viewingQuotation.folio : folio}
+                                                includeIva={includeIva}
+                                            />
+
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
 
-            {/* Hidden Export Container - Global */}
-            <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
-                <div id="quotation-pdf-export" style={{ width: '900px' }}>
-                    <PrintableQuotation
-                        company={company}
-                        client={viewingQuotation ? {
-                            name: viewingQuotation.nombre_cliente,
-                            phone: viewingQuotation.telefono,
-                            email: viewingQuotation.correo,
-                            address: ''
-                        } : client}
-                        items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
-                            id: index + 1,
-                            qty: art.cantidad,
-                            desc: art.articulo,
-                            price: art.precioUnitario,
-                            cost: art.costoEmpresa || 0,
-                            discount: art.descuento || 0,
-                            tax: 0
-                        })) : items}
-                        terms={viewingQuotation ? viewingQuotation.terminos : terms}
-                        folio={viewingQuotation ? viewingQuotation.folio : folio}
-                        includeIva={includeIva}
-                        isPdf={true}
-                    />
+                {/* Hidden Export Container - Global */}
+                <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+                    <div id="quotation-pdf-export" style={{ width: '900px' }}>
+                        <PrintableQuotation
+                            company={company}
+                            client={viewingQuotation ? {
+                                name: viewingQuotation.nombre_cliente,
+                                phone: viewingQuotation.telefono,
+                                email: viewingQuotation.correo,
+                                address: ''
+                            } : client}
+                            items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
+                                id: index + 1,
+                                qty: art.cantidad,
+                                desc: art.articulo,
+                                price: art.precioUnitario,
+                                cost: art.costoEmpresa || 0,
+                                discount: art.descuento || 0,
+                                tax: 0
+                            })) : items}
+                            terms={viewingQuotation ? viewingQuotation.terminos : terms}
+                            folio={viewingQuotation ? viewingQuotation.folio : folio}
+                            includeIva={includeIva}
+                            isPdf={true}
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
+        </ErrorBoundary>
     );
 };
 
