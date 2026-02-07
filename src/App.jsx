@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Eye, Download, User, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut } from 'lucide-react';
 import Login from './components/Login';
+import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
 
 class ErrorBoundary extends React.Component {
@@ -1219,6 +1220,10 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggl
 // --- MAIN APP ---
 
 const App = () => {
+    // 1. Check for critical configuration errors first
+    if (!supabase) {
+        return <SupabaseConfigError />;
+    }
 
 
     const handleLogout = async () => {
