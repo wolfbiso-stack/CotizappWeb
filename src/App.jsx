@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -73,7 +73,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
             </div>
 
             {quotations.length === 0 ? (
-                <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-slate-100'}`}>
+                <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-slate-600 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
                         <FileText className="w-10 h-10" />
                     </div>
@@ -89,9 +89,9 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
                     </button>
                 </div>
             ) : (
-                <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-slate-100'}`}>
+                <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     <table className="w-full">
-                        <thead className={`border-b ${darkMode ? 'bg-slate-600 border-slate-500' : 'bg-slate-50 border-slate-100'}`}>
+                        <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                             <tr>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
@@ -102,7 +102,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
                         </thead>
                         <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
                             {quotations.map((quotation) => (
-                                <tr key={quotation.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-600' : 'hover:bg-slate-50'}`}>
+                                <tr key={quotation.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-bold text-blue-600">#{quotation.folio}</span>
                                     </td>
@@ -151,7 +151,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
     );
 };
 
-const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode }) => {
+const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selectedTemplate, onTemplateChange }) => {
     const [activeSubTab, setActiveSubTab] = useState('company');
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -169,10 +169,18 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode }) => {
         { id: 'templates', label: 'Plantillas de facturas' },
     ];
 
+    const TEMPLATES = [
+        { id: 'classic', name: 'Clásica', description: 'Diseño limpio y tradicional.' },
+        { id: 'modern', name: 'Moderna', description: 'Estilo audaz con encabezados llamativos.' },
+        { id: 'formal', name: 'Formal', description: 'Elegante y corporativo, ideal para empresas serias.' },
+        { id: 'creative', name: 'Creativa', description: 'Toque de color y diseño único.' }
+    ];
+
     return (
-        <div className={`flex h-full animate-in slide-in-from-right-4 duration-300 ${darkMode ? 'bg-slate-800' : 'bg-slate-50'}`}>
+        <div className={`flex h-full animate-in slide-in-from-right-4 duration-300 ${darkMode ? 'bg-transparent' : 'bg-transparent'}`}>
             {/* Sub-sidebar */}
-            <div className={`w-64 border-r h-full flex flex-col shrink-0 ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+            {/* Sub-sidebar */}
+            <div className={`w-64 border-r h-full flex flex-col shrink-0 ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
                 <div className={`p-6 border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
                     <h2 className={`text-xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>Configuración</h2>
                 </div>
@@ -201,7 +209,7 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode }) => {
                             <p className={`${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Administra la información legal y de contacto de tu negocio.</p>
                         </div>
 
-                        <div className={`rounded-xl shadow-sm border p-8 space-y-8 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                        <div className={`space-y-8 ${darkMode ? '' : ''}`}>
                             {/* Logo Section */}
                             <div className={`flex items-start gap-8 border-b pb-8 ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
                                 <div className="w-32">
@@ -308,40 +316,57 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode }) => {
                             <p className="text-slate-500">Selecciona el diseño predeterminado para tus documentos.</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="border-2 border-blue-500 rounded-xl overflow-hidden relative shadow-md group cursor-pointer">
-                                <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10">Activa</div>
-                                <div className="bg-slate-100 aspect-[3/4] flex items-center justify-center border-b border-slate-200">
-                                    <div className="w-1/2 h-3/4 bg-white shadow-sm flex flex-col p-2 gap-2">
-                                        <div className="h-4 bg-slate-200 w-full mb-2"></div>
-                                        <div className="h-2 bg-slate-200 w-2/3"></div>
-                                        <div className="h-2 bg-slate-200 w-2/3"></div>
-                                        <div className="flex-1"></div>
-                                        <div className="h-8 bg-blue-50 w-full"></div>
-                                    </div>
-                                </div>
-                                <div className="p-4 bg-white text-center">
-                                    <h3 className="font-bold text-slate-800">Clásica</h3>
-                                </div>
-                            </div>
-
-                            <div className="border border-slate-200 hover:border-blue-300 rounded-xl overflow-hidden relative shadow-sm hover:shadow-md transition-all group cursor-pointer">
-                                <div className="absolute inset-0 bg-white/50 group-hover:bg-transparent transition-colors z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                    <span className="bg-white text-slate-800 font-bold px-4 py-2 rounded-lg shadow-lg">Seleccionar</span>
-                                </div>
-                                <div className="bg-slate-50 aspect-[3/4] flex items-center justify-center border-b border-slate-200">
-                                    <div className="w-1/2 h-3/4 bg-white shadow-sm flex flex-col p-2 gap-2">
-                                        <div className="flex gap-2 mb-2">
-                                            <div className="h-4 bg-slate-800 w-1/3"></div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {TEMPLATES.map(template => (
+                                <div
+                                    key={template.id}
+                                    onClick={() => onTemplateChange(template.id)}
+                                    className={`border-2 rounded-xl overflow-hidden relative shadow-md group cursor-pointer transition-all ${selectedTemplate === template.id ? 'border-blue-600 ring-4 ring-blue-100 shadow-xl scale-[1.02]' : 'border-slate-200 hover:border-blue-400 hover:shadow-lg'} ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
+                                >
+                                    {selectedTemplate === template.id && (
+                                        <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md flex items-center gap-1">
+                                            <Check className="w-3 h-3" /> Activa
                                         </div>
-                                        <div className="h-2 bg-slate-200 w-full"></div>
-                                        <div className="flex-1"></div>
+                                    )}
+
+                                    {selectedTemplate !== template.id && (
+                                        <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                            <span className="bg-white/90 backdrop-blur text-slate-800 font-bold px-4 py-2 rounded-lg shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                                Seleccionar
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-slate-50/50 aspect-[3/4] border-b border-slate-200 overflow-hidden relative group">
+                                        <div className="absolute top-0 left-0 origin-top-left transform scale-[0.38] w-[900px] h-[1100px] bg-white shadow-sm pointer-events-none select-none">
+                                            <PrintableQuotation
+                                                company={companyData || { nombre: 'Mi Empresa', direccion: 'Dirección, Ciudad', correo: 'contacto@empresa.com', telefono: '+52 55 1234 5678' }}
+                                                client={{
+                                                    name: 'Cliente Ejemplo',
+                                                    address: 'Dirección del Cliente',
+                                                    phone: '55 1234 5678',
+                                                    email: 'cliente@email.com'
+                                                }}
+                                                items={[
+                                                    { qty: 1, desc: 'Desarrollo Web Profesional', price: 15000, discount: 0, tax: 0 },
+                                                    { qty: 1, desc: 'Hosting Anual', price: 2500, discount: 0, tax: 0 },
+                                                    { qty: 5, desc: 'Cuentas de Correo', price: 150, discount: 0, tax: 0 }
+                                                ]}
+                                                terms="Términos y condiciones de ejemplo."
+                                                folio="001"
+                                                date="01/01/2024"
+                                                dueDate="15/01/2024"
+                                                includeIva={true}
+                                                template={template.id}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className={`p-4 text-center transition-colors ${selectedTemplate === template.id ? 'bg-blue-50/50' : 'bg-transparent'}`}>
+                                        <h3 className={`font-bold ${selectedTemplate === template.id ? 'text-blue-700' : 'text-slate-800'}`}>{template.name}</h3>
+                                        <p className="text-xs text-slate-500 mt-1">{template.description}</p>
                                     </div>
                                 </div>
-                                <div className="p-4 bg-white text-center">
-                                    <h3 className="font-bold text-slate-800">Moderna (Próximamente)</h3>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -365,7 +390,7 @@ const ClientDetails = ({ client, onBack }) => {
                 </h1>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-4xl mx-auto">
+            <div className={`rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-4xl mx-auto ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
                 <div className="bg-slate-50 p-8 border-b border-slate-100 flex items-center gap-6">
                     <div className="w-24 h-24 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold text-4xl shadow-lg shadow-blue-500/30">
                         {client.nombre.charAt(0).toUpperCase()}
@@ -564,7 +589,7 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
 
             {/* List View */}
             {clients.length === 0 ? (
-                <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-slate-100'}`}>
+                <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-slate-600 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
                         <User className="w-10 h-10" />
                     </div>
@@ -580,9 +605,9 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
                     </button>
                 </div>
             ) : (
-                <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-slate-100'}`}>
+                <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     {/* List Header */}
-                    <div className={`grid grid-cols-12 gap-4 p-4 border-b text-xs font-bold uppercase tracking-widest hidden md:grid ${darkMode ? 'bg-slate-600 border-slate-500 text-slate-200' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
+                    <div className={`grid grid-cols-12 gap-4 p-4 border-b text-xs font-bold uppercase tracking-widest hidden md:grid ${darkMode ? 'bg-slate-600/50 border-slate-500 text-slate-200' : 'bg-gray-50/50 border-slate-100 text-slate-500'}`}>
                         <div
                             className="col-span-5 pl-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 transition-colors"
                             onClick={() => setSortOrder(prev => prev === 'date' ? 'alpha' : 'date')}
@@ -879,7 +904,7 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, darkMode }) 
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className={`${darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-50 text-slate-600'}`}>
+                        <tr className={`${darkMode ? 'bg-slate-800/50 text-slate-300' : 'bg-gray-50/50 text-slate-600'}`}>
                             <th className="p-3 text-left rounded-l-lg w-16">Cant.</th>
                             <th className="p-3 text-left">Descripción / Producto</th>
                             <th className="p-3 text-right pr-4 w-28 text-orange-500">Costo Unit.</th>
@@ -1003,6 +1028,409 @@ const TermsInput = ({ value, onChange, darkMode }) => (
     </div>
 );
 
+const TemplateClassic = ({ company, client, items, terms, folio, date, dueDate, subtotal, totalDiscount, totalTax, grandTotal, isPdf, formatCurrency }) => (
+    <div className="bg-white max-w-[900px] mx-auto text-gray-800 relative shadow-none" style={{ width: '900px', minHeight: isPdf ? 'auto' : '1100px' }}>
+        <div className="h-4 w-full bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600"></div>
+        <div className="pt-12 px-12 pb-0 flex flex-col h-full justify-between">
+            <div>
+                <div className="flex justify-between items-start mb-16">
+                    <div className="flex gap-6 items-start w-7/12">
+                        {company.logo_uri ? (
+                            <img src={company.logo_uri} alt="Logo" className="max-w-32 max-h-32 object-contain rounded-md" />
+                        ) : (
+                            <div className="w-20 h-20 bg-blue-50 rounded-md flex items-center justify-center text-blue-500">
+                                <Building2 className="w-10 h-10" />
+                            </div>
+                        )}
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-800 mb-1 leading-tight">{company.nombre || "NOMBRE EMPRESA"}</h1>
+                            <div className="text-sm text-gray-500 space-y-1">
+                                <p>{company.direccion || "Dirección de la empresa, Ciudad, Estado"}</p>
+                                <p>{company.correo}</p>
+                                <p>{company.telefono}</p>
+                                {company.rfc && <p>RFC: {company.rfc}</p>}
+                                {company.pagina_web && <p>{company.pagina_web}</p>}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-right w-5/12">
+                        <h2 className="text-2xl font-bold text-gray-700 uppercase tracking-widest mb-6 border-b pb-2">COTIZACIÓN</h2>
+                        <div className="text-sm">
+                            <div className="grid grid-cols-[100px_1fr] gap-y-2 text-right">
+                                <span className="font-bold text-gray-500">Folio:</span><span className="font-bold text-gray-900">#{folio}</span>
+                                <span className="font-bold text-gray-500">Fecha:</span><span className="text-gray-700">{date}</span>
+                                <span className="font-bold text-gray-500">Vence:</span><span className="text-gray-700">{dueDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-12 bg-slate-50 py-8 -mx-12 px-12 border-y border-gray-100/50">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">COTIZACIÓN PARA:</h3>
+                    <div className="text-gray-800">
+                        <p className="text-2xl font-bold text-slate-800 mb-1">{client.name || "Nombre del Cliente"}</p>
+                        <p className="text-gray-600">{client.address}</p>
+                        <div className="text-gray-500 mt-1 flex gap-4 text-sm">
+                            {client.phone && <span>Tel: {client.phone}</span>}
+                            {client.email && <span>Email: {client.email}</span>}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-12">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="text-left py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-16">Cant.</th>
+                                <th className="text-left py-2 text-xs font-bold text-gray-400 uppercase tracking-widest">Descripción / Producto</th>
+                                <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Precio Unit.</th>
+                                <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {items.map((item, idx) => {
+                                const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
+                                return (
+                                    <tr key={idx}>
+                                        <td className="py-2 text-sm font-medium text-gray-500 align-top">{item.qty}</td>
+                                        <td className="py-2 pr-4 align-top">
+                                            <p className="font-bold text-slate-800 text-sm mb-1">{item.desc}</p>
+                                            {(item.discount > 0 || item.tax > 0) && (
+                                                <p className="text-xs text-blue-500">
+                                                    {item.discount > 0 && `Desc. ${item.discount}% `}
+                                                    {item.tax > 0 && `+ IVA ${item.tax}%`}
+                                                </p>
+                                            )}
+                                        </td>
+                                        <td className="py-2 text-right text-sm text-gray-600 align-top">${formatCurrency(item.price)}</td>
+                                        <td className="py-2 text-right text-sm font-bold text-slate-700 align-top">${formatCurrency(total)}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table >
+                </div >
+            </div >
+
+            <div className="bg-slate-50 -mx-12 px-12 pt-10 pb-12 mt-auto border-t border-gray-100">
+                <div className="flex items-start justify-between">
+                    <div className="w-7/12 pr-12">
+                        {terms && (
+                            <div className="mb-12">
+                                <h4 className="font-bold text-slate-700 text-sm mb-3">Términos y Condiciones</h4>
+                                <div className="text-xs text-gray-500 leading-relaxed whitespace-pre-line">{terms}</div>
+                            </div>
+                        )}
+                        <div className="mt-12 pt-4 border-t border-gray-100">
+                            <p className="text-xs font-bold mb-1 uppercase tracking-wide bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">Atentamente:</p>
+                            <p className="text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">{company.nombre || "Nombre de la Empresa"}</p>
+                        </div>
+                    </div>
+                    <div className="w-5/12 pl-8">
+                        <div className="space-y-3 text-right">
+                            <div className="flex justify-between text-sm text-gray-500"><span>Subtotal:</span><span className="font-medium text-gray-700">${formatCurrency(subtotal)}</span></div>
+                            {totalDiscount > 0 && <div className="flex justify-between text-sm text-green-600"><span>Descuento:</span><span>-${formatCurrency(totalDiscount)}</span></div>}
+                            {totalTax > 0 && <div className="flex justify-between text-sm text-gray-500"><span>IVA / Impuestos:</span><span className="font-medium text-gray-700">${formatCurrency(totalTax)}</span></div>}
+                            <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+                                <span className="text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">Total:</span>
+                                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">${formatCurrency(grandTotal)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div >
+    </div >
+);
+
+const TemplateModern = ({ company, client, items, terms, folio, date, dueDate, subtotal, totalDiscount, totalTax, grandTotal, isPdf, formatCurrency }) => (
+    <div className="bg-white max-w-[900px] mx-auto text-gray-800 relative shadow-none font-sans" style={{ width: '900px', minHeight: isPdf ? 'auto' : '1100px' }}>
+        <div className="flex h-full flex-col justify-between p-12">
+            <div>
+                <div className="flex justify-between items-end mb-12 border-b-4 border-slate-900 pb-6">
+                    <div>
+                        <h1 className="text-5xl font-black text-slate-900 tracking-tight uppercase mb-6 leading-none">Cotización</h1>
+                        <span className="bg-black text-white px-3 py-1 text-sm font-bold tracking-widest rounded-sm inline-block">#{folio}</span>
+                    </div>
+                    <div className="text-right">
+                        {company.logo_uri ? (
+                            <img src={company.logo_uri} alt="Logo" className="max-w-40 max-h-20 object-contain ml-auto" />
+                        ) : (
+                            <h2 className="text-2xl font-bold text-slate-900">{company.nombre || "TU EMPRESA"}</h2>
+                        )}
+                        <p className="text-sm text-slate-500 mt-2">{company.direccion}</p>
+                        <p className="text-sm text-slate-500">{company.correo} | {company.telefono}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-12 mb-12">
+                    <div>
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Emitido Para</h3>
+                        <p className="text-2xl font-bold text-slate-900 leading-tight">{client.name || "Nombre del Cliente"}</p>
+                        <p className="text-slate-600 mt-1">{client.address}</p>
+                        <p className="text-slate-500 text-sm mt-2">{client.phone} • {client.email}</p>
+                    </div>
+                    <div className="flex justify-end gap-8">
+                        <div>
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Fecha Emisión</h3>
+                            <p className="text-lg font-bold text-slate-900">{date}</p>
+                        </div>
+                        <div>
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Vencimiento</h3>
+                            <p className="text-lg font-bold text-red-500">{dueDate}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <table className="w-full mb-12">
+                    <thead className="bg-slate-900 text-white">
+                        <tr>
+                            <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider w-16">Cant</th>
+                            <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider">Descripción</th>
+                            <th className="py-3 px-4 text-right text-xs font-bold uppercase tracking-wider w-32">Precio</th>
+                            <th className="py-3 px-4 text-right text-xs font-bold uppercase tracking-wider w-32">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {items.map((item, idx) => {
+                            const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
+                            return (
+                                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                    <td className="py-3 px-4 text-sm font-bold text-slate-900">{item.qty}</td>
+                                    <td className="py-3 px-4">
+                                        <p className="text-sm font-bold text-slate-900">{item.desc}</p>
+                                        {(item.discount > 0 || item.tax > 0) && <p className="text-xs text-slate-400 mt-0.5">{item.discount > 0 && `-${item.discount}%`} {item.tax > 0 && `+IVA`}</p>}
+                                    </td>
+                                    <td className="py-3 px-4 text-right text-sm text-slate-600">${formatCurrency(item.price)}</td>
+                                    <td className="py-3 px-4 text-right text-sm font-bold text-slate-900">${formatCurrency(total)}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div className="flex justify-end mb-12">
+                    <div className="w-5/12 space-y-2">
+                        <div className="flex justify-between text-slate-500 text-sm"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
+                        {totalDiscount > 0 && <div className="flex justify-between text-green-600 text-sm"><span>Descuento</span><span>-${formatCurrency(totalDiscount)}</span></div>}
+                        {totalTax > 0 && <div className="flex justify-between text-slate-500 text-sm"><span>Impuestos</span><span>${formatCurrency(totalTax)}</span></div>}
+                        <div className="flex justify-between items-center text-slate-900 text-2xl font-black pt-4 border-t-2 border-slate-900 mt-4">
+                            <span>TOTAL</span>
+                            <span>${formatCurrency(grandTotal)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-12 border-t border-slate-200 pt-8">
+                    <div>
+                        <h4 className="font-bold text-slate-900 text-sm mb-2">Términos</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-line">{terms}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-sm font-bold text-slate-900 mb-1">Atte:</p>
+                        <div className="h-12"></div>
+                        <p className="text-lg font-black text-slate-900">{company.nombre}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div >
+);
+
+const TemplateFormal = ({ company, client, items, terms, folio, date, dueDate, subtotal, totalDiscount, totalTax, grandTotal, isPdf, formatCurrency }) => (
+    <div className="bg-white max-w-[900px] mx-auto text-gray-900 relative shadow-none font-serif" style={{ width: '900px', minHeight: isPdf ? 'auto' : '1100px' }}>
+        <div className="p-16 flex flex-col h-full justify-between">
+            <div>
+                <div className="text-center mb-12 border-b border-gray-300 pb-8">
+                    {company.logo_uri ? (
+                        <img src={company.logo_uri} alt="Logo" className="h-24 object-contain mx-auto mb-4" />
+                    ) : (
+                        <h1 className="text-3xl font-bold uppercase tracking-widest mb-2 text-gray-800">{company.nombre || "NOMBRE EMPRESA"}</h1>
+                    )}
+                    <p className="text-sm text-gray-600 tracking-wide">{company.direccion} | {company.telefono} | {company.correo}</p>
+                    {company.rfc && <p className="text-sm text-gray-600 tracking-wide mt-1">RFC: {company.rfc}</p>}
+                </div>
+
+                <div className="flex justify-between mb-12">
+                    <div className="w-1/2 pr-8">
+                        <h3 className="text-xs font-bold uppercase border-b border-gray-400 pb-1 mb-3 text-gray-500">Preparado Para</h3>
+                        <p className="font-bold text-xl">{client.name}</p>
+                        <p className="text-gray-700 mt-1">{client.address}</p>
+                        <p className="text-gray-600 text-sm mt-1">{client.phone}</p>
+                        <p className="text-gray-600 text-sm">{client.email}</p>
+                    </div>
+                    <div className="w-1/2 pl-8 border-l border-gray-200">
+                        <h3 className="text-xs font-bold uppercase border-b border-gray-400 pb-1 mb-3 text-gray-500">Detalles</h3>
+                        <div className="grid grid-cols-2 gap-y-2 text-sm">
+                            <span className="text-gray-600">Número de Folio:</span>
+                            <span className="font-bold text-right">#{folio}</span>
+                            <span className="text-gray-600">Fecha de Emisión:</span>
+                            <span className="font-bold text-right">{date}</span>
+                            <span className="text-gray-600">Válido Hasta:</span>
+                            <span className="font-bold text-right">{dueDate}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <table className="w-full mb-8 border-collapse">
+                    <thead>
+                        <tr className="bg-gray-100 border-y border-gray-300">
+                            <th className="py-2 px-3 text-left text-xs font-bold uppercase w-16 text-gray-700">Cant.</th>
+                            <th className="py-2 px-3 text-left text-xs font-bold uppercase text-gray-700">Descripción</th>
+                            <th className="py-2 px-3 text-right text-xs font-bold uppercase w-32 text-gray-700">Precio</th>
+                            <th className="py-2 px-3 text-right text-xs font-bold uppercase w-32 text-gray-700">Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map((item, idx) => {
+                            const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
+                            return (
+                                <tr key={idx} className="border-b border-gray-200">
+                                    <td className="py-3 px-3 text-sm">{item.qty}</td>
+                                    <td className="py-3 px-3 text-sm">
+                                        <div className="font-medium">{item.desc}</div>
+                                        {(item.discount > 0) && <div className="text-xs text-gray-500 italic">Descuento aplicado: {item.discount}%</div>}
+                                    </td>
+                                    <td className="py-3 px-3 text-right text-sm">${formatCurrency(item.price)}</td>
+                                    <td className="py-3 px-3 text-right text-sm font-bold">${formatCurrency(total)}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+
+                <div className="flex justify-end">
+                    <div className="w-5/12">
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                            <span className="text-sm text-gray-600">Subtotal</span>
+                            <span className="text-sm font-medium">${formatCurrency(subtotal)}</span>
+                        </div>
+                        {totalDiscount > 0 && (
+                            <div className="flex justify-between py-2 border-b border-gray-200">
+                                <span className="text-sm text-gray-600">Descuento</span>
+                                <span className="text-sm font-medium">-${formatCurrency(totalDiscount)}</span>
+                            </div>
+                        )}
+                        {totalTax > 0 && (
+                            <div className="flex justify-between py-2 border-b border-gray-200">
+                                <span className="text-sm text-gray-600">IVA (16%)</span>
+                                <span className="text-sm font-medium">${formatCurrency(totalTax)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between py-3 border-b-2 border-gray-800 mt-2">
+                            <span className="text-base font-bold uppercase">Total MXN</span>
+                            <span className="text-lg font-bold">${formatCurrency(grandTotal)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-12 text-center text-sm text-gray-500 pt-8 border-t border-gray-200">
+                {terms && <p className="mb-4 italic">"{terms}"</p>}
+                <p className="font-bold">{company.nombre}</p>
+                <p>Gracias por su preferencia.</p>
+            </div>
+        </div>
+    </div>
+);
+
+const TemplateCreative = ({ company, client, items, terms, folio, date, dueDate, subtotal, totalDiscount, totalTax, grandTotal, isPdf, formatCurrency }) => (
+    <div className="bg-white max-w-[900px] mx-auto text-gray-800 relative shadow-none overflow-hidden" style={{ width: '900px', minHeight: isPdf ? 'auto' : '1100px' }}>
+        {/* Abstract Shapes */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 -translate-x-1/4"></div>
+
+        <div className="relative z-10 p-12 flex flex-col h-full justify-between">
+            <div>
+                <div className="flex justify-between items-center mb-12">
+                    <div className="w-1/2">
+                        {company.logo_uri ? (
+                            <img src={company.logo_uri} alt="Logo" className="max-w-40 max-h-32 object-contain" />
+                        ) : (
+                            <div className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
+                                {company.nombre || "CREATIVA"}
+                            </div>
+                        )}
+                    </div>
+                    <div className="text-right">
+                        <div className="text-6xl font-black text-slate-900 opacity-10 tracking-tighter">COTIZACIÓN</div>
+                        <div className="text-xl font-bold text-pink-500 -mt-8 mr-1">#{folio}</div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-16">
+                    <div className="bg-slate-50/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-100">
+                        <span className="text-xs font-bold text-pink-500 uppercase tracking-widest block mb-2">De</span>
+                        <p className="font-bold text-slate-800">{company.nombre}</p>
+                        <p className="text-sm text-slate-500 mt-1">{company.correo}</p>
+                        <p className="text-sm text-slate-500">{company.telefono}</p>
+                    </div>
+                    <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg transform translate-y-4">
+                        <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest block mb-2">Para</span>
+                        <p className="font-bold text-xl">{client.name}</p>
+                        <div className="h-px bg-white/20 my-3"></div>
+                        <div className="flex justify-between text-sm text-slate-300">
+                            <span>Fecha: {date}</span>
+                            <span className="text-yellow-400 font-bold">Vence: {dueDate}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    {items.map((item, idx) => {
+                        const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
+                        return (
+                            <div key={idx} className="flex items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-yellow-100 rounded-full flex items-center justify-center font-bold text-pink-600 text-lg mr-4 shrink-0">
+                                    {item.qty}
+                                </div>
+                                <div className="flex-1 pr-4">
+                                    <h4 className="font-bold text-slate-800">{item.desc}</h4>
+                                    {(item.discount > 0 || item.tax > 0) && (
+                                        <div className="flex gap-2 text-xs font-bold mt-1">
+                                            {item.discount > 0 && <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">-{item.discount}%</span>}
+                                            {item.tax > 0 && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">IVA Included</span>}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-xs text-slate-400">Unitario</div>
+                                    <div className="font-bold text-slate-700">${formatCurrency(item.price)}</div>
+                                </div>
+                                <div className="w-32 text-right pl-4 border-l border-slate-100 ml-4">
+                                    <div className="text-xs text-pink-500 font-bold">Total</div>
+                                    <div className="font-bold text-slate-900">${formatCurrency(total)}</div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div>
+                <div className="bg-slate-900 text-white p-8 rounded-3xl flex items-center justify-between shadow-2xl relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-yellow-600 opacity-20"></div>
+                    <div className="relative z-10 w-1/2">
+                        {terms && (
+                            <>
+                                <h4 className="font-bold text-yellow-400 text-sm mb-2">Notas Importantes</h4>
+                                <p className="text-xs text-slate-300 line-clamp-3">{terms}</p>
+                            </>
+                        )}
+                    </div>
+                    <div className="relative z-10 text-right">
+                        <div className="text-sm text-slate-400">Total a Pagar</div>
+                        <div className="text-4xl font-black text-white tracking-tight">${formatCurrency(grandTotal)}</div>
+                        <div className="text-xs text-yellow-400 mt-1 uppercase tracking-wide font-bold">{company.nombre}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 const PrintableQuotation = ({
     company,
     client,
@@ -1012,7 +1440,8 @@ const PrintableQuotation = ({
     date,
     dueDate,
     includeIva,
-    isPdf = false
+    isPdf = false,
+    template = 'classic'
 }) => {
     // Calculate totals
     const subtotal = items.reduce((acc, item) => {
@@ -1022,7 +1451,6 @@ const PrintableQuotation = ({
     }, 0);
 
     const totalDiscount = items.reduce((acc, item) => acc + (item.qty * item.price * (item.discount / 100)), 0);
-
     const totalTax = includeIva ? subtotal * 0.16 : 0;
     const grandTotal = subtotal + totalTax;
 
@@ -1030,309 +1458,169 @@ const PrintableQuotation = ({
     const validDate = date || new Date().toLocaleDateString();
     const validDueDate = dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
-    return (
-        <div className="bg-white max-w-[900px] mx-auto text-gray-800 relative shadow-none" style={{ width: '900px', minHeight: isPdf ? 'auto' : '1100px' }}>
+    const props = { company, client, items, terms, folio, date: validDate, dueDate: validDueDate, subtotal, totalDiscount, totalTax, grandTotal, isPdf, formatCurrency };
 
-            {/* Top Gradient Bar */}
-            <div className="h-4 w-full bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600"></div>
-
-            <div className="pt-12 px-12 pb-0 flex flex-col h-full justify-between">
-                <div>
-                    {/* Header Section */}
-                    <div className="flex justify-between items-start mb-16">
-                        {/* Company Info (Left) */}
-                        <div className="flex gap-6 items-start w-7/12">
-                            {company.logo_uri ? (
-                                <img src={company.logo_uri} alt="Logo" className="max-w-32 max-h-32 object-contain rounded-md" />
-                            ) : (
-                                <div className="w-20 h-20 bg-blue-50 rounded-md flex items-center justify-center text-blue-500">
-                                    <Building2 className="w-10 h-10" />
-                                </div>
-                            )}
-                            <div>
-                                <h1 className="text-3xl font-bold text-slate-800 mb-1 leading-tight">
-                                    {company.nombre || "NOMBRE EMPRESA"}
-                                </h1>
-                                <div className="text-sm text-gray-500 space-y-1">
-                                    <p>{company.direccion || "Dirección de la empresa, Ciudad, Estado"}</p>
-                                    <p>{company.correo}</p>
-                                    <p>{company.telefono}</p>
-                                    {company.rfc && <p>RFC: {company.rfc}</p>}
-                                    {company.pagina_web && <p>{company.pagina_web}</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Quotation Details (Right) */}
-                        <div className="text-right w-5/12">
-                            <h2 className="text-2xl font-bold text-gray-700 uppercase tracking-widest mb-6 border-b pb-2">COTIZACIÓN</h2>
-                            <div className="text-sm">
-                                <div className="grid grid-cols-[100px_1fr] gap-y-2 text-right">
-                                    <span className="font-bold text-gray-500">Folio:</span>
-                                    <span className="font-bold text-gray-900">#{folio}</span>
-
-                                    <span className="font-bold text-gray-500">Fecha:</span>
-                                    <span className="text-gray-700">{validDate}</span>
-
-                                    <span className="font-bold text-gray-500">Vence:</span>
-                                    <span className="text-gray-700">{validDueDate}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Client Section */}
-                    <div className="mb-12 bg-slate-50 py-8 -mx-12 px-12 border-y border-gray-100/50">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">COTIZACIÓN PARA:</h3>
-                        <div className="text-gray-800">
-                            <p className="text-2xl font-bold text-slate-800 mb-1">{client.name || "Nombre del Cliente"}</p>
-                            <p className="text-gray-600">{client.address}</p>
-                            <div className="text-gray-500 mt-1 flex gap-4 text-sm">
-                                {client.phone && <span>Tel: {client.phone}</span>}
-                                {client.email && <span>Email: {client.email}</span>}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Items Table */}
-                    <div className="mb-12">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-gray-100">
-                                    <th className="text-left py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-16">Cant.</th>
-                                    <th className="text-left py-2 text-xs font-bold text-gray-400 uppercase tracking-widest">Descripción / Producto</th>
-                                    <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Precio Unit.</th>
-                                    <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Importe</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {items.map((item, idx) => {
-                                    const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
-                                    return (
-                                        <tr key={idx}>
-                                            <td className="py-2 text-sm font-medium text-gray-500 align-top">{item.qty}</td>
-                                            <td className="py-2 pr-4 align-top">
-                                                <p className="font-bold text-slate-800 text-sm mb-1">{item.desc}</p>
-                                                {(item.discount > 0 || item.tax > 0) && (
-                                                    <p className="text-xs text-blue-500">
-                                                        {item.discount > 0 && `Desc. ${item.discount}% `}
-                                                        {item.tax > 0 && `+ IVA ${item.tax}%`}
-                                                    </p>
-                                                )}
-                                            </td>
-                                            <td className="py-2 text-right text-sm text-gray-600 align-top">${formatCurrency(item.price)}</td>
-                                            <td className="py-2 text-right text-sm font-bold text-slate-700 align-top">${formatCurrency(total)}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Footer Section: Terms & Totals split */}
-                <div className="bg-slate-50 -mx-12 px-12 pt-10 pb-12 mt-auto border-t border-gray-100">
-                    <div className="flex items-start justify-between">
-                        {/* Left: Terms & Signature */}
-                        <div className="w-7/12 pr-12">
-                            {terms && (
-                                <div className="mb-12">
-                                    <h4 className="font-bold text-slate-700 text-sm mb-3">Términos y Condiciones</h4>
-                                    <div className="text-xs text-gray-500 leading-relaxed whitespace-pre-line">
-                                        {terms}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="mt-12 pt-4 border-t border-gray-100">
-                                <p className={`text-xs font-bold mb-1 uppercase tracking-wide ${isPdf ? 'text-blue-600' : 'bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text'}`}>Atentamente:</p>
-                                <p className={`text-lg font-bold ${isPdf ? 'text-blue-600' : 'bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text'}`}>{company.nombre || "Nombre de la Empresa"}</p>
-                            </div>
-                        </div>
-
-                        {/* Right: Totals */}
-                        <div className="w-5/12 pl-8">
-                            <div className="space-y-3 text-right">
-                                <div className="flex justify-between text-sm text-gray-500">
-                                    <span>Subtotal:</span>
-                                    <span className="font-medium text-gray-700">${formatCurrency(subtotal)}</span>
-                                </div>
-
-                                {totalDiscount > 0 && (
-                                    <div className="flex justify-between text-sm text-green-600">
-                                        <span>Descuento:</span>
-                                        <span>-${formatCurrency(totalDiscount)}</span>
-                                    </div>
-                                )}
-
-                                {totalTax > 0 && (
-                                    <div className="flex justify-between text-sm text-gray-500">
-                                        <span>IVA / Impuestos:</span>
-                                        <span className="font-medium text-gray-700">${formatCurrency(totalTax)}</span>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
-                                    <span className={`text-lg font-bold ${isPdf ? 'text-blue-600' : 'bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text'}`}>Total:</span>
-                                    <span className={`text-2xl font-bold ${isPdf ? 'text-blue-600' : 'bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text'}`}>${formatCurrency(grandTotal)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+    switch (template) {
+        case 'modern': return <TemplateModern {...props} />;
+        case 'formal': return <TemplateFormal {...props} />;
+        case 'creative': return <TemplateCreative {...props} />;
+        case 'classic':
+        default:
+            return <TemplateClassic {...props} />;
+    }
 };
 
 // --- SIDEBAR COMPONENT ---
-const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, darkMode, toggleDarkMode, companyLogo, mobileMode, toggleMobileMode, isOpen, onClose, onCreateNew }) => {
-    const [isHovered, setIsHovered] = useState(false);
+// --- SIDEBAR COMPONENT ---
 
-    // Mobile Overlay
-    if (mobileMode && !isOpen) return null;
+const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName }) => {
+    const isGlass = currentTheme === 'glass';
+    const isDark = currentTheme === 'dark';
 
-    // Width Logic: 
-    // Mobile: w-64 (fixed when open)
-    // Desktop: w-20 (collapsed) -> w-64 (hover)
-    const sidebarWidth = mobileMode ? 'w-64' : (isHovered ? 'w-64' : 'w-20');
+    const sidebarClasses = mobileMode
+        ? `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600'} ${isGlass ? 'text-amber-900' : 'text-white'} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
+        : `fixed inset-y-0 left-0 z-20 w-72 ${isGlass ? 'text-amber-900' : 'text-white'} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : 'bg-transparent'}`;
+
+    const textMuted = isGlass ? 'text-amber-700/70' : 'text-blue-200';
+    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : 'hover:text-white';
+    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : 'font-bold text-white';
+    const inactiveClass = isGlass ? 'text-amber-800' : 'text-blue-100';
 
     return (
         <>
             {/* Mobile Overlay */}
             {mobileMode && isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
-                    onClick={onClose}
-                />
+                <div className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={onClose} />
             )}
 
-            <div
-                className={`fixed left-0 top-0 h-full bg-white dark:bg-slate-900 shadow-xl z-50 transition-all duration-300 ease-in-out flex flex-col border-r border-slate-200 dark:border-slate-800 ${sidebarWidth} ${mobileMode && !isOpen ? '-translate-x-full' : 'translate-x-0'}`}
-                onMouseEnter={() => !mobileMode && setIsHovered(true)}
-                onMouseLeave={() => !mobileMode && setIsHovered(false)}
-            >
-                {/* Header / Logo */}
-                <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-slate-800 shrink-0 overflow-hidden whitespace-nowrap">
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30 mr-3">
-                        <Zap className="w-6 h-6" />
+            <div className={sidebarClasses}>
+                <div className="p-8 pb-4">
+                    <div className="flex items-center gap-3 mb-1">
+                        {companyLogo ? (
+                            <img src={companyLogo} alt="Company Logo" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : 'bg-white/20 text-white'}`}>
+                                <span className="font-bold text-xl">{companyName?.[0] || 'C'}</span>
+                            </div>
+                        )}
+                        <div>
+                            <h2 className="font-bold text-lg leading-tight">{companyName || 'Empresa'}</h2>
+                            <p className={`text-xs ${textMuted}`}>{userEmail}</p>
+                        </div>
                     </div>
-                    <span className={`font-bold text-lg tracking-tight transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                        SmartQuote
-                    </span>
-                    {mobileMode && (
-                        <button onClick={onClose} className="ml-auto p-1 text-slate-400">
-                            <X className="w-5 h-5" />
-                        </button>
-                    )}
                 </div>
 
-                {/* Navigation */}
-                <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3 overflow-x-hidden">
+                <div className="flex-1 overflow-y-auto px-8 py-4 space-y-8 scrollbar-hide">
+                    {/* Section: MAIN MENU */}
+                    <div>
+                        <h3 className={`text-[10px] font-bold tracking-widest mb-4 uppercase ${textMuted}`}>Menú</h3>
+                        <ul className="space-y-1">
+                            {/* Cotizaciones Dropdown */}
+                            <li>
+                                <div className="space-y-1">
+                                    <button
+                                        onClick={() => setActiveTab('cotizaciones-list')}
+                                        className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${['cotizaciones-list', 'cotizaciones-new'].includes(activeTab) ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <FileText className="w-4 h-4" />
+                                            <span>Cotizaciones</span>
+                                        </div>
+                                    </button>
 
-                    {/* Cotizaciones Group */}
-                    <div className="flex flex-col gap-1">
+
+                                </div>
+                            </li>
+
+                            {/* Clients */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('clientes')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'clientes' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <User className="w-4 h-4" />
+                                        <span>Clientes</span>
+                                    </div>
+                                </button>
+                            </li>
+
+                            {/* Contracts */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('contratos')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'contratos' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="w-4 h-4" />
+                                        <span>Contratos</span>
+                                    </div>
+                                </button>
+                            </li>
+
+                            {/* Products */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('items')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'items' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <ShoppingCart className="w-4 h-4" />
+                                        <span>Productos</span>
+                                    </div>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                </div>
+
+                <div className="p-8 pt-0 space-y-6">
+                    {/* Settings & Logout */}
+                    <div className="space-y-1">
                         <button
-                            onClick={() => setActiveTab('cotizaciones-list')}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
-                            ${activeTab.startsWith('cotizaciones')
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
-                                }`}
+                            onClick={() => setActiveTab('configuracion')}
+                            className={`w-full flex items-center gap-3 text-left py-2 px-3 transition-all ${activeTab === 'configuracion' ? activeClass : `${inactiveClass} ${textHover}`}`}
                         >
-                            <FileText className={`w-6 h-6 shrink-0 ${activeTab.startsWith('cotizaciones') ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
-                            <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                                Cotizaciones
-                            </span>
+                            <Settings className="w-4 h-4" />
+                            <span>Configuración</span>
                         </button>
-
-                        {/* Sub-item: Nueva Cotización (Only visible when expanded) */}
-                        {(!mobileMode && isHovered) || mobileMode ? (
-                            <button
-                                onClick={onCreateNew}
-                                className={`ml-12 text-sm text-left text-slate-500 hover:text-blue-600 transition-colors py-1 ${!mobileMode && !isHovered ? 'hidden' : 'block'}`}
-                            >
-                                • Nueva Cotización
-                            </button>
-                        ) : null}
-                    </div>
-
-                    <button
-                        onClick={() => setActiveTab('clientes')}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
-                        ${activeTab === 'clientes'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
-                            }`}
-                    >
-                        <Users className={`w-6 h-6 shrink-0 ${activeTab === 'clientes' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
-                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                            Clientes
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('contratos')}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
-                        ${activeTab === 'contratos'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
-                            }`}
-                    >
-                        <ScrollText className={`w-6 h-6 shrink-0 ${activeTab === 'contratos' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
-                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                            Contratos
-                        </span>
-                    </button>
-
-                    <div className="my-2 border-t border-slate-100 dark:border-slate-800 mx-2"></div>
-
-                    <button
-                        onClick={() => setActiveTab('configuracion')}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap
-                        ${activeTab === 'configuracion'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600'
-                            }`}
-                    >
-                        <Settings className={`w-6 h-6 shrink-0 ${activeTab === 'configuracion' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`} />
-                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                            Configuración
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={toggleDarkMode}
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600"
-                    >
-                        {darkMode ? <Sun className="w-6 h-6 shrink-0" /> : <Moon className="w-6 h-6 shrink-0" />}
-                        <span className={`transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                            Modo Oscuro
-                        </span>
-                    </button>
-
-                </div>
-
-                {/* Profile Card */}
-                <div className={`p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 shrink-0 overflow-hidden whitespace-nowrap transition-all duration-300 ${!mobileMode && !isHovered ? 'px-2' : 'px-4'}`}>
-                    <div className={`flex items-center gap-3 ${!mobileMode && !isHovered ? 'justify-center' : ''}`}>
-                        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 p-1 shrink-0 overflow-hidden">
-                            {companyLogo ? (
-                                <img src={companyLogo} className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                                <Building2 className="w-full h-full text-slate-400 p-1" />
-                            )}
-                        </div>
-                        <div className={`flex-1 min-w-0 transition-opacity duration-200 ${!mobileMode && !isHovered ? 'opacity-0 w-0 hidden' : 'opacity-100 block'}`}>
-                            <p className="text-sm font-bold truncate">Usuario</p>
-                            <p className="text-xs text-slate-500 truncate">{userEmail}</p>
-                        </div>
                         <button
                             onClick={onLogout}
-                            className={`text-slate-400 hover:text-red-500 transition-colors ${!mobileMode && !isHovered ? 'hidden' : 'block'}`}
-                            title="Cerrar Sesión"
+                            className={`w-full flex items-center gap-3 text-left py-2 px-3 transition-all ${inactiveClass} ${textHover}`}
                         >
-                            <LogOut className="w-5 h-5" />
+                            <LogOut className="w-4 h-4" />
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
+
+                    <div className={`flex items-center gap-4 text-xs font-bold uppercase tracking-wider ${textMuted}`}>
+                        <button className={`${textHover} transition-colors`}>Contacto</button>
+                        <button className={`${textHover} transition-colors`}>Changelog</button>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-md rounded-full p-1 flex items-center w-max">
+                        <button
+                            onClick={() => setTheme('blue')}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${currentTheme === 'blue' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${currentTheme === 'blue' ? 'bg-blue-600' : 'bg-transparent border border-blue-300'}`}></span>
+                            Azul
+                        </button>
+                        <button
+                            onClick={() => setTheme('glass')}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${currentTheme === 'glass' ? 'bg-white text-pink-500 shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${currentTheme === 'glass' ? 'bg-pink-500' : 'bg-transparent border border-blue-300'}`}></span>
+                            Claro
+                        </button>
+                        <button
+                            onClick={() => setTheme('dark')}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${currentTheme === 'dark' ? 'bg-slate-700 text-white shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${currentTheme === 'dark' ? 'bg-slate-400' : 'bg-transparent border border-blue-300'}`}></span>
+                            Oscuro
                         </button>
                     </div>
                 </div>
@@ -1423,18 +1711,27 @@ const App = () => {
 
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Dark Mode State
-    const [darkMode, setDarkMode] = useState(() => {
-        const saved = localStorage.getItem('darkMode');
-        return saved === 'true';
+    // Theme State
+    const [currentTheme, setCurrentTheme] = useState(() => {
+        return localStorage.getItem('theme') || 'blue';
     });
 
-    const toggleDarkMode = () => {
-        setDarkMode(prev => {
-            const newValue = !prev;
-            localStorage.setItem('darkMode', newValue);
-            return newValue;
-        });
+    const setTheme = (theme) => {
+        setCurrentTheme(theme);
+        localStorage.setItem('theme', theme);
+    };
+
+    // Helper for legacy dark mode support in child components
+    const isDark = currentTheme === 'dark';
+
+    // Template State
+    const [selectedTemplate, setSelectedTemplate] = useState(() => {
+        return localStorage.getItem('selectedTemplate') || 'classic';
+    });
+
+    const handleTemplateChange = (templateId) => {
+        setSelectedTemplate(templateId);
+        localStorage.setItem('selectedTemplate', templateId);
     };
 
     // NEW AUTH EFFECT
@@ -2304,7 +2601,7 @@ const App = () => {
 
         if (selectedContract) {
             return (
-                <div className={`w-full min-h-screen p-8 flex flex-col items-center justify-center ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
+                <div className={`w-full min-h-screen p-8 flex flex-col items-center justify-center ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold mb-4">Contrato de {selectedContract.toUpperCase()}</h2>
                         <p className="text-slate-500">Esta plantilla aún no está implementada.</p>
@@ -2322,10 +2619,10 @@ const App = () => {
         return (
             <div className="w-full px-4 md:px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-8">
-                    <h1 className={`text-3xl font-extrabold tracking-tight mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                    <h1 className={`text-3xl font-extrabold tracking-tight mb-2 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
                         Generar <span className="text-blue-600">Contratos</span>
                     </h1>
-                    <p className={`${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona el tipo de servicio para generar el contrato correspondiente.</p>
+                    <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona el tipo de servicio para generar el contrato correspondiente.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2333,14 +2630,14 @@ const App = () => {
                         <button
                             key={type.id}
                             onClick={() => setSelectedContract(type.id)}
-                            className={`relative overflow-hidden group p-8 rounded-2xl shadow-lg border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                            className={`relative overflow-hidden group p-8 rounded-2xl shadow-lg border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 text-left ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                         >
                             <div className={`absolute top-0 right-0 w-32 h-32 transform translate-x-8 -translate-y-8 rounded-full opacity-10 transition-transform group-hover:scale-110 ${type.color}`}></div>
                             <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 shadow-md ${type.color} text-white`}>
                                 <type.icon className="w-8 h-8" />
                             </div>
-                            <h3 className={`text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>{type.title}</h3>
-                            <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Generar contrato de servicio para {type.title.toLowerCase()}.</p>
+                            <h3 className={`text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{type.title}</h3>
+                            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Generar contrato de servicio para {type.title.toLowerCase()}.</p>
                         </button>
                     ))}
                 </div>
@@ -2351,17 +2648,28 @@ const App = () => {
     if (loadingAuth) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
     if (!session) return <Login />;
 
+    // Determine background class based on theme
+    const getBackgroundClass = () => {
+        switch (currentTheme) {
+            case 'dark': return 'bg-slate-900';
+            case 'glass': return 'bg-gradient-to-br from-orange-200 via-rose-200 to-amber-100';
+            case 'blue':
+            default: return 'bg-blue-600';
+        }
+    };
+
     return (
         <ErrorBoundary>
-            <div className={`min-h-screen ${darkMode ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
+            <div className={`min-h-screen flex ${getBackgroundClass()} ${currentTheme === 'dark' ? 'dark' : ''}`}>
                 <Sidebar
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     onLogout={handleLogout}
                     userEmail={session.user.email}
-                    darkMode={darkMode}
-                    toggleDarkMode={toggleDarkMode}
+                    currentTheme={currentTheme}
+                    setTheme={setTheme}
                     companyLogo={company.logo_uri}
+                    companyName={company.nombre}
                     mobileMode={mobileMode}
                     toggleMobileMode={toggleMobileMode}
                     isOpen={sidebarOpen}
@@ -2381,321 +2689,329 @@ const App = () => {
 
                 {/* Mobile Header */}
                 {mobileMode && (
-                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-blue-600 text-white border-blue-500'}`}>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setSidebarOpen(true)}
-                                className={`p-2 -ml-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-700'}`}
+                                className={`p-2 -ml-2 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-blue-500 text-white'}`}
                             >
                                 <span>Menu</span>
                             </button>
                             <div className="flex items-center gap-2">
-                                <span className={`font-bold text-lg tracking-tight ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>SmartQuote</span>
+                                <span className="font-bold text-lg tracking-tight">SmartQuote</span>
                             </div>
                         </div>
                     </div>
                 )}
 
-                <div className={`transition-all duration-300 ${mobileMode ? 'ml-0' : 'ml-20'} ${darkMode ? 'bg-slate-800' : ''}`}>
-                    {activeTab === 'cotizaciones-list' && (
-                        <QuotationList
-                            quotations={quotations}
-                            onCreateNew={() => {
-                                setClient({ name: '', phone: '', email: '', address: '' });
-                                setItems([]);
-                                setTerms(localStorage.getItem('defaultTerms') || '');
-                                setQuotationDate(new Date().toISOString().split('T')[0]);
-                                setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-                                setEditingQuotationId(null);
-                                fetchNextFolio(session.user.id);
-                                setActiveTab('cotizaciones-new');
-                            }}
-                            onView={viewQuotation}
-                            onEdit={loadQuotationForEdit}
-                            onDelete={deleteQuotation}
-                            darkMode={darkMode}
-                        />
-                    )}
+                {/* Main Content Area - Floating Card */}
+                <main className={`flex-1 transition-all duration-300 p-8 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'}`}>
+                    <div className={`w-full h-full rounded-[2.5rem] shadow-2xl overflow-y-auto px-8 py-10 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
 
-                    {activeTab === 'cotizaciones-new' && (
-                        <div className="w-full px-4 md:px-8 py-8 pb-20">
-                            {/* Header */}
-                            <div className={`flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-6 ${darkMode ? 'border-slate-600' : ''}`}>
-                                <div>
-                                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                                        Generador de <span className="text-blue-600">Cotizaciones</span>
-                                    </h1>
-                                    <p className={`mt-1 ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowPreview(true)}
-                                        className="btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
-                                        title="Vista Previa"
-                                    >
-                                        <Eye className="w-5 h-5" />
-                                        <span className="hidden sm:inline">Vista Previa</span>
-                                    </button>
-                                    <button
-                                        onClick={saveQuotation}
-                                        className="btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
-                                    >
-                                        <Download className="w-5 h-5" />
-                                        {editingQuotationId ? 'Actualizar' : 'Guardar'}
-                                    </button>
-                                    <button
-                                        onClick={generatePDF}
-                                        disabled={isGenerating}
-                                        className={`btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        <Download className="w-5 h-5" />
-                                        {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                                    </button>
-                                </div>
-                            </div>
+                        {activeTab === 'cotizaciones-list' && (
+                            <QuotationList
+                                quotations={quotations}
+                                onCreateNew={() => {
+                                    setClient({ name: '', phone: '', email: '', address: '' });
+                                    setItems([]);
+                                    setTerms(localStorage.getItem('defaultTerms') || '');
+                                    setQuotationDate(new Date().toISOString().split('T')[0]);
+                                    setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                                    setEditingQuotationId(null);
+                                    fetchNextFolio(session.user.id);
+                                    setActiveTab('cotizaciones-new');
+                                }}
+                                onView={viewQuotation}
+                                onEdit={loadQuotationForEdit}
+                                onDelete={deleteQuotation}
+                                darkMode={isDark}
+                            />
+                        )}
 
-                            {/* Full Width Editor */}
-                            <div className="w-full max-w-5xl mx-auto space-y-6">
-                                {/* Company Data Auto-filled */}
-                                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1">
-                                            {company.logo_uri ? (
-                                                <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
-                                            ) : (
-                                                <Building2 className="w-6 h-6" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-blue-900">Emisor: {company.nombre || 'Nombre de tu Empresa'}</p>
-                                            <p className="text-xs text-blue-700">Los datos se tomarán de tu configuración.</p>
-                                        </div>
+                        {activeTab === 'cotizaciones-new' && (
+                            <div className="w-full px-4 md:px-8 py-8 pb-20">
+                                {/* Header */}
+                                <div className={`flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-6 ${isDark ? 'border-slate-600' : ''}`}>
+                                    <div>
+                                        <h1 className={`text-3xl font-extrabold tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                                            Generador de <span className="text-blue-600">Cotizaciones</span>
+                                        </h1>
+                                        <p className={`mt-1 ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
                                     </div>
-                                    <button onClick={() => setActiveTab('configuracion')} className="text-blue-600 text-xs font-bold hover:underline">Editar</button>
-                                </div>
-
-                                {/* Quotation Details (Folio, Date, Expiration) */}
-                                <div className={`p-6 rounded-xl shadow-lg border text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                                    <h3 className={`font-bold flex items-center gap-2 mb-4 ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
-                                        <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div>
-                                            <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
-                                            <input
-                                                type="text"
-                                                value={folio}
-                                                readOnly
-                                                className={`w-full border rounded-lg p-3 text-sm font-bold text-center ${darkMode ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-slate-100 border-slate-200 text-blue-600'}`}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Cotización</label>
-                                            <input
-                                                type="date"
-                                                value={quotationDate}
-                                                onChange={(e) => setQuotationDate(e.target.value)}
-                                                className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block text-xs font-bold mb-1 uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Vencimiento</label>
-                                            <input
-                                                type="date"
-                                                value={expirationDate}
-                                                onChange={(e) => setExpirationDate(e.target.value)}
-                                                className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Client Section with Selector */}
-                                <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                                        <h3 className={`font-bold flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
-                                            <User className="w-5 h-5 text-gray-500" /> Datos del Cliente
-                                        </h3>
-                                        <select
-                                            className={`border rounded-lg text-sm block p-2 outline-none w-full md:w-64 focus:ring-blue-500 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
-                                            onChange={(e) => handleSelectClient(e.target.value)}
-                                            defaultValue=""
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setShowPreview(true)}
+                                            className="btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                                            title="Vista Previa"
                                         >
-                                            <option value="" disabled>Seleccionar Cliente Guardado...</option>
-                                            {savedClients.map(c => (
-                                                <option key={c.id} value={c.id}>{c.nombre} {c.empresa ? `(${c.empresa})` : ''}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Nombre del Cliente"
-                                            value={client.name}
-                                            onChange={(e) => updateClient('name', e.target.value)}
-                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Teléfono"
-                                            value={client.phone}
-                                            onChange={(e) => updateClient('phone', e.target.value)}
-                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                        />
-                                        <input
-                                            type="email"
-                                            placeholder="Correo Electrónico"
-                                            value={client.email}
-                                            onChange={(e) => updateClient('email', e.target.value)}
-                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Dirección / Ciudad"
-                                            value={client.address}
-                                            onChange={(e) => updateClient('address', e.target.value)}
-                                            className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${darkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                        />
-                                    </div>
-                                </div>
-                                <ItemsTable
-                                    items={items}
-                                    onAddItem={addItem}
-                                    onRemoveItem={removeItem}
-                                    onUpdateItem={updateItem}
-                                    darkMode={darkMode}
-                                />
-
-                                {/* Global IVA Switch */}
-                                <div className={`p-4 rounded-xl flex items-center justify-end gap-3 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-                                    <span className={`font-bold text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>Desglosar IVA (16%)</span>
-                                    <button
-                                        onClick={() => setIncludeIva(!includeIva)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${includeIva ? 'bg-blue-600' : 'bg-gray-200'}`}
-                                    >
-                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIva ? 'translate-x-6' : 'translate-x-1'}`} />
-                                    </button>
-                                </div>
-
-                                <TermsInput value={terms} onChange={setTerms} darkMode={darkMode} />
-                            </div>
-                        </div>
-                    )}
-                    {activeTab === 'clientes' && (
-                        <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={darkMode} />
-                    )}
-                    {activeTab === 'configuracion' && (
-                        <SettingsView
-                            companyData={company}
-                            onCompanyChange={updateCompany}
-                            onSave={saveCompanySettings}
-                            darkMode={darkMode}
-                        />
-                    )}
-                    {activeTab === 'contratos' && (
-                        <ContractsView darkMode={darkMode} company={company} />
-                    )}
-
-                    {/* Global Preview Modal */}
-                    {showPreview && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                            <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-                                {/* Modal Header */}
-                                <div className={`p-4 border-b flex justify-between items-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                                    <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>
-                                        <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
-                                    </h3>
-                                    <div className="flex items-center gap-2">
+                                            <Eye className="w-5 h-5" />
+                                            <span className="hidden sm:inline">Vista Previa</span>
+                                        </button>
+                                        <button
+                                            onClick={saveQuotation}
+                                            className="btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                                        >
+                                            <Download className="w-5 h-5" />
+                                            {editingQuotationId ? 'Actualizar' : 'Guardar'}
+                                        </button>
                                         <button
                                             onClick={generatePDF}
                                             disabled={isGenerating}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            className={`btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            <Download className="w-4 h-4" />
+                                            <Download className="w-5 h-5" />
                                             {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setShowPreview(false);
-                                                if (viewingQuotation) {
-                                                    setViewingQuotation(null);
-                                                }
-                                            }}
-                                            className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                                        >
-                                            <X className="w-6 h-6" />
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Modal Content - Scrollable */}
-                                <div className={`overflow-auto p-8 flex justify-center ${darkMode ? 'bg-slate-900/50' : 'bg-slate-200/50'}`} ref={previewContainerRef}>
-                                    <div
-                                        className="bg-white shadow-xl origin-top transition-transform duration-200"
-                                        style={{
-                                            transform: `scale(${previewScale})`,
-                                            width: '900px',
-                                            height: 'auto'
-                                        }}
-                                    >
-                                        <div ref={quotationRef}>
-                                            <PrintableQuotation
-                                                company={company}
-                                                client={viewingQuotation ? {
-                                                    name: viewingQuotation.nombre_cliente,
-                                                    phone: viewingQuotation.telefono,
-                                                    email: viewingQuotation.correo,
-                                                    address: ''
-                                                } : client}
-                                                items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
-                                                    id: index + 1,
-                                                    qty: art.cantidad,
-                                                    desc: art.articulo,
-                                                    price: art.precioUnitario,
-                                                    discount: art.descuento || 0,
-                                                    tax: 0
-                                                })) : items}
-                                                terms={viewingQuotation ? viewingQuotation.terminos : terms}
-                                                folio={viewingQuotation ? viewingQuotation.folio : folio}
-                                                includeIva={includeIva}
-                                            />
+                                {/* Full Width Editor */}
+                                <div className="w-full max-w-5xl mx-auto space-y-6">
+                                    {/* Company Data Auto-filled */}
+                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1">
+                                                {company.logo_uri ? (
+                                                    <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
+                                                ) : (
+                                                    <Building2 className="w-6 h-6" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-blue-900">Emisor: {company.nombre || 'Nombre de tu Empresa'}</p>
+                                                <p className="text-xs text-blue-700">Los datos se tomarán de tu configuración.</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setActiveTab('configuracion')} className="text-blue-600 text-xs font-bold hover:underline">Editar</button>
+                                    </div>
 
+                                    {/* Quotation Details (Folio, Date, Expiration) */}
+                                    <div className={`p-6 rounded-xl shadow-lg border text-left backdrop-blur-md ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/50'}`}>
+                                        <h3 className={`font-bold flex items-center gap-2 mb-4 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                                            <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div>
+                                                <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
+                                                <input
+                                                    type="text"
+                                                    value={folio}
+                                                    readOnly
+                                                    className={`w-full border rounded-lg p-3 text-sm font-bold text-center ${isDark ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-slate-100 border-slate-200 text-blue-600'}`}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Cotización</label>
+                                                <input
+                                                    type="date"
+                                                    value={quotationDate}
+                                                    onChange={(e) => setQuotationDate(e.target.value)}
+                                                    className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Vencimiento</label>
+                                                <input
+                                                    type="date"
+                                                    value={expirationDate}
+                                                    onChange={(e) => setExpirationDate(e.target.value)}
+                                                    className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Client Section with Selector */}
+                                    <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left backdrop-blur-md ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/50 border-white/40'}`}>
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                                            <h3 className={`font-bold flex items-center gap-2 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                                                <User className="w-5 h-5 text-gray-500" /> Datos del Cliente
+                                            </h3>
+                                            <select
+                                                className={`border rounded-lg text-sm block p-2 outline-none w-full md:w-64 focus:ring-blue-500 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
+                                                onChange={(e) => handleSelectClient(e.target.value)}
+                                                defaultValue=""
+                                            >
+                                                <option value="" disabled>Seleccionar Cliente Guardado...</option>
+                                                {savedClients.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.nombre} {c.empresa ? `(${c.empresa})` : ''}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <input
+                                                type="text"
+                                                placeholder="Nombre del Cliente"
+                                                value={client.name}
+                                                onChange={(e) => updateClient('name', e.target.value)}
+                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Teléfono"
+                                                value={client.phone}
+                                                onChange={(e) => updateClient('phone', e.target.value)}
+                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                            />
+                                            <input
+                                                type="email"
+                                                placeholder="Correo Electrónico"
+                                                value={client.email}
+                                                onChange={(e) => updateClient('email', e.target.value)}
+                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Dirección / Ciudad"
+                                                value={client.address}
+                                                onChange={(e) => updateClient('address', e.target.value)}
+                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <ItemsTable
+                                        items={items}
+                                        onAddItem={addItem}
+                                        onRemoveItem={removeItem}
+                                        onUpdateItem={updateItem}
+                                        darkMode={isDark}
+                                    />
+
+                                    {/* Global IVA Switch */}
+                                    <div className={`p-4 rounded-xl flex items-center justify-end gap-3 backdrop-blur-md ${isDark ? 'bg-slate-800/80' : 'bg-white/60'}`}>
+                                        <span className={`font-bold text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Desglosar IVA (16%)</span>
+                                        <button
+                                            onClick={() => setIncludeIva(!includeIva)}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${includeIva ? 'bg-blue-600' : 'bg-gray-200'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIva ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+
+                                    <TermsInput value={terms} onChange={setTerms} darkMode={isDark} />
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'clientes' && (
+                            <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
+                        )}
+                        {activeTab === 'configuracion' && (
+                            <SettingsView
+                                companyData={company}
+                                onCompanyChange={updateCompany}
+                                onSave={saveCompanySettings}
+                                darkMode={isDark}
+                                selectedTemplate={selectedTemplate}
+                                onTemplateChange={handleTemplateChange}
+                            />
+                        )}
+                        {activeTab === 'contratos' && (
+                            <ContractsView darkMode={isDark} company={company} />
+                        )}
+
+                        {/* Global Preview Modal */}
+                        {showPreview && (
+                            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                                <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+                                    {/* Modal Header */}
+                                    <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                        <h3 className={`font-bold text-lg flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                            <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={generatePDF}
+                                                disabled={isGenerating}
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowPreview(false);
+                                                    if (viewingQuotation) {
+                                                        setViewingQuotation(null);
+                                                    }
+                                                }}
+                                                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                                            >
+                                                <X className="w-6 h-6" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Modal Content - Scrollable */}
+                                    <div className={`overflow-auto p-8 flex justify-center ${isDark ? 'bg-slate-900/50' : 'bg-slate-200/50'}`} ref={previewContainerRef}>
+                                        <div
+                                            className="bg-white shadow-xl origin-top transition-transform duration-200"
+                                            style={{
+                                                transform: `scale(${previewScale})`,
+                                                width: '900px',
+                                                height: 'auto'
+                                            }}
+                                        >
+                                            <div ref={quotationRef}>
+                                                <PrintableQuotation
+                                                    company={company}
+                                                    client={viewingQuotation ? {
+                                                        name: viewingQuotation.nombre_cliente,
+                                                        phone: viewingQuotation.telefono,
+                                                        email: viewingQuotation.correo,
+                                                        address: ''
+                                                    } : client}
+                                                    items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
+                                                        id: index + 1,
+                                                        qty: art.cantidad,
+                                                        desc: art.articulo,
+                                                        price: art.precioUnitario,
+                                                        discount: art.descuento || 0,
+                                                        tax: 0
+                                                    })) : items}
+                                                    terms={viewingQuotation ? viewingQuotation.terminos : terms}
+                                                    folio={viewingQuotation ? viewingQuotation.folio : folio}
+                                                    includeIva={includeIva}
+                                                    template={selectedTemplate}
+                                                />
+
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Hidden Export Container - Global */}
-                <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
-                    <div id="quotation-pdf-export" style={{ width: '900px' }}>
-                        <PrintableQuotation
-                            company={company}
-                            client={viewingQuotation ? {
-                                name: viewingQuotation.nombre_cliente,
-                                phone: viewingQuotation.telefono,
-                                email: viewingQuotation.correo,
-                                address: ''
-                            } : client}
-                            items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
-                                id: index + 1,
-                                qty: art.cantidad,
-                                desc: art.articulo,
-                                price: art.precioUnitario,
-                                cost: art.costoEmpresa || 0,
-                                discount: art.descuento || 0,
-                                tax: 0
-                            })) : items}
-                            terms={viewingQuotation ? viewingQuotation.terminos : terms}
-                            folio={viewingQuotation ? viewingQuotation.folio : folio}
-                            includeIva={includeIva}
-                            isPdf={true}
-                        />
+                        )}
                     </div>
-                </div>
+
+                    {/* Hidden Export Container - Global */}
+                    <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+                        <div id="quotation-pdf-export" style={{ width: '900px' }}>
+                            <PrintableQuotation
+                                company={company}
+                                client={viewingQuotation ? {
+                                    name: viewingQuotation.nombre_cliente,
+                                    phone: viewingQuotation.telefono,
+                                    email: viewingQuotation.correo,
+                                    address: ''
+                                } : client}
+                                items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
+                                    id: index + 1,
+                                    qty: art.cantidad,
+                                    desc: art.articulo,
+                                    price: art.precioUnitario,
+                                    cost: art.costoEmpresa || 0,
+                                    discount: art.descuento || 0,
+                                    tax: 0
+                                })) : items}
+                                terms={viewingQuotation ? viewingQuotation.terminos : terms}
+                                folio={viewingQuotation ? viewingQuotation.folio : folio}
+                                includeIva={includeIva}
+                                isPdf={true}
+                                template={selectedTemplate}
+                            />
+                        </div>
+                    </div>
+                </main>
             </div>
         </ErrorBoundary>
     );

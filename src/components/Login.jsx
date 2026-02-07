@@ -38,15 +38,24 @@ const Login = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100">
+        <div className="min-h-screen bg-gradient-modern flex items-center justify-center p-4">
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-center">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mx-auto mb-4 text-white">
-                        <Zap className="w-8 h-8" />
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mx-auto mb-4 text-white overflow-hidden">
+                        <img
+                            src="logo.png"
+                            alt="Logo"
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.parentNode.innerHTML = '<svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>'; // Fallback to Zap icon SVG if image fails
+                            }}
+                        />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-1">SmartQuote</h2>
-                    <p className="text-blue-100 text-sm">Tu aliado en cotizaciones profesionales</p>
+                    <h2 className="text-2xl font-bold text-white mb-1">CotizaApp Web</h2>
+                    <p className="text-blue-100 text-sm">SOLUCIONES A TU MEDIDA</p>
                 </div>
 
                 {/* Form */}
