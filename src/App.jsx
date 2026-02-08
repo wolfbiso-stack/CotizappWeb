@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -54,9 +54,41 @@ const formatCurrency = (amount) => {
     });
 };
 
+// Utility function to format dates that might be in text format (DD/MM/YYYY)
+const formatServiceDate = (dateString) => {
+    if (!dateString) return '-';
+    // Check if it's already a valid date string for parsing (e.g. ISO)
+    let date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString();
+    }
+    // Try parsing DD/MM/YYYY
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+        const [day, month, year] = parts;
+        date = new Date(`${year}-${month}-${day}`);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString();
+        }
+    }
+    return dateString; // Fallback to original string
+};
+
 // --- COMPONENTS ---
 
 const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onShare, darkMode }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredQuotations = quotations.filter(q => {
+        const search = searchTerm.toLowerCase();
+        return (
+            q.folio?.toString().includes(search) ||
+            q.nombre_cliente?.toLowerCase().includes(search) ||
+            q.empresa_cliente?.toLowerCase().includes(search) ||
+            q.numero_cliente?.toLowerCase().includes(search)
+        );
+    });
+
     return (
         <div className="w-full px-4 md:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
@@ -72,7 +104,21 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
                 </button>
             </div>
 
-            {quotations.length === 0 ? (
+            {/* Search Bar */}
+            <div className="mb-6">
+                <div className="relative">
+                    <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${darkMode ? 'text-slate-400' : 'text-slate-400'}`} />
+                    <input
+                        type="text"
+                        placeholder="Buscar por folio, nombre, empresa o teléfono..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm`}
+                    />
+                </div>
+            </div>
+
+            {filteredQuotations.length === 0 ? (
                 <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-slate-600 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
                         <FileText className="w-10 h-10" />
@@ -101,7 +147,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                            {quotations.map((quotation) => (
+                            {filteredQuotations.map((quotation) => (
                                 <tr key={quotation.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-bold text-blue-600">#{quotation.folio}</span>
@@ -449,6 +495,7 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
     const [selectedClient, setSelectedClient] = useState(null);
     const [editingClientId, setEditingClientId] = useState(null);
     const [sortOrder, setSortOrder] = useState('date'); // 'date' | 'alpha'
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchClients = async () => {
         try {
@@ -572,6 +619,16 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
+    const filteredClients = sortedClients.filter(c => {
+        const search = searchTerm.toLowerCase();
+        return (
+            c.nombre?.toLowerCase().includes(search) ||
+            c.empresa?.toLowerCase().includes(search) ||
+            c.correo?.toLowerCase().includes(search) ||
+            c.numero?.toLowerCase().includes(search)
+        );
+    });
+
     return (
         <div className="w-full px-4 md:px-8 py-8 relative">
             <div className="flex justify-between items-center mb-8">
@@ -587,8 +644,22 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
                 </button>
             </div>
 
+            {/* Search Bar */}
+            <div className="mb-6">
+                <div className="relative">
+                    <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${darkMode ? 'text-slate-400' : 'text-slate-400'}`} />
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, empresa, correo o teléfono..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm`}
+                    />
+                </div>
+            </div>
+
             {/* List View */}
-            {clients.length === 0 ? (
+            {filteredClients.length === 0 ? (
                 <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-slate-600 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
                         <User className="w-10 h-10" />
@@ -621,7 +692,7 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
 
                     {/* List Items */}
                     <div className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                        {sortedClients.map(client => (
+                        {filteredClients.map((client) => (
                             <div key={client.id} className={`grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center transition-colors group ${darkMode ? 'hover:bg-slate-600' : 'hover:bg-blue-50/30'}`}>
                                 {/* Name & Company */}
                                 <div className="col-span-5 flex items-center gap-4">
@@ -1470,6 +1541,760 @@ const PrintableQuotation = ({
     }
 };
 
+// --- CONTACTO & CHANGELOG PAGES ---
+
+const ContactoView = ({ darkMode }) => {
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <h1 className={`text-3xl font-extrabold tracking-tight mb-8 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                <span className="text-blue-600">Contacto</span>
+            </h1>
+            <div className={`rounded-xl shadow-lg border p-12 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <p className={`text-center ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                    Página de contacto en construcción...
+                </p>
+            </div>
+        </div>
+    );
+};
+
+const ChangelogView = ({ darkMode }) => {
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <h1 className={`text-3xl font-extrabold tracking-tight mb-8 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                <span className="text-blue-600">Changelog</span>
+            </h1>
+            <div className={`rounded-xl shadow-lg border p-12 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <p className={`text-center ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                    Registro de cambios en construcción...
+                </p>
+            </div>
+        </div>
+    );
+};
+
+
+const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
+    const fetchServices = async () => {
+        setRefreshing(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicios_cctv')
+                .select('*')
+                .order('servicio_fecha', { ascending: false });
+
+            if (error) throw error;
+            setServices(data || []);
+        } catch (error) {
+            console.error('Error loading CCTV services:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const handleDelete = async (numero) => {
+        if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
+        try {
+            const { error } = await supabase
+                .from('servicios_cctv')
+                .delete()
+                .eq('servicio_numero', numero);
+
+            if (error) throw error;
+            fetchServices();
+            alert('Servicio eliminado correctamente');
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Error al eliminar servicio');
+        }
+    };
+
+    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-4">
+                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicios <span className="text-blue-600">CCTV</span>
+                    </h1>
+                    <button
+                        onClick={fetchServices}
+                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        title="Actualizar lista"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
+                    </button>
+                </div>
+                <button
+                    onClick={() => onNavigate('servicios')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${darkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                >
+                    <ArrowLeft className="w-5 h-5" /> Regresar
+                </button>
+            </div>
+
+            <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                {services.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500">
+                        No hay servicios de CCTV registrados.
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                            <tr>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>No. Servicio</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                            {services.map((service) => (
+                                <tr key={service.servicio_numero} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="text-sm font-bold text-blue-600">#{service.servicio_numero}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.servicio_fecha)}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {service.pagado && service.entregado ? (
+                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
+                                                    Pagado y Entregado
+                                                </span>
+                                            ) : (
+                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
+                                                    Pendiente de Entregar/Pagar
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={() => onViewService(service)}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Ver Servicio"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onNavigate('services-cctv-edit')}
+                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                title="Editar Servicio"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(service.servicio_numero)}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Eliminar Servicio"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const CCTVServiceView = ({ service, onBack, darkMode }) => {
+    if (!service) return null;
+
+    const [photos, setPhotos] = useState([]);
+    const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    useEffect(() => {
+        if (service?.id) fetchPhotos();
+    }, [service]);
+
+    const fetchPhotos = async () => {
+        setLoadingPhotos(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicio_fotos')
+                .select('*')
+                .eq('servicio_id', service.id)
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            setPhotos(data || []);
+        } catch (error) {
+            console.error('Error fetching photos:', error);
+        } finally {
+            setLoadingPhotos(false);
+        }
+    };
+
+    const SectionCard = ({ title, icon: Icon, children, color = "blue" }) => (
+        <div className={`p-6 rounded-2xl shadow-lg border backdrop-blur-md transition-all hover:shadow-xl ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/40'}`}>
+            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                <div className={`p-2 rounded-lg ${darkMode ? `bg-${color}-500/20 text-${color}-400` : `bg-${color}-100 text-${color}-600`}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+                {title}
+            </h3>
+            <div className="space-y-3">
+                {children}
+            </div>
+        </div>
+    );
+
+    const InfoRow = ({ label, value, isMonospaced = false }) => (
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-1 border-b border-dashed last:border-0 border-slate-200/50">
+            <span className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
+            <span className={`font-medium text-sm ${isMonospaced ? 'font-mono' : ''} ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{value || '-'}</span>
+        </div>
+    );
+
+    const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8 animate-in fade-in zoom-in duration-300">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
+                    <h1 className={`text-3xl font-extrabold tracking-tight flex items-center gap-3 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicio <span className="text-blue-600">#{service.servicio_numero}</span>
+                    </h1>
+                    <p className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {service.tipo_servicio} • Realizado el {formatServiceDate(service.servicio_fecha)} • {service.servicio_hora || 'Hora no especificada'}
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.pagado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {service.pagado ? 'Pagado' : 'Pendiente Pago'}
+                    </div>
+                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.entregado ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {service.entregado ? 'Entregado' : 'En Proceso'}
+                    </div>
+                    <button
+                        onClick={onBack}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors shadow-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Regresar
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 1. Cliente */}
+                <SectionCard title="Información del Cliente" icon={User} color="blue">
+                    <InfoRow label="Nombre" value={service.cliente_nombre} />
+                    <InfoRow label="Teléfono" value={service.cliente_telefono} />
+                    <InfoRow label="Correo" value={service.cliente_correo} />
+                    <InfoRow label="Dirección" value={service.cliente_direccion} />
+                </SectionCard>
+
+                {/* 2. Dispositivos */}
+                <SectionCard title="Detalles del Equipo" icon={Video} color="indigo">
+                    <InfoRow label="Marca Principal" value={service.marca_principal} />
+                    <InfoRow label="Tipo Grabador" value={service.tipo_grabador} />
+                    <InfoRow label="Cámaras" value={service.tipos_camaras?.join(', ')} />
+                    <InfoRow label="IP Grabador" value={service.ip_grabador} isMonospaced />
+                    <InfoRow label="Dominio / P2P" value={service.dominio_ddns || service.id_nube_p2p} isMonospaced />
+                </SectionCard>
+
+                {/* 3. Credenciales (Blur sensitive data logic could go here) */}
+                <SectionCard title="Acceso y Credenciales" icon={Settings} color="slate">
+                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-2">
+                        <p className="text-xs text-yellow-600 font-bold mb-1">⚠️ Información Confidencial</p>
+                    </div>
+                    <InfoRow label="Usuario" value={service.usuario} isMonospaced />
+                    <InfoRow label="Contraseña" value={service.contrasena} isMonospaced />
+                </SectionCard>
+
+                {/* 4. Financiero */}
+                <SectionCard title="Desglose Financiero" icon={ShoppingCart} color="green">
+                    <InfoRow label="Mano de Obra" value={formatMoney(service.mano_obra)} />
+                    <InfoRow label="Materiales" value={formatMoney(service.materiales)} />
+                    <div className="my-2 border-t border-slate-300/50"></div>
+                    <InfoRow label="Total" value={formatMoney(service.total)} />
+                    <InfoRow label="Anticipo" value={formatMoney(service.anticipo)} />
+                    <div className="p-2 rounded bg-blue-500/10 mt-2">
+                        <div className="flex justify-between items-center font-bold text-blue-600">
+                            <span>Saldo Pendiente</span>
+                            <span>{formatMoney(service.saldo)}</span>
+                        </div>
+                    </div>
+                </SectionCard>
+
+                {/* 5. Garantía */}
+                <SectionCard title="Garantía" icon={Check} color="teal">
+                    <InfoRow label="Estado" value={service.garantia_aplica ? 'Aplica Garantía' : 'Sin Garantía'} />
+                    {service.garantia_aplica && (
+                        <>
+                            <InfoRow label="Inicio" value={formatServiceDate(service.garantia_fecha_inicio)} />
+                            <InfoRow label="Vencimiento" value={formatServiceDate(service.garantia_fecha_vencimiento)} />
+                            <div className="mt-2 text-xs italic opacity-70">
+                                {service.garantia_detalles}
+                            </div>
+                        </>
+                    )}
+                </SectionCard>
+
+                {/* 6. Técnico */}
+                <SectionCard title="Técnico Responsable" icon={Users} color="orange">
+                    <InfoRow label="Nombre" value={service.tecnico_nombre} />
+                    <InfoRow label="Celular" value={service.tecnico_celular} />
+                    {/* Firma Tecnico */}
+                </SectionCard>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {service.firma_tecnico_path && (
+                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
+                        <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
+                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma del Técnico</p>
+                    </div>
+                )}
+
+                {service.firma_cliente_path && (
+                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
+                        <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
+                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma de Conformidad</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Photo Gallery */}
+            <div className="mt-8">
+                <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                    <Image className="w-5 h-5 text-blue-500" /> Evidencia Fotográfica
+                </h3>
+                {loadingPhotos ? (
+                    <div className="flex justify-center p-8">
+                        <Loader className="animate-spin w-6 h-6 text-blue-600" />
+                    </div>
+                ) : photos.length === 0 ? (
+                    <div className={`p-8 rounded-xl border text-center ${darkMode ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                        No hay fotografías registradas para este servicio.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {photos.map((photo) => (
+                            <div key={photo.id} className={`group relative aspect-video rounded-xl overflow-hidden border shadow-sm transition-all hover:shadow-md ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                                <img
+                                    src={photo.uri}
+                                    alt={`Evidencia ${photo.id}`}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                    <button
+                                        onClick={() => window.open(photo.uri, '_blank')}
+                                        className="bg-white/90 text-slate-800 p-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all"
+                                        title="Ver imagen completa"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const PCList = ({ darkMode, onNavigate, onViewService }) => {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
+    const fetchServices = async () => {
+        setRefreshing(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicios_pc')
+                .select('*')
+                .order('fecha', { ascending: false });
+
+            if (error) throw error;
+            setServices(data || []);
+        } catch (error) {
+            console.error('Error loading PC services:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
+        try {
+            const { error } = await supabase
+                .from('servicios_pc')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            fetchServices();
+            alert('Servicio eliminado correctamente');
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Error al eliminar servicio');
+        }
+    };
+
+    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-4">
+                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicios <span className="text-blue-600">PC</span>
+                    </h1>
+                    <button
+                        onClick={fetchServices}
+                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        title="Actualizar lista"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
+                    </button>
+                </div>
+                <button
+                    onClick={() => onNavigate('servicios')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${darkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                >
+                    <ArrowLeft className="w-5 h-5" /> Regresar
+                </button>
+            </div>
+
+            <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                {services.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500">
+                        No hay servicios de PC registrados.
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                            <tr>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>No. Servicio</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                            {services.map((service) => (
+                                <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="text-sm font-bold text-blue-600">#{service.orden_numero}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {service.pagado && service.entregado ? (
+                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
+                                                    Pagado y Entregado
+                                                </span>
+                                            ) : (
+                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
+                                                    Pendiente de Entregar/Pagar
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={() => onViewService(service)}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Ver Servicio"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                title="Editar Servicio"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(service.id)}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Eliminar Servicio"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const PCServiceView = ({ service, onBack, darkMode }) => {
+    if (!service) return null;
+
+    const [photos, setPhotos] = useState([]);
+    const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    useEffect(() => {
+        if (service?.id) fetchPhotos();
+    }, [service]);
+
+    const fetchPhotos = async () => {
+        setLoadingPhotos(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicio_fotos')
+                .select('*')
+                .eq('servicio_id', service.id)
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            setPhotos(data || []);
+        } catch (error) {
+            console.error('Error fetching photos:', error);
+        } finally {
+            setLoadingPhotos(false);
+        }
+    };
+
+    const SectionCard = ({ title, icon: Icon, children, color = "blue" }) => (
+        <div className={`p-6 rounded-2xl shadow-lg border backdrop-blur-md transition-all hover:shadow-xl ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/40'}`}>
+            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                <div className={`p-2 rounded-lg ${darkMode ? `bg-${color}-500/20 text-${color}-400` : `bg-${color}-100 text-${color}-600`}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+                {title}
+            </h3>
+            <div className="space-y-3">
+                {children}
+            </div>
+        </div>
+    );
+
+    const InfoRow = ({ label, value, isMonospaced = false }) => (
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-1 border-b border-dashed last:border-0 border-slate-200/50">
+            <span className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
+            <span className={`font-medium text-sm ${isMonospaced ? 'font-mono' : ''} ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{value || '-'}</span>
+        </div>
+    );
+
+    const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8 animate-in fade-in zoom-in duration-300">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
+                    <h1 className={`text-3xl font-extrabold tracking-tight flex items-center gap-3 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicio PC <span className="text-blue-600">#{service.orden_numero}</span>
+                    </h1>
+                    <p className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Recibido el {formatServiceDate(service.fecha)}
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.pagado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {service.pagado ? 'Pagado' : 'Pendiente Pago'}
+                    </div>
+                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.entregado ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {service.entregado ? 'Entregado' : 'En Proceso'}
+                    </div>
+                    <button
+                        onClick={onBack}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors shadow-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Regresar
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 1. Cliente */}
+                <SectionCard title="Información del Cliente" icon={User} color="blue">
+                    <InfoRow label="Nombre" value={service.cliente_nombre} />
+                    <InfoRow label="Teléfono" value={service.cliente_telefono} />
+                </SectionCard>
+
+                {/* 2. Equipo */}
+                <SectionCard title="Detalles del Equipo" icon={Monitor} color="indigo">
+                    <InfoRow label="Tipo" value={service.equipo_tipo} />
+                    <InfoRow label="Modelo" value={service.equipo_modelo} />
+                    <InfoRow label="Serie" value={service.equipo_serie} isMonospaced />
+                    <div className="pt-2">
+                        <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Problema Reportado</span>
+                        <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.problema_reportado}</p>
+                    </div>
+                </SectionCard>
+
+                {/* 3. Diagnóstico y Trabajo */}
+                <SectionCard title="Diagnóstico y Reparación" icon={Settings} color="slate">
+                    <div className="mb-3">
+                        <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Diagnóstico Técnico</span>
+                        <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.diagnostico_tecnico || 'Pendiente'}</p>
+                    </div>
+                    {service.repuestos_descripcion && (
+                        <div className="mb-3">
+                            <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Repuestos Utilizados</span>
+                            <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.repuestos_descripcion}</p>
+                        </div>
+                    )}
+                    {/* Trabajo Realizado (Handling JSON simpler for now) */}
+                    {/* For simply displaying if JSON is complex, just show if present or map if simple array */}
+                </SectionCard>
+
+                {/* 4. Financiero */}
+                <SectionCard title="Desglose Financiero" icon={ShoppingCart} color="green">
+                    <InfoRow label="Mano de Obra" value={formatMoney(service.mano_obra)} />
+                    <InfoRow label="Costo Repuestos" value={formatMoney(service.repuestos_costo)} />
+                    <InfoRow label="Subtotal" value={formatMoney(service.subtotal)} />
+                    {service.incluir_iva && <InfoRow label="IVA (16%)" value={formatMoney(service.iva)} />}
+                    <div className="my-2 border-t border-slate-300/50"></div>
+                    <InfoRow label="Total" value={formatMoney(service.total)} />
+                    <InfoRow label="Anticipo" value={formatMoney(service.anticipo)} />
+                    <div className="p-2 rounded bg-blue-500/10 mt-2">
+                        <div className="flex justify-between items-center font-bold text-blue-600">
+                            <span>Saldo Pendiente</span>
+                            <span>{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
+                        </div>
+                    </div>
+                </SectionCard>
+
+                {/* 5. Técnico y Obs */}
+                <SectionCard title="Información Adicional" icon={Users} color="orange">
+                    <InfoRow label="Técnico Responsable" value={service.tecnico_nombre} />
+                    <div className="mt-3">
+                        <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Observaciones</span>
+                        <p className={`text-sm italic ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{service.observaciones || 'Ninguna observación'}</p>
+                    </div>
+                </SectionCard>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {service.firma_tecnico_path && (
+                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
+                        <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
+                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma del Técnico</p>
+                    </div>
+                )}
+
+                {service.firma_cliente_path && (
+                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
+                        <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
+                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma de Conformidad</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Photo Gallery */}
+            <div className="mt-8">
+                <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                    <Image className="w-5 h-5 text-blue-500" /> Evidencia Fotográfica
+                </h3>
+                {loadingPhotos ? (
+                    <div className="flex justify-center p-8">
+                        <Loader className="animate-spin w-6 h-6 text-blue-600" />
+                    </div>
+                ) : photos.length === 0 ? (
+                    <div className={`p-8 rounded-xl border text-center ${darkMode ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                        No hay fotografías registradas para este servicio.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {photos.map((photo) => (
+                            <div key={photo.id} className={`group relative aspect-video rounded-xl overflow-hidden border shadow-sm transition-all hover:shadow-md ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                                <img
+                                    src={photo.uri}
+                                    alt={`Evidencia ${photo.id}`}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                    <button
+                                        onClick={() => window.open(photo.uri, '_blank')}
+                                        className="bg-white/90 text-slate-800 p-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all"
+                                        title="Ver imagen completa"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const ServiciosView = ({ darkMode, onNavigate }) => {
+    const services = [
+        { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        { id: 'pc', title: 'PC', icon: Monitor, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+        { id: 'celulares', title: 'Celulares', icon: Smartphone, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+        { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+        { id: 'redes', title: 'Redes', icon: Globe, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+    ];
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <h1 className={`text-3xl font-extrabold tracking-tight mb-8 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                Gestión de <span className="text-blue-600">Servicios</span>
+            </h1>
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6`}>
+                {services.map((service) => (
+                    <button
+                        key={service.id}
+                        className={`p-6 rounded-2xl shadow-lg border transition-all hover:-translate-y-1 hover:shadow-xl text-left ${darkMode ? 'bg-slate-800 border-slate-700 hover:bg-slate-750' : 'bg-white border-slate-100 hover:border-blue-200'}`}
+                        onClick={() => {
+                            if (service.id === 'cctv') {
+                                onNavigate('services-cctv-list');
+                            } else if (service.id === 'pc') {
+                                onNavigate('services-pc-list');
+                            } else {
+                                alert(`Navegar a ${service.title} (Pendiente)`);
+                            }
+                        }}
+                    >
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${service.bg} ${service.color}`}>
+                            <service.icon className="w-8 h-8" />
+                        </div>
+                        <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>{service.title}</h3>
+                        <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Administrar servicios de {service.title}...</p>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 // --- SIDEBAR COMPONENT ---
 // --- SIDEBAR COMPONENT ---
 
@@ -1545,6 +2370,19 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, s
                                 </button>
                             </li>
 
+                            {/* Servicios */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('servicios')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'servicios' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Settings className="w-4 h-4" />
+                                        <span>Servicios</span>
+                                    </div>
+                                </button>
+                            </li>
+
                             {/* Contracts */}
                             <li>
                                 <button
@@ -1596,30 +2434,30 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, s
                     </div>
 
                     <div className={`flex items-center gap-4 text-xs font-bold uppercase tracking-wider ${textMuted}`}>
-                        <button className={`${textHover} transition-colors`}>Contacto</button>
-                        <button className={`${textHover} transition-colors`}>Changelog</button>
+                        <button onClick={() => setActiveTab('contacto')} className={`${textHover} transition-colors`}>Contacto</button>
+                        <button onClick={() => setActiveTab('changelog')} className={`${textHover} transition-colors`}>Changelog</button>
                     </div>
 
                     <div className="bg-white/10 backdrop-blur-md rounded-full p-1 flex items-center w-max">
                         <button
                             onClick={() => setTheme('blue')}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${currentTheme === 'blue' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'blue' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
                         >
                             <span className={`w-2 h-2 rounded-full ${currentTheme === 'blue' ? 'bg-blue-600' : 'bg-transparent border border-blue-300'}`}></span>
                             Azul
                         </button>
                         <button
                             onClick={() => setTheme('glass')}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${currentTheme === 'glass' ? 'bg-white text-pink-500 shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'glass' ? 'bg-white text-amber-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
                         >
-                            <span className={`w-2 h-2 rounded-full ${currentTheme === 'glass' ? 'bg-pink-500' : 'bg-transparent border border-blue-300'}`}></span>
+                            <Sun className={`w-3 h-3 ${currentTheme === 'glass' ? 'text-amber-600' : ''}`} />
                             Claro
                         </button>
                         <button
                             onClick={() => setTheme('dark')}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${currentTheme === 'dark' ? 'bg-slate-700 text-white shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'dark' ? 'bg-slate-700 text-white shadow-sm' : 'text-blue-200 hover:text-white'}`}
                         >
-                            <span className={`w-2 h-2 rounded-full ${currentTheme === 'dark' ? 'bg-slate-400' : 'bg-transparent border border-blue-300'}`}></span>
+                            <Moon className={`w-3 h-3 ${currentTheme === 'dark' ? 'text-slate-300' : ''}`} />
                             Oscuro
                         </button>
                     </div>
@@ -1728,6 +2566,19 @@ const App = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(() => {
         return localStorage.getItem('selectedTemplate') || 'classic';
     });
+
+    // Selected Service for Details View
+    const [selectedService, setSelectedService] = useState(null);
+
+    const handleViewService = (service) => {
+        setSelectedService(service);
+        setActiveTab('services-cctv-view');
+    };
+
+    const handleViewPCService = (service) => {
+        setSelectedService(service);
+        setActiveTab('services-pc-view');
+    };
 
     const handleTemplateChange = (templateId) => {
         setSelectedTemplate(templateId);
@@ -2646,7 +3497,7 @@ const App = () => {
     };
 
     if (loadingAuth) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
-    if (!session) return <Login />;
+    if (!session) return <Login currentTheme={currentTheme} setTheme={setTheme} />;
 
     // Determine background class based on theme
     const getBackgroundClass = () => {
@@ -2704,9 +3555,8 @@ const App = () => {
                     </div>
                 )}
 
-                {/* Main Content Area - Floating Card */}
                 <main className={`flex-1 transition-all duration-300 p-8 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'}`}>
-                    <div className={`w-full h-full rounded-[2.5rem] shadow-2xl overflow-y-auto px-8 py-10 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+                    <div className={`w-full h-full rounded-[2.5rem] shadow-2xl overflow-y-auto px-8 py-10 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'}`}>
 
                         {activeTab === 'cotizaciones-list' && (
                             <QuotationList
@@ -2906,6 +3756,11 @@ const App = () => {
                                 onTemplateChange={handleTemplateChange}
                             />
                         )}
+                        {activeTab === 'servicios' && <ServiciosView darkMode={isDark} onNavigate={setActiveTab} />}
+                        {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
+                        {activeTab === 'services-cctv-view' && <CCTVServiceView service={selectedService} onBack={() => setActiveTab('services-cctv-list')} darkMode={isDark} />}
+                        {activeTab === 'services-pc-list' && <PCList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewPCService} />}
+                        {activeTab === 'services-pc-view' && <PCServiceView service={selectedService} onBack={() => setActiveTab('services-pc-list')} darkMode={isDark} />}
                         {activeTab === 'contratos' && (
                             <ContractsView darkMode={isDark} company={company} />
                         )}
