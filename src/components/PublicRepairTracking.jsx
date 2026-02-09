@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { getProgressFromStatus, STATUS_OPTIONS } from '../utils/statusMapper';
-import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench } from 'lucide-react';
+import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock } from 'lucide-react';
 
 const PublicRepairTracking = () => {
     const token = window.location.pathname.split('/track/')[1];
@@ -24,7 +24,6 @@ const PublicRepairTracking = () => {
         try {
             setLoading(true);
 
-            // Fetch service
             const { data: serviceData, error: serviceError } = await supabase
                 .from('servicios_pc')
                 .select('*, user_id')
@@ -36,18 +35,15 @@ const PublicRepairTracking = () => {
 
             setService(serviceData);
 
-            // Fetch company data using user_id from service
             try {
                 if (serviceData.user_id) {
-                    const { data: companyData, error: companyError } = await supabase
+                    const { data: companyData } = await supabase
                         .from('empresas')
                         .select('*')
                         .eq('user_id', serviceData.user_id)
                         .single();
 
-                    if (!companyError && companyData) {
-                        setCompany(companyData);
-                    }
+                    if (companyData) setCompany(companyData);
                 }
             } catch (err) {
                 console.log('No company data available');
@@ -69,9 +65,9 @@ const PublicRepairTracking = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 text-center">
-                    <Loader className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-3" />
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                <div className="text-center">
+                    <Loader className="w-10 h-10 animate-spin text-slate-400 mx-auto mb-3" />
                     <p className="text-slate-600 text-sm font-medium">Cargando...</p>
                 </div>
             </div>
@@ -80,14 +76,14 @@ const PublicRepairTracking = () => {
 
     if (error || !service) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 text-center max-w-md">
-                    <XCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-lg p-10 text-center max-w-md">
+                    <XCircle className="w-14 h-14 text-red-500 mx-auto mb-4" />
                     <h1 className="text-xl font-bold text-slate-800 mb-2">Error</h1>
-                    <p className="text-sm text-slate-600 mb-4">{error}</p>
+                    <p className="text-sm text-slate-600 mb-5">{error}</p>
                     <button
                         onClick={() => window.location.href = '/'}
-                        className="px-5 py-2 bg-blue-600 text-white text-sm rounded-xl font-bold hover:bg-blue-700 transition-colors"
+                        className="px-5 py-2.5 bg-slate-800 text-white text-sm rounded-lg font-medium hover:bg-slate-700 transition-colors"
                     >
                         Volver al inicio
                     </button>
@@ -98,210 +94,193 @@ const PublicRepairTracking = () => {
 
     const currentProgress = getProgressFromStatus(service.status);
     const currentStatusIndex = STATUS_OPTIONS.findIndex(s => s.value === service.status?.toLowerCase());
-
-    // Only show first 4 statuses (exclude "No fue posible reparar")
     const displayStatuses = STATUS_OPTIONS.filter(s => s.value !== 'no_reparable').slice(0, 4);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 py-6 px-4">
-            <div className="max-w-4xl mx-auto space-y-4">
-
-                {/* Company Header - Compact & Elegant */}
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-5">
-                    <div className="flex flex-col md:flex-row items-center gap-4">
-                        {/* Logo */}
+        <div className="min-h-screen bg-slate-50">
+            {/* Top Bar with Company Info */}
+            <div className="bg-slate-900 text-white px-6 py-4 shadow-lg">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
                         {company?.logo_uri ? (
-                            <img src={company.logo_uri} alt="Logo" className="h-14 w-14 object-contain rounded-lg flex-shrink-0" />
+                            <img src={company.logo_uri} alt="Logo" className="h-10 w-10 object-contain bg-white rounded-lg p-1" />
                         ) : (
-                            <div className="h-14 w-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Building2 className="w-7 h-7 text-white" />
+                            <div className="h-10 w-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                <Building2 className="w-5 h-5" />
                             </div>
                         )}
-
-                        {/* Company Info */}
-                        <div className="flex-1 text-center md:text-left min-w-0">
-                            <h1 className="text-xl font-black text-slate-800 mb-1 truncate">
-                                {company?.nombre || 'Mi Empresa'}
-                            </h1>
-                            <div className="flex flex-wrap gap-3 text-xs text-slate-600 justify-center md:justify-start">
-                                {company?.direccion && (
-                                    <div className="flex items-center gap-1">
-                                        <MapPin className="w-3 h-3 flex-shrink-0" />
-                                        <span className="truncate">{company.direccion}</span>
-                                    </div>
-                                )}
-                                {company?.telefono && (
-                                    <div className="flex items-center gap-1">
-                                        <Phone className="w-3 h-3 flex-shrink-0" />
-                                        <span>{company.telefono}</span>
-                                    </div>
-                                )}
-                                {company?.correo && (
-                                    <div className="flex items-center gap-1">
-                                        <Mail className="w-3 h-3 flex-shrink-0" />
-                                        <span className="truncate">{company.correo}</span>
-                                    </div>
-                                )}
+                        <div>
+                            <h1 className="font-bold text-lg">{company?.nombre || 'Mi Empresa'}</h1>
+                            <div className="flex gap-3 text-xs text-slate-400">
+                                {company?.telefono && <span>📞 {company.telefono}</span>}
+                                {company?.correo && <span>✉️ {company.correo}</span>}
                             </div>
                         </div>
-
-                        {/* Order Number */}
-                        <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white px-5 py-3 rounded-xl text-center flex-shrink-0">
-                            <p className="text-[10px] opacity-90 uppercase tracking-wider mb-0.5">Orden</p>
-                            <p className="text-2xl font-black">#{service.orden_numero}</p>
-                        </div>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs text-slate-400 uppercase tracking-wide">Orden de Servicio</p>
+                        <p className="text-2xl font-black">#{service.orden_numero}</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Equipment Card - Compact */}
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-5">
-                    <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Monitor className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-lg font-bold text-slate-800 mb-2">Equipo Recibido</h2>
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="min-w-0">
-                                    <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Tipo</p>
-                                    <p className="text-sm font-bold text-slate-800 truncate">{service.equipo_tipo}</p>
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Modelo</p>
-                                    <p className="text-sm font-bold text-slate-800 truncate">{service.equipo_modelo}</p>
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Serie</p>
-                                    <p className="text-sm font-bold text-slate-800 truncate">{service.equipo_serie || 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div className="max-w-7xl mx-auto p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* Client and Technician Cards - Elegant & Compact */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Client Card */}
-                    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg p-4 border border-white/50">
-                        <div className="flex items-start gap-3">
-                            <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <User className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Cliente</p>
-                                <p className="text-base font-bold text-slate-800 mb-1 truncate">{service.cliente_nombre}</p>
-                                <div className="flex items-center gap-1.5 text-slate-600">
-                                    <Phone className="w-3 h-3 flex-shrink-0" />
-                                    <span className="text-xs font-medium">{service.cliente_telefono}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Left Column - Status Timeline */}
+                    <div className="lg:col-span-1 space-y-6">
+                        {/* Progress Card */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-blue-600" />
+                                Estado del Servicio
+                            </h2>
 
-                    {/* Technician Card */}
-                    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg p-4 border border-white/50">
-                        <div className="flex items-start gap-3">
-                            <div className="w-11 h-11 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Wrench className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider mb-1">Técnico</p>
-                                <p className="text-base font-bold text-slate-800 mb-1 truncate">{service.tecnico_nombre || 'Por asignar'}</p>
-                                {service.tecnico_celular && (
-                                    <div className="flex items-center gap-1.5 text-slate-600">
-                                        <Phone className="w-3 h-3 flex-shrink-0" />
-                                        <span className="text-xs font-medium">{service.tecnico_celular}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            {/* Vertical Timeline */}
+                            <div className="relative space-y-8">
+                                {displayStatuses.map((status, index) => {
+                                    const isCompleted = currentProgress >= status.progress;
+                                    const isCurrent = currentStatusIndex === STATUS_OPTIONS.findIndex(s => s.value === status.value);
 
-                {/* Progress Tracker - Elegant */}
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6">
-                    <h2 className="text-lg font-bold text-slate-800 mb-6 text-center">Estado de Reparación</h2>
+                                    return (
+                                        <div key={status.value} className="relative flex items-start gap-4">
+                                            {/* Vertical Line */}
+                                            {index < displayStatuses.length - 1 && (
+                                                <div className={`absolute left-4 top-10 w-0.5 h-10 ${isCompleted ? 'bg-blue-600' : 'bg-slate-200'
+                                                    }`}></div>
+                                            )}
 
-                    {/* Progress Steps */}
-                    <div className="relative">
-                        {/* Progress Line */}
-                        <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 rounded-full" style={{ marginLeft: '1.5rem', marginRight: '1.5rem' }} />
-                        <div
-                            className="absolute top-5 left-0 h-0.5 rounded-full transition-all duration-1000 ease-out"
-                            style={{
-                                width: `calc(${currentProgress}% - 3rem)`,
-                                marginLeft: '1.5rem',
-                                background: currentProgress === 100
-                                    ? 'linear-gradient(to right, #3b82f6, #10b981)'
-                                    : currentProgress >= 80
-                                        ? 'linear-gradient(to right, #3b82f6, #86efac)'
-                                        : 'linear-gradient(to right, #3b82f6, #fbbf24)'
-                            }}
-                        />
-
-                        {/* Steps */}
-                        <div className="relative flex justify-between items-start px-6">
-                            {displayStatuses.map((status, index) => {
-                                const isCompleted = currentProgress >= status.progress;
-                                const isCurrent = currentStatusIndex === STATUS_OPTIONS.findIndex(s => s.value === status.value);
-
-                                return (
-                                    <div key={status.value} className="flex flex-col items-center" style={{ flex: 1 }}>
-                                        {/* Dot */}
-                                        <div
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 shadow-md ${isCompleted
+                                            {/* Status Node */}
+                                            <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${isCompleted
                                                     ? status.progress === 100
-                                                        ? 'bg-gradient-to-br from-green-500 to-green-600 scale-105'
-                                                        : status.progress === 80
-                                                            ? 'bg-gradient-to-br from-green-400 to-green-500'
-                                                            : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                                                        ? 'bg-green-600 shadow-lg shadow-green-600/50'
+                                                        : 'bg-blue-600 shadow-lg shadow-blue-600/50'
                                                     : 'bg-slate-200'
-                                                } ${isCurrent ? 'ring-3 ring-blue-200' : ''}`}
-                                        >
-                                            <div className={`w-4 h-4 rounded-full ${isCompleted ? 'bg-white' : 'bg-slate-400'}`} />
-                                        </div>
+                                                }`}>
+                                                {isCompleted ? (
+                                                    <CheckCircle2 className="w-5 h-5 text-white" />
+                                                ) : (
+                                                    <div className="w-3 h-3 rounded-full bg-slate-400"></div>
+                                                )}
+                                            </div>
 
-                                        {/* Label */}
-                                        <p className={`mt-2 text-center text-[11px] font-bold transition-colors leading-tight ${isCompleted ? 'text-slate-800' : 'text-slate-400'
-                                            }`}>
-                                            {status.label}
-                                        </p>
+                                            {/* Label */}
+                                            <div className="flex-1 pt-1">
+                                                <p className={`font-bold text-sm ${isCompleted ? 'text-slate-800' : 'text-slate-400'
+                                                    }`}>
+                                                    {status.label}
+                                                </p>
+                                                {isCurrent && (
+                                                    <p className="text-xs text-blue-600 mt-1">● En proceso</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Cost Card */}
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white">
+                            <h3 className="text-sm font-bold uppercase tracking-wide mb-3 text-slate-300">Costo Total</h3>
+                            <p className="text-4xl font-black mb-4">${formatCurrency(service.total)}</p>
+                            {service.anticipo > 0 && (
+                                <div className="space-y-2 pt-4 border-t border-white/10">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-400">Anticipo</span>
+                                        <span className="font-semibold">-${formatCurrency(service.anticipo)}</span>
                                     </div>
-                                );
-                            })}
+                                    <div className="flex justify-between text-lg font-bold">
+                                        <span>Por Pagar</span>
+                                        <span className="text-yellow-400">${formatCurrency((service.total || 0) - (service.anticipo || 0))}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                {/* Reported Failure and Total Cost - Compact */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Reported Failure */}
-                    {service.problema_reportado && (
-                        <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-5">
-                            <h3 className="text-sm font-bold text-red-600 uppercase tracking-wider mb-3">Falla Reportada</h3>
-                            <p className="text-sm text-slate-700 leading-relaxed">{service.problema_reportado}</p>
-                        </div>
-                    )}
+                    {/* Right Column - Details */}
+                    <div className="lg:col-span-2 space-y-6">
 
-                    {/* Total Cost */}
-                    <div className="bg-gradient-to-br from-blue-600 to-purple-600 backdrop-blur-xl rounded-2xl shadow-xl p-5 text-white">
-                        <h3 className="text-sm font-bold uppercase tracking-wider mb-3 opacity-90">Costo Total</h3>
-                        <p className="text-4xl font-black mb-2">${formatCurrency(service.total)}</p>
-                        {service.anticipo > 0 && (
-                            <div className="mt-3 pt-3 border-t border-white/30 space-y-1">
-                                <div className="flex justify-between text-xs">
-                                    <span className="opacity-90">Anticipo:</span>
-                                    <span className="font-bold">-${formatCurrency(service.anticipo)}</span>
+                        {/* Equipment Info */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
+                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <Monitor className="w-5 h-5 text-slate-600" />
+                                    Información del Equipo
+                                </h2>
+                            </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-3 gap-6">
+                                    <div>
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Tipo</p>
+                                        <p className="text-base font-bold text-slate-800">{service.equipo_tipo}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Modelo</p>
+                                        <p className="text-base font-bold text-slate-800">{service.equipo_modelo}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">No. Serie</p>
+                                        <p className="text-base font-bold text-slate-800">{service.equipo_serie || 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-base font-bold">
-                                    <span>Restante:</span>
-                                    <span>${formatCurrency((service.total || 0) - (service.anticipo || 0))}</span>
+                            </div>
+                        </div>
+
+                        {/* Client & Tech Cards Side by Side */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Client */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <User className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Cliente</p>
+                                        <p className="text-lg font-bold text-slate-800 mb-2 truncate">{service.cliente_nombre}</p>
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <Phone className="w-4 h-4" />
+                                            <span className="text-sm">{service.cliente_telefono}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Technician */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Wrench className="w-6 h-6 text-orange-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Técnico Asignado</p>
+                                        <p className="text-lg font-bold text-slate-800 mb-2 truncate">{service.tecnico_nombre || 'Por asignar'}</p>
+                                        {service.tecnico_celular && (
+                                            <div className="flex items-center gap-2 text-slate-600">
+                                                <Phone className="w-4 h-4" />
+                                                <span className="text-sm">{service.tecnico_celular}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Reported Failure */}
+                        {service.problema_reportado && (
+                            <div className="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+                                <div className="bg-red-50 px-6 py-3 border-b border-red-200">
+                                    <h3 className="text-sm font-bold text-red-700 uppercase tracking-wide">⚠️ Falla Reportada</h3>
+                                </div>
+                                <div className="p-6">
+                                    <p className="text-slate-700 leading-relaxed">{service.problema_reportado}</p>
                                 </div>
                             </div>
                         )}
+
                     </div>
                 </div>
-
             </div>
         </div>
     );

@@ -1923,6 +1923,7 @@ const CCTVServiceView = ({ service, onBack, darkMode }) => {
 const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
+    const [openUpward, setOpenUpward] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -1936,21 +1937,20 @@ const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleStatusSelect = async (statusValue) => {
+    const handleStatusUpdate = async (newStatus) => {
         setUpdating(true);
         try {
             const { error } = await supabase
                 .from('servicios_pc')
-                .update({ status: statusValue })
+                .update({ status: newStatus })
                 .eq('id', service.id);
 
             if (error) throw error;
-
+            onStatusChange();
             setIsOpen(false);
-            if (onStatusChange) onStatusChange();
         } catch (error) {
             console.error('Error updating status:', error);
-            alert('Error al actualizar el estado');
+            alert('Error al actualizar estado');
         } finally {
             setUpdating(false);
         }
@@ -1973,33 +1973,53 @@ const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
     const displayColor = currentStatus ? currentStatus.color : 'gray';
 
     return (
-        <div className="relative inline-block" ref={dropdownRef}>
+        <div className="relative inline-block w-full" ref={dropdownRef}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    if (!isOpen && dropdownRef.current) {
+                        const rect = dropdownRef.current.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const shouldOpenUpward = spaceBelow < 300;
+                        setOpenUpward(shouldOpenUpward);
+                    }
+                    setIsOpen(!isOpen);
+                }}
                 disabled={updating}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-2 ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}`}
+                className={`w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-md hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all flex items-center justify-between gap-2 ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${darkMode ? 'bg-slate-800 border-slate-600 text-slate-200' : 'text-slate-700'}`}
             >
                 {updating ? (
-                    <Loader className="w-3 h-3 animate-spin" />
+                    <div className="flex items-center gap-2">
+                        <Loader className="w-4 h-4 animate-spin text-blue-500" />
+                        <span>Actualizando...</span>
+                    </div>
                 ) : (
                     <>
-                        {displayLabel}
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <div className="flex items-center gap-2 overflow-hidden">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColorClass(displayColor).split(' ')[0].replace('bg-', 'bg-').replace('-100', '-500')}`}></span>
+                            <span className="truncate">{displayLabel}</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </>
                 )}
             </button>
 
             {isOpen && !updating && (
-                <div className={`absolute z-50 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <div
+                    className={`absolute z-[200] w-56 rounded-md shadow-lg border overflow-hidden ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                >
                     {STATUS_OPTIONS.map((status) => (
                         <button
                             key={status.value}
-                            onClick={() => handleStatusSelect(status.value)}
-                            className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors flex items-center gap-3 ${darkMode ? 'hover:bg-slate-700 text-slate-200' : 'hover:bg-slate-50 text-slate-800'}`}
+                            onClick={() => handleStatusUpdate(status.value)}
+                            className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between group transition-colors ${darkMode
+                                ? 'hover:bg-slate-700 text-slate-200'
+                                : 'hover:bg-slate-50 text-slate-700'
+                                }`}
                         >
-                            <span className={`w-3 h-3 rounded-full flex-shrink-0 ${status.color === 'blue' ? 'bg-blue-500' : status.color === 'yellow' ? 'bg-yellow-500' : status.color === 'green' ? 'bg-green-500' : status.color === 'purple' ? 'bg-purple-500' : status.color === 'red' ? 'bg-red-500' : 'bg-gray-500'}`} />
-                            <span className="flex-1">{status.label}</span>
-                            <span className="text-xs text-slate-400">{status.progress}%</span>
+                            <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full bg-${status.color}-500`}></span>
+                                <span className="font-medium">{status.label}</span>
+                            </div>
                         </button>
                     ))}
                 </div>
@@ -2107,86 +2127,94 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                 </button>
             </div>
 
-            <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de PC registrados.
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
-                            <tr>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>No. Servicio</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
-                                <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                            {services.map((service) => (
-                                <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm font-bold text-blue-600">#{service.orden_numero}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {/* Status Dropdown */}
-                                            <StatusDropdown service={service} darkMode={darkMode} onStatusChange={fetchServices} />
-
-                                            {/* QR Button */}
-                                            <button
-                                                onClick={() => handleShowQR(service)}
-                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                                title="Ver QR de Seguimiento"
-                                            >
-                                                <QrCode className="w-5 h-5" />
-                                            </button>
-
-                                            {service.pagado && service.entregado ? (
-                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
-                                                    Pagado y Entregado
-                                                </span>
-                                            ) : (
-                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
-                                                    Pendiente de Entregar/Pagar
-                                                </span>
-                                            )}
-                                            <button
-                                                onClick={() => onViewService(service)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Ver Servicio"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                                title="Editar Servicio"
-                                            >
-                                                <Edit2 className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(service.id)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Eliminar Servicio"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto pb-64">
+                        <table className="w-full">
+                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <tr>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>No. Servicio</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                                {services.map((service) => (
+                                    <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-blue-600">#{service.orden_numero}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <StatusDropdown
+                                                service={service}
+                                                darkMode={darkMode}
+                                                onStatusChange={fetchServices}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+
+                                                {/* QR Button */}
+                                                <button
+                                                    onClick={() => handleShowQR(service)}
+                                                    className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                    title="Ver QR de Seguimiento"
+                                                >
+                                                    <QrCode className="w-5 h-5" />
+                                                </button>
+
+                                                {service.pagado && service.entregado ? (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
+                                                        Pagado y Entregado
+                                                    </span>
+                                                ) : (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
+                                                        Pendiente de Entregar/Pagar
+                                                    </span>
+                                                )}
+                                                <button
+                                                    onClick={() => onViewService(service)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver Servicio"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar Servicio"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(service.id)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Servicio"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
