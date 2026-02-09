@@ -8,6 +8,7 @@ import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
 import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
+import ServiceReceipt from './components/ServiceReceipt';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 
 class ErrorBoundary extends React.Component {
@@ -1196,8 +1197,8 @@ const TemplateClassic = ({ company, client, items, terms, folio, date, dueDate, 
                             </div>
                         )}
                         <div className="mt-12 pt-4 border-t border-gray-100">
-                            <p className="text-xs font-bold mb-1 uppercase tracking-wide bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">Atentamente:</p>
-                            <p className="text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">{company.nombre || "Nombre de la Empresa"}</p>
+                            <p className="text-xs font-bold mb-1 uppercase tracking-wide text-blue-600">Atentamente:</p>
+                            <p className="text-lg font-bold text-blue-600">{company.nombre || "Nombre de la Empresa"}</p>
                         </div>
                     </div>
                     <div className="w-5/12 pl-8">
@@ -1206,8 +1207,8 @@ const TemplateClassic = ({ company, client, items, terms, folio, date, dueDate, 
                             {totalDiscount > 0 && <div className="flex justify-between text-sm text-green-600"><span>Descuento:</span><span>-${formatCurrency(totalDiscount)}</span></div>}
                             {totalTax > 0 && <div className="flex justify-between text-sm text-gray-500"><span>IVA / Impuestos:</span><span className="font-medium text-gray-700">${formatCurrency(totalTax)}</span></div>}
                             <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
-                                <span className="text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">Total:</span>
-                                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-purple-600 bg-clip-text text-transparent print-gradient-text">${formatCurrency(grandTotal)}</span>
+                                <span className="text-lg font-bold text-blue-600">Total:</span>
+                                <span className="text-2xl font-bold text-blue-600">${formatCurrency(grandTotal)}</span>
                             </div>
                         </div>
                     </div>
@@ -2034,6 +2035,8 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
     const [refreshing, setRefreshing] = useState(false);
     const [showQRTicket, setShowQRTicket] = useState(false);
     const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
 
     useEffect(() => {
         fetchServices();
@@ -2071,7 +2074,8 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
 
                 if (error) throw error;
 
-                setSelectedServiceForQR({ ...service, public_token: newToken });
+                const updatedService = { ...service, public_token: newToken };
+                setSelectedServiceForQR(updatedService);
                 setShowQRTicket(true);
                 fetchServices(); // Refresh to get updated token
             } catch (error) {
@@ -2081,6 +2085,34 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
         } else {
             setSelectedServiceForQR(service);
             setShowQRTicket(true);
+        }
+    };
+
+    const handleShowReceipt = async (service) => {
+        // Generate public_token if it doesn't exist (needed for QR in receipt)
+        if (!service.public_token) {
+            try {
+                const newToken = crypto.randomUUID();
+                const { data, error } = await supabase
+                    .from('servicios_pc')
+                    .update({ public_token: newToken })
+                    .eq('id', service.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                const updatedService = { ...service, public_token: newToken };
+                setSelectedServiceForReceipt(updatedService);
+                setShowReceipt(true);
+                fetchServices();
+            } catch (error) {
+                console.error('Error generating token:', error);
+                alert('Error al generar ticket');
+            }
+        } else {
+            setSelectedServiceForReceipt(service);
+            setShowReceipt(true);
         }
     };
 
@@ -2179,6 +2211,14 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                                                     <QrCode className="w-5 h-5" />
                                                 </button>
 
+                                                <button
+                                                    onClick={() => handleShowReceipt(service)}
+                                                    className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Imprimir Ticket"
+                                                >
+                                                    <ScrollText className="w-5 h-5" />
+                                                </button>
+
                                                 {service.pagado && service.entregado ? (
                                                     <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
                                                         Pagado y Entregado
@@ -2225,6 +2265,18 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                     onClose={() => {
                         setShowQRTicket(false);
                         setSelectedServiceForQR(null);
+                    }}
+                    darkMode={darkMode}
+                />
+            )}
+
+            {/* Receipt Modal */}
+            {showReceipt && selectedServiceForReceipt && (
+                <ServiceReceipt
+                    service={selectedServiceForReceipt}
+                    onClose={() => {
+                        setShowReceipt(false);
+                        setSelectedServiceForReceipt(null);
                     }}
                     darkMode={darkMode}
                 />

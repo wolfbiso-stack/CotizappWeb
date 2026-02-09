@@ -38,7 +38,7 @@ const PublicRepairTracking = () => {
             try {
                 if (serviceData.user_id) {
                     const { data: companyData } = await supabase
-                        .from('empresas')
+                        .from('configuracion_empresa')
                         .select('*')
                         .eq('user_id', serviceData.user_id)
                         .single();
@@ -65,10 +65,10 @@ const PublicRepairTracking = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                <div className="text-center">
-                    <Loader className="w-10 h-10 animate-spin text-slate-400 mx-auto mb-3" />
-                    <p className="text-slate-600 text-sm font-medium">Cargando...</p>
+            <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-slate-100 flex items-center justify-center p-4">
+                <div className="bg-white/80 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 text-center">
+                    <Loader className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-slate-600 font-medium animate-pulse">Cargando información del servicio...</p>
                 </div>
             </div>
         );
@@ -76,16 +76,18 @@ const PublicRepairTracking = () => {
 
     if (error || !service) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-lg p-10 text-center max-w-md">
-                    <XCircle className="w-14 h-14 text-red-500 mx-auto mb-4" />
-                    <h1 className="text-xl font-bold text-slate-800 mb-2">Error</h1>
-                    <p className="text-sm text-slate-600 mb-5">{error}</p>
+            <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-50 via-slate-50 to-slate-100 flex items-center justify-center p-4">
+                <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-10 text-center max-w-md border border-white/50">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <XCircle className="w-10 h-10 text-red-500" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-800 mb-2">Servicio No Encontrado</h1>
+                    <p className="text-slate-600 mb-8 leading-relaxed">{error || 'No pudimos encontrar la información de este servicio. Verifica que el enlace sea correcto.'}</p>
                     <button
                         onClick={() => window.location.href = '/'}
-                        className="px-5 py-2.5 bg-slate-800 text-white text-sm rounded-lg font-medium hover:bg-slate-700 transition-colors"
+                        className="w-full px-6 py-3.5 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     >
-                        Volver al inicio
+                        Volver al Inicio
                     </button>
                 </div>
             </div>
@@ -97,188 +99,233 @@ const PublicRepairTracking = () => {
     const displayStatuses = STATUS_OPTIONS.filter(s => s.value !== 'no_reparable').slice(0, 4);
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Top Bar with Company Info */}
-            <div className="bg-slate-900 text-white px-6 py-4 shadow-lg">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        {company?.logo_uri ? (
-                            <img src={company.logo_uri} alt="Logo" className="h-10 w-10 object-contain bg-white rounded-lg p-1" />
-                        ) : (
-                            <div className="h-10 w-10 bg-white/10 rounded-lg flex items-center justify-center">
-                                <Building2 className="w-5 h-5" />
-                            </div>
-                        )}
-                        <div>
-                            <h1 className="font-bold text-lg">{company?.nombre || 'Mi Empresa'}</h1>
-                            <div className="flex gap-3 text-xs text-slate-400">
-                                {company?.telefono && <span>📞 {company.telefono}</span>}
-                                {company?.correo && <span>✉️ {company.correo}</span>}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-xs text-slate-400 uppercase tracking-wide">Orden de Servicio</p>
-                        <p className="text-2xl font-black">#{service.orden_numero}</p>
-                    </div>
-                </div>
-            </div>
+        <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-slate-100 py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-800">
+            {/* Main Container */}
+            <div className="max-w-5xl mx-auto space-y-8">
 
-            <div className="max-w-7xl mx-auto p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Header Card (Glass) - Company Info & Order Number */}
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 overflow-hidden relative group hover:bg-white/80 transition-all duration-500">
+                    {/* Decorative top gradient line */}
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
 
-                    {/* Left Column - Status Timeline */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {/* Progress Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-blue-600" />
-                                Estado del Servicio
-                            </h2>
-
-                            {/* Vertical Timeline */}
-                            <div className="relative space-y-8">
-                                {displayStatuses.map((status, index) => {
-                                    const isCompleted = currentProgress >= status.progress;
-                                    const isCurrent = currentStatusIndex === STATUS_OPTIONS.findIndex(s => s.value === status.value);
-
-                                    return (
-                                        <div key={status.value} className="relative flex items-start gap-4">
-                                            {/* Vertical Line */}
-                                            {index < displayStatuses.length - 1 && (
-                                                <div className={`absolute left-4 top-10 w-0.5 h-10 ${isCompleted ? 'bg-blue-600' : 'bg-slate-200'
-                                                    }`}></div>
-                                            )}
-
-                                            {/* Status Node */}
-                                            <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${isCompleted
-                                                    ? status.progress === 100
-                                                        ? 'bg-green-600 shadow-lg shadow-green-600/50'
-                                                        : 'bg-blue-600 shadow-lg shadow-blue-600/50'
-                                                    : 'bg-slate-200'
-                                                }`}>
-                                                {isCompleted ? (
-                                                    <CheckCircle2 className="w-5 h-5 text-white" />
-                                                ) : (
-                                                    <div className="w-3 h-3 rounded-full bg-slate-400"></div>
-                                                )}
-                                            </div>
-
-                                            {/* Label */}
-                                            <div className="flex-1 pt-1">
-                                                <p className={`font-bold text-sm ${isCompleted ? 'text-slate-800' : 'text-slate-400'
-                                                    }`}>
-                                                    {status.label}
-                                                </p>
-                                                {isCurrent && (
-                                                    <p className="text-xs text-blue-600 mt-1">● En proceso</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Cost Card */}
-                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white">
-                            <h3 className="text-sm font-bold uppercase tracking-wide mb-3 text-slate-300">Costo Total</h3>
-                            <p className="text-4xl font-black mb-4">${formatCurrency(service.total)}</p>
-                            {service.anticipo > 0 && (
-                                <div className="space-y-2 pt-4 border-t border-white/10">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-400">Anticipo</span>
-                                        <span className="font-semibold">-${formatCurrency(service.anticipo)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-lg font-bold">
-                                        <span>Por Pagar</span>
-                                        <span className="text-yellow-400">${formatCurrency((service.total || 0) - (service.anticipo || 0))}</span>
-                                    </div>
+                    <div className="p-8 md:p-10 flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                        {/* Company Info */}
+                        <div className="flex items-center gap-6 w-full md:w-auto">
+                            {company?.logo_uri ? (
+                                <div className="w-24 h-24 bg-white rounded-2xl shadow-md p-2 flex items-center justify-center flex-shrink-0 border border-slate-100">
+                                    <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
+                                </div>
+                            ) : (
+                                <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center flex-shrink-0 text-white">
+                                    <Building2 className="w-10 h-10" />
                                 </div>
                             )}
+                            <div className="text-center md:text-left">
+                                <h1 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{company?.nombre || 'Centro de Reparaciones'}</h1>
+                                <div className="space-y-1">
+                                    {company?.telefono && (
+                                        <div className="flex items-center justify-center md:justify-start gap-2 text-slate-600 font-medium">
+                                            <div className="p-1.5 bg-blue-100 rounded-full text-blue-600"><Phone className="w-3.5 h-3.5" /></div>
+                                            {company.telefono}
+                                        </div>
+                                    )}
+                                    {company?.correo && (
+                                        <div className="flex items-center justify-center md:justify-start gap-2 text-slate-600 font-medium">
+                                            <div className="p-1.5 bg-blue-100 rounded-full text-blue-600"><Mail className="w-3.5 h-3.5" /></div>
+                                            {company.correo}
+                                        </div>
+                                    )}
+                                    {company?.direccion && (
+                                        <div className="flex items-center justify-center md:justify-start gap-2 text-slate-600 font-medium">
+                                            <div className="p-1.5 bg-blue-100 rounded-full text-blue-600"><MapPin className="w-3.5 h-3.5" /></div>
+                                            {company.direccion}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Order Number Badge */}
+                        <div className="bg-slate-50/50 backdrop-blur-md px-8 py-5 rounded-2xl border border-slate-200/60 text-center transform transition-transform group-hover:scale-105 duration-300 shadow-sm w-full md:w-auto">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Orden de Servicio</p>
+                            <p className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">#{service.orden_numero}</p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Right Column - Details */}
-                    <div className="lg:col-span-2 space-y-6">
+                {/* Status Timeline - Horizontal */}
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 p-8 md:p-10 scroll-m-20">
+                    <h2 className="text-xl font-bold text-slate-800 mb-10 flex items-center gap-3">
+                        <div className="p-2.5 bg-green-100 rounded-xl text-green-600 shadow-sm">
+                            <Clock className="w-6 h-6" />
+                        </div>
+                        Estado del Servicio
+                    </h2>
 
-                        {/* Equipment Info */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
-                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                    <Monitor className="w-5 h-5 text-slate-600" />
+                    <div className="relative py-4">
+                        {/* Background Track (Thick Single Bar) */}
+                        <div className="absolute top-1/2 left-0 right-0 h-3 bg-slate-100 rounded-full -translate-y-1/2 z-0"></div>
+
+                        {/* Progress Fill (Green) */}
+                        <div
+                            className="absolute top-1/2 left-0 h-3 bg-green-500 rounded-full -translate-y-1/2 z-0 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+                            style={{ width: `${currentProgress}%` }}
+                        ></div>
+
+                        <div className="flex justify-between items-center relative z-10 w-full">
+                            {displayStatuses.map((status, index) => {
+                                const isCompleted = currentProgress >= status.progress;
+                                const isCurrent = currentStatusIndex === STATUS_OPTIONS.findIndex(s => s.value === status.value);
+
+                                return (
+                                    <div key={status.value} className="flex flex-col items-center gap-3 relative group flex-1">
+                                        {/* Status Node */}
+                                        <div className={`w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-500 z-10 ${isCompleted
+                                                ? 'bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)] scale-110'
+                                                : 'bg-white border-4 border-slate-200'
+                                            }`}>
+                                            {isCompleted ? (
+                                                <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-white" strokeWidth={3} />
+                                            ) : (
+                                                <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-slate-200"></div>
+                                            )}
+                                        </div>
+
+                                        {/* Label */}
+                                        <div className={`text-center transition-all duration-300 absolute top-full mt-4 w-32 ${isCompleted ? 'opacity-100' : 'opacity-40'}`}>
+                                            <p className={`font-bold text-xs md:text-sm uppercase tracking-wide ${isCurrent ? 'text-green-600' : 'text-slate-500'}`}>
+                                                {status.label}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column (Details) - Spans 8 */}
+                    <div className="lg:col-span-8 space-y-8 order-2 lg:order-1">
+                        {/* Equipment Card */}
+                        <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+                            <div className="bg-slate-50/50 px-8 py-5 border-b border-white/50 flex items-center justify-between">
+                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                        <Monitor className="w-5 h-5" />
+                                    </div>
                                     Información del Equipo
                                 </h2>
+                                <span className="px-3 py-1 bg-slate-200/50 text-slate-600 text-xs font-bold rounded-full uppercase tracking-wide">
+                                    ID: {service.id}
+                                </span>
                             </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-3 gap-6">
-                                    <div>
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Tipo</p>
-                                        <p className="text-base font-bold text-slate-800">{service.equipo_tipo}</p>
+                            <div className="p-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tipo</p>
+                                        <p className="text-lg font-bold text-slate-800">{service.equipo_tipo}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Modelo</p>
-                                        <p className="text-base font-bold text-slate-800">{service.equipo_modelo}</p>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Modelo</p>
+                                        <p className="text-lg font-bold text-slate-800">{service.equipo_modelo}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">No. Serie</p>
-                                        <p className="text-base font-bold text-slate-800">{service.equipo_serie || 'N/A'}</p>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">N/S</p>
+                                        <p className="text-lg font-bold text-slate-800 font-mono bg-slate-100 inline-block px-2 py-0.5 rounded text-sm">{service.equipo_serie || 'No reg.'}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Client & Tech Cards Side by Side */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Two Columns Grid for Client/Tech */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Client */}
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <User className="w-6 h-6 text-blue-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Cliente</p>
-                                        <p className="text-lg font-bold text-slate-800 mb-2 truncate">{service.cliente_nombre}</p>
-                                        <div className="flex items-center gap-2 text-slate-600">
-                                            <Phone className="w-4 h-4" />
-                                            <span className="text-sm">{service.cliente_telefono}</span>
-                                        </div>
+                            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 p-6 flex items-start gap-5 hover:shadow-2xl transition-shadow duration-300 group">
+                                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20 text-white group-hover:scale-110 transition-transform">
+                                    <User className="w-7 h-7" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Propietario</p>
+                                    <p className="text-lg font-bold text-slate-800 truncate mb-1">{service.cliente_nombre}</p>
+                                    <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
+                                        <Phone className="w-3.5 h-3.5" />
+                                        {service.cliente_telefono}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Technician */}
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Wrench className="w-6 h-6 text-orange-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Técnico Asignado</p>
-                                        <p className="text-lg font-bold text-slate-800 mb-2 truncate">{service.tecnico_nombre || 'Por asignar'}</p>
-                                        {service.tecnico_celular && (
-                                            <div className="flex items-center gap-2 text-slate-600">
-                                                <Phone className="w-4 h-4" />
-                                                <span className="text-sm">{service.tecnico_celular}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 p-6 flex items-start gap-5 hover:shadow-2xl transition-shadow duration-300 group">
+                                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20 text-white group-hover:scale-110 transition-transform">
+                                    <Wrench className="w-7 h-7" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Técnico Asignado</p>
+                                    <p className="text-lg font-bold text-slate-800 truncate mb-1">{service.tecnico_nombre || 'Pendiente'}</p>
+                                    {service.tecnico_celular && (
+                                        <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
+                                            <Phone className="w-3.5 h-3.5" />
+                                            {service.tecnico_celular}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Reported Failure */}
                         {service.problema_reportado && (
-                            <div className="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
-                                <div className="bg-red-50 px-6 py-3 border-b border-red-200">
-                                    <h3 className="text-sm font-bold text-red-700 uppercase tracking-wide">⚠️ Falla Reportada</h3>
-                                </div>
-                                <div className="p-6">
-                                    <p className="text-slate-700 leading-relaxed">{service.problema_reportado}</p>
+                            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-red-100 overflow-hidden relative group">
+                                <div className="absolute left-0 top-0 bottom-0 w-2 bg-red-400 group-hover:w-3 transition-all"></div>
+                                <div className="p-8 pl-10">
+                                    <h3 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <XCircle className="w-4 h-4" />
+                                        Reporte de Falla
+                                    </h3>
+                                    <p className="text-slate-700 text-lg leading-relaxed font-medium italic">"{service.problema_reportado}"</p>
                                 </div>
                             </div>
                         )}
 
+                        {/* Footer Info */}
+                        <div className="text-center text-slate-400 text-sm font-medium pt-8 pb-12">
+                            <p>Esta es una página pública de seguimiento. No requiere inicio de sesión.</p>
+                            <p className="mt-2 text-xs opacity-60">© {new Date().getFullYear()} CotizApp - Sistema de Gestión</p>
+                        </div>
+                    </div>
+
+                    {/* Right Column (Cost) - Spans 4 */}
+                    <div className="lg:col-span-4 space-y-8 order-1 lg:order-2">
+                        {/* Cost Card (Glass Light) */}
+                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 relative overflow-hidden group hover:bg-white/90 transition-all duration-300">
+                            {/* Decorative Background Blob */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 text-slate-500 flex items-center gap-2">
+                                Costo Estimado
+                            </h3>
+                            <div className="flex items-baseline gap-1 mb-8 relative z-10">
+                                <span className="text-6xl font-black tracking-tight text-slate-800">${formatCurrency(service.total).split('.')[0]}</span>
+                                <span className="text-2xl font-bold text-slate-400">.{formatCurrency(service.total).split('.')[1]}</span>
+                            </div>
+
+                            {service.anticipo > 0 && (
+                                <div className="space-y-4 pt-6 border-t border-slate-100 relative z-10">
+                                    <div className="flex justify-between text-sm items-center">
+                                        <span className="text-slate-500 font-medium">Anticipo realizado</span>
+                                        <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">-${formatCurrency(service.anticipo)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-lg items-center pt-2">
+                                        <span className="font-bold text-slate-700">Restante por pagar</span>
+                                        <span className="font-black text-blue-600 text-xl">
+                                            ${formatCurrency((service.total || 0) - (service.anticipo || 0))}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+
+                        </div>
                     </div>
                 </div>
             </div>
