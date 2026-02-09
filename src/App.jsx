@@ -2,10 +2,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
+import PublicRepairTracking from './components/PublicRepairTracking';
+import QRServiceTicket from './components/QRServiceTicket';
+import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -1916,10 +1919,101 @@ const CCTVServiceView = ({ service, onBack, darkMode }) => {
     );
 };
 
+// Status Dropdown Component
+const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [updating, setUpdating] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleStatusSelect = async (statusValue) => {
+        setUpdating(true);
+        try {
+            const { error } = await supabase
+                .from('servicios_pc')
+                .update({ status: statusValue })
+                .eq('id', service.id);
+
+            if (error) throw error;
+
+            setIsOpen(false);
+            if (onStatusChange) onStatusChange();
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Error al actualizar el estado');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const getStatusColorClass = (colorName) => {
+        const colors = {
+            blue: 'bg-blue-100 text-blue-700 border-blue-300',
+            yellow: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+            green: 'bg-green-100 text-green-700 border-green-300',
+            purple: 'bg-purple-100 text-purple-700 border-purple-300',
+            red: 'bg-red-100 text-red-700 border-red-300',
+            gray: 'bg-gray-100 text-gray-700 border-gray-300'
+        };
+        return colors[colorName] || colors.gray;
+    };
+
+    const currentStatus = STATUS_OPTIONS.find(s => s.value === service.status?.toLowerCase());
+    const displayLabel = currentStatus ? currentStatus.label : 'Seleccionar Estado';
+    const displayColor = currentStatus ? currentStatus.color : 'gray';
+
+    return (
+        <div className="relative inline-block" ref={dropdownRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                disabled={updating}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-2 ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}`}
+            >
+                {updating ? (
+                    <Loader className="w-3 h-3 animate-spin" />
+                ) : (
+                    <>
+                        {displayLabel}
+                        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </>
+                )}
+            </button>
+
+            {isOpen && !updating && (
+                <div className={`absolute z-50 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                    {STATUS_OPTIONS.map((status) => (
+                        <button
+                            key={status.value}
+                            onClick={() => handleStatusSelect(status.value)}
+                            className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors flex items-center gap-3 ${darkMode ? 'hover:bg-slate-700 text-slate-200' : 'hover:bg-slate-50 text-slate-800'}`}
+                        >
+                            <span className={`w-3 h-3 rounded-full flex-shrink-0 ${status.color === 'blue' ? 'bg-blue-500' : status.color === 'yellow' ? 'bg-yellow-500' : status.color === 'green' ? 'bg-green-500' : status.color === 'purple' ? 'bg-purple-500' : status.color === 'red' ? 'bg-red-500' : 'bg-gray-500'}`} />
+                            <span className="flex-1">{status.label}</span>
+                            <span className="text-xs text-slate-400">{status.progress}%</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const PCList = ({ darkMode, onNavigate, onViewService }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
 
     useEffect(() => {
         fetchServices();
@@ -1942,6 +2036,34 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
             setRefreshing(false);
         }
     };
+
+    const handleShowQR = async (service) => {
+        // Generate public_token if it doesn't exist
+        if (!service.public_token) {
+            try {
+                const newToken = crypto.randomUUID();
+                const { data, error } = await supabase
+                    .from('servicios_pc')
+                    .update({ public_token: newToken })
+                    .eq('id', service.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                setSelectedServiceForQR({ ...service, public_token: newToken });
+                setShowQRTicket(true);
+                fetchServices(); // Refresh to get updated token
+            } catch (error) {
+                console.error('Error generating token:', error);
+                alert('Error al generar código QR');
+            }
+        } else {
+            setSelectedServiceForQR(service);
+            setShowQRTicket(true);
+        }
+    };
+
 
     const handleDelete = async (id) => {
         if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
@@ -2018,6 +2140,18 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="flex items-center justify-end gap-2">
+                                            {/* Status Dropdown */}
+                                            <StatusDropdown service={service} darkMode={darkMode} onStatusChange={fetchServices} />
+
+                                            {/* QR Button */}
+                                            <button
+                                                onClick={() => handleShowQR(service)}
+                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                title="Ver QR de Seguimiento"
+                                            >
+                                                <QrCode className="w-5 h-5" />
+                                            </button>
+
                                             {service.pagado && service.entregado ? (
                                                 <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
                                                     Pagado y Entregado
@@ -2055,11 +2189,23 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                     </table>
                 )}
             </div>
+
+            {/* QR Ticket Modal */}
+            {showQRTicket && selectedServiceForQR && (
+                <QRServiceTicket
+                    service={selectedServiceForQR}
+                    onClose={() => {
+                        setShowQRTicket(false);
+                        setSelectedServiceForQR(null);
+                    }}
+                    darkMode={darkMode}
+                />
+            )}
         </div>
     );
 };
 
-const PCServiceView = ({ service, onBack, darkMode }) => {
+const PCServiceView = ({ service, onBack, darkMode, company }) => {
     if (!service) return null;
 
     const [photos, setPhotos] = useState([]);
@@ -2086,169 +2232,301 @@ const PCServiceView = ({ service, onBack, darkMode }) => {
         }
     };
 
-    const SectionCard = ({ title, icon: Icon, children, color = "blue" }) => (
-        <div className={`p-6 rounded-2xl shadow-lg border backdrop-blur-md transition-all hover:shadow-xl ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/40'}`}>
-            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                <div className={`p-2 rounded-lg ${darkMode ? `bg-${color}-500/20 text-${color}-400` : `bg-${color}-100 text-${color}-600`}`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-                {title}
-            </h3>
-            <div className="space-y-3">
-                {children}
-            </div>
-        </div>
-    );
-
-    const InfoRow = ({ label, value, isMonospaced = false }) => (
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-1 border-b border-dashed last:border-0 border-slate-200/50">
-            <span className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
-            <span className={`font-medium text-sm ${isMonospaced ? 'font-mono' : ''} ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{value || '-'}</span>
-        </div>
-    );
-
     const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
 
     return (
-        <div className="w-full px-4 md:px-8 py-8 animate-in fade-in zoom-in duration-300">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h1 className={`text-3xl font-extrabold tracking-tight flex items-center gap-3 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                        Servicio PC <span className="text-blue-600">#{service.orden_numero}</span>
-                    </h1>
-                    <p className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                        Recibido el {formatServiceDate(service.fecha)}
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.pagado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {service.pagado ? 'Pagado' : 'Pendiente Pago'}
-                    </div>
-                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.entregado ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {service.entregado ? 'Entregado' : 'En Proceso'}
-                    </div>
-                    <button
-                        onClick={onBack}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors shadow-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}
-                    >
-                        <ArrowLeft className="w-4 h-4" /> Regresar
-                    </button>
-                </div>
-            </div>
+        <div className="w-full min-h-screen p-6 md:p-10">
+            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* 1. Cliente */}
-                <SectionCard title="Información del Cliente" icon={User} color="blue">
-                    <InfoRow label="Nombre" value={service.cliente_nombre} />
-                    <InfoRow label="Teléfono" value={service.cliente_telefono} />
-                </SectionCard>
+                {/* Header */}
+                <div className="p-6 md:p-8 bg-blue-50 border-b border-blue-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        {/* Left: Company Info */}
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={onBack}
+                                className="p-2 rounded-full hover:bg-white/50 transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-slate-600" />
+                            </button>
 
-                {/* 2. Equipo */}
-                <SectionCard title="Detalles del Equipo" icon={Monitor} color="indigo">
-                    <InfoRow label="Tipo" value={service.equipo_tipo} />
-                    <InfoRow label="Modelo" value={service.equipo_modelo} />
-                    <InfoRow label="Serie" value={service.equipo_serie} isMonospaced />
-                    <div className="pt-2">
-                        <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Problema Reportado</span>
-                        <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.problema_reportado}</p>
-                    </div>
-                </SectionCard>
-
-                {/* 3. Diagnóstico y Trabajo */}
-                <SectionCard title="Diagnóstico y Reparación" icon={Settings} color="slate">
-                    <div className="mb-3">
-                        <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Diagnóstico Técnico</span>
-                        <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.diagnostico_tecnico || 'Pendiente'}</p>
-                    </div>
-                    {service.repuestos_descripcion && (
-                        <div className="mb-3">
-                            <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Repuestos Utilizados</span>
-                            <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.repuestos_descripcion}</p>
-                        </div>
-                    )}
-                    {/* Trabajo Realizado (Handling JSON simpler for now) */}
-                    {/* For simply displaying if JSON is complex, just show if present or map if simple array */}
-                </SectionCard>
-
-                {/* 4. Financiero */}
-                <SectionCard title="Desglose Financiero" icon={ShoppingCart} color="green">
-                    <InfoRow label="Mano de Obra" value={formatMoney(service.mano_obra)} />
-                    <InfoRow label="Costo Repuestos" value={formatMoney(service.repuestos_costo)} />
-                    <InfoRow label="Subtotal" value={formatMoney(service.subtotal)} />
-                    {service.incluir_iva && <InfoRow label="IVA (16%)" value={formatMoney(service.iva)} />}
-                    <div className="my-2 border-t border-slate-300/50"></div>
-                    <InfoRow label="Total" value={formatMoney(service.total)} />
-                    <InfoRow label="Anticipo" value={formatMoney(service.anticipo)} />
-                    <div className="p-2 rounded bg-blue-500/10 mt-2">
-                        <div className="flex justify-between items-center font-bold text-blue-600">
-                            <span>Saldo Pendiente</span>
-                            <span>{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
-                        </div>
-                    </div>
-                </SectionCard>
-
-                {/* 5. Técnico y Obs */}
-                <SectionCard title="Información Adicional" icon={Users} color="orange">
-                    <InfoRow label="Técnico Responsable" value={service.tecnico_nombre} />
-                    <div className="mt-3">
-                        <span className={`text-xs font-bold uppercase mb-1 block ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Observaciones</span>
-                        <p className={`text-sm italic ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{service.observaciones || 'Ninguna observación'}</p>
-                    </div>
-                </SectionCard>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {service.firma_tecnico_path && (
-                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
-                        <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
-                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma del Técnico</p>
-                    </div>
-                )}
-
-                {service.firma_cliente_path && (
-                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
-                        <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
-                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma de Conformidad</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Photo Gallery */}
-            <div className="mt-8">
-                <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                    <Image className="w-5 h-5 text-blue-500" /> Evidencia Fotográfica
-                </h3>
-                {loadingPhotos ? (
-                    <div className="flex justify-center p-8">
-                        <Loader className="animate-spin w-6 h-6 text-blue-600" />
-                    </div>
-                ) : photos.length === 0 ? (
-                    <div className={`p-8 rounded-xl border text-center ${darkMode ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-                        No hay fotografías registradas para este servicio.
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {photos.map((photo) => (
-                            <div key={photo.id} className={`group relative aspect-video rounded-xl overflow-hidden border shadow-sm transition-all hover:shadow-md ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
-                                <img
-                                    src={photo.uri}
-                                    alt={`Evidencia ${photo.id}`}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                    <button
-                                        onClick={() => window.open(photo.uri, '_blank')}
-                                        className="bg-white/90 text-slate-800 p-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all"
-                                        title="Ver imagen completa"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                    </button>
+                            <div className="flex items-center gap-4">
+                                {company?.logo_uri ? (
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain bg-white rounded-xl shadow-sm p-1" />
+                                ) : (
+                                    <div className="w-20 h-20 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
+                                        {company?.nombre?.charAt(0) || 'C'}
+                                    </div>
+                                )}
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-800 leading-tight">
+                                        {company?.nombre || 'Mi Empresa'}
+                                    </h2>
+                                    <p className="text-xs text-slate-600 font-medium mt-1">
+                                        {company?.telefono}
+                                    </p>
+                                    {company?.direccion && (
+                                        <p className="text-xs text-slate-500">
+                                            {company.direccion}
+                                        </p>
+                                    )}
+                                    {company?.email && (
+                                        <p className="text-xs text-slate-500">
+                                            {company.email}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Right: Service Number & Date */}
+                        <div className="text-left md:text-right">
+                            <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 mb-1">
+                                Reporte de Servicio
+                            </span>
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-blue-800 mb-2">
+                                #{service.orden_numero}
+                            </h1>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/60 rounded-lg border border-blue-100 shadow-sm">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">FECHA:</span>
+                                <span className="text-xs font-mono font-bold text-slate-700">
+                                    {formatServiceDate(service.fecha)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left Column - 2 cols */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Cliente y Técnico */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Cliente */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Cliente</h3>
+                                </div>
+                                <p className="text-xl font-bold text-slate-800 mb-1">{service.cliente_nombre}</p>
+                                <p className="text-sm text-slate-500">{service.cliente_telefono}</p>
+                            </div>
+
+                            {/* Técnico Responsable */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Users className="w-5 h-5 text-orange-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-600">Técnico Responsable</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                                        {service.tecnico_nombre ? service.tecnico_nombre.charAt(0) : 'I'}
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-bold text-slate-800">{service.tecnico_nombre || 'Sin asignar'}</p>
+                                        <p className="text-xs text-slate-500">Asignado al servicio</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Dispositivo */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-white border border-purple-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Monitor className="w-5 h-5 text-purple-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600">Dispositivo</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Equipo</p>
+                                    <p className="text-base font-semibold text-slate-800">{service.equipo_tipo} • {service.equipo_modelo}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Número de Serie</p>
+                                    <p className="text-base font-mono text-slate-600">{service.equipo_serie}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Informe Técnico */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-50 to-white border border-cyan-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Settings className="w-5 h-5 text-cyan-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Informe Técnico</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Problema Reportado */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Problema Reportado</p>
+                                    <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                                        {(service.problema_reportado || '').split('\n').map((line, i) => (
+                                            line.trim() && (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-red-800">{line}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                        {!service.problema_reportado && <p className="text-sm text-red-600 italic">No especificado</p>}
+                                    </div>
+                                </div>
+
+                                {/* Diagnóstico */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Diagnóstico Realizado</p>
+                                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                        {(service.diagnostico_tecnico || '').split('\n').map((line, i) => (
+                                            line.trim() && (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-blue-800">{line}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                        {!service.diagnostico_tecnico && <p className="text-sm text-blue-600 italic">Diagnóstico pendiente...</p>}
+                                    </div>
+                                </div>
+
+                                {/* Trabajo Realizado */}
+                                {service.trabajo_realizado && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Trabajo Realizado</p>
+                                        <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                                            {(Array.isArray(service.trabajo_realizado) ? service.trabajo_realizado : (typeof service.trabajo_realizado === 'string' ? service.trabajo_realizado.split(',') : [])).map((item, i) => (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-green-800">{typeof item === 'string' ? item : JSON.stringify(item)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Repuestos */}
+                                {service.repuestos_descripcion && service.repuestos_descripcion !== '[]' && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Repuestos & Materiales</p>
+                                        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                            <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Observaciones */}
+                                {service.observaciones && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Observaciones</p>
+                                        <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                                            <p className="text-sm text-amber-800 italic">"{service.observaciones}"</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Resumen Financiero */}
+                    <div className="lg:col-span-1">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 sticky top-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <ShoppingCart className="w-5 h-5 text-blue-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Resumen Financiero</h3>
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Mano de Obra</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.mano_obra)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Repuestos</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.repuestos_costo)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Subtotal</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.subtotal)}</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-4 mb-6">
+                                <p className="text-xs text-blue-400 uppercase tracking-wider mb-2 text-center font-bold">Total a Pagar</p>
+                                <p className="text-4xl font-black text-center text-blue-600">
+                                    {formatMoney(service.total)}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 p-4 rounded-xl bg-white border border-slate-200">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
+                                    <span className="font-bold text-blue-600">-{formatMoney(service.anticipo)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                    <span className="text-slate-800 font-bold uppercase text-xs">Restante</span>
+                                    <span className="font-bold text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Firmas */}
+                {(service.firma_tecnico_path || service.firma_cliente_path) && (
+                    <div className="px-8 md:px-10 pb-8 grid grid-cols-2 gap-6">
+                        {service.firma_tecnico_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-xs uppercase tracking-widest text-slate-400">Firma del Técnico</p>
+                            </div>
+                        )}
+                        {service.firma_cliente_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-xs uppercase tracking-widest text-slate-400">Firma de Conformidad</p>
+                            </div>
+                        )}
                     </div>
                 )}
+
+                {/* Galería de Fotos */}
+                <div className="px-8 md:px-10 pb-10">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Image className="w-5 h-5 text-purple-600" />
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600">Evidencia Fotográfica</h3>
+                    </div>
+                    {loadingPhotos ? (
+                        <div className="flex justify-center p-12">
+                            <Loader className="animate-spin w-8 h-8 text-blue-500" />
+                        </div>
+                    ) : photos.length === 0 ? (
+                        <div className="p-12 rounded-xl border border-dashed border-slate-300 text-center text-slate-400">
+                            No se han adjuntado fotografías a este servicio.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {photos.map((photo) => (
+                                <div key={photo.id} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm cursor-pointer transition-all hover:shadow-lg hover:scale-105">
+                                    <img
+                                        src={photo.uri}
+                                        alt={`Evidencia ${photo.id}`}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                        <button
+                                            onClick={() => window.open(photo.uri, '_blank')}
+                                            className="bg-white text-slate-800 p-3 rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -3496,6 +3774,12 @@ const App = () => {
         );
     };
 
+    // Check for public tracking route BEFORE auth check
+    const urlPath = window.location.pathname;
+    if (urlPath.includes('/track/')) {
+        return <PublicRepairTracking />;
+    }
+
     if (loadingAuth) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
     if (!session) return <Login currentTheme={currentTheme} setTheme={setTheme} />;
 
@@ -3760,7 +4044,7 @@ const App = () => {
                         {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
                         {activeTab === 'services-cctv-view' && <CCTVServiceView service={selectedService} onBack={() => setActiveTab('services-cctv-list')} darkMode={isDark} />}
                         {activeTab === 'services-pc-list' && <PCList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewPCService} />}
-                        {activeTab === 'services-pc-view' && <PCServiceView service={selectedService} onBack={() => setActiveTab('services-pc-list')} darkMode={isDark} />}
+                        {activeTab === 'services-pc-view' && <PCServiceView service={selectedService} onBack={() => setActiveTab('services-pc-list')} darkMode={isDark} company={company} />}
                         {activeTab === 'contratos' && (
                             <ContractsView darkMode={isDark} company={company} />
                         )}
