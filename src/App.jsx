@@ -3855,6 +3855,14 @@ const App = () => {
     };
 
     // Check for public tracking route BEFORE auth check
+    // Check for public tracking route BEFORE auth check
+    // Modified for GitHub Pages Hash Routing compatibility
+    const urlHash = window.location.hash;
+    if (urlHash.includes('#/track/')) {
+        return <PublicRepairTracking />;
+    }
+
+    // Legacy support for direct paths (in case of local dev or different hosting)
     const urlPath = window.location.pathname;
     if (urlPath.includes('/track/')) {
         return <PublicRepairTracking />;

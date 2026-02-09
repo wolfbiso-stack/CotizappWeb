@@ -36,9 +36,10 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
         }
     };
 
-    // Get base path from document base or default
+    // Get base path from document base or default to /CotizappWeb/
     const basePath = document.querySelector('base')?.getAttribute('href') || '/CotizappWeb/';
-    const publicUrl = `${window.location.origin}${basePath}track/${service.public_token}`;
+    // Use Hash Routing for GitHub Pages compatibility
+    const publicUrl = `${window.location.origin}${basePath}#/track/${service.public_token}`;
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('es-MX', {
