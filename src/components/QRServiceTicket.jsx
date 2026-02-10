@@ -225,6 +225,49 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
                                     </div>
                                 </div>
 
+                                {/* Refacciones Section */}
+                                {(() => {
+                                    let parts = [];
+                                    try {
+                                        parts = JSON.parse(service.repuestos_descripcion || '[]');
+                                        if (!Array.isArray(parts)) parts = [];
+                                    } catch (e) {
+                                        if (service.repuestos_descripcion && typeof service.repuestos_descripcion === 'string' && service.repuestos_descripcion.trim().length > 0) {
+                                            parts = [{ id: 'legacy', cantidad: 1, descripcion: service.repuestos_descripcion, precio_publico: service.repuestos_costo || 0 }];
+                                        }
+                                    }
+
+                                    if (parts.length === 0) return null;
+
+                                    return (
+                                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Refacciones y Materiales</h4>
+                                            <div className="overflow-hidden">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="text-left text-[10px] text-slate-400 uppercase tracking-wider">
+                                                            <th className="pb-2 font-bold w-12 text-center">Cant.</th>
+                                                            <th className="pb-2 font-bold">Descripción</th>
+                                                            <th className="pb-2 font-bold text-right">Precio</th>
+                                                            <th className="pb-2 font-bold text-right">Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-200">
+                                                        {parts.map((part, idx) => (
+                                                            <tr key={idx} className="text-slate-700">
+                                                                <td className="py-2 text-center font-bold text-slate-500">{part.cantidad}</td>
+                                                                <td className="py-2 pr-4">{part.descripcion}</td>
+                                                                <td className="py-2 text-right font-mono text-xs text-slate-500">${formatCurrency(part.precio_publico)}</td>
+                                                                <td className="py-2 text-right font-mono text-xs font-bold">${formatCurrency((part.cantidad || 0) * (part.precio_publico || 0))}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
                                 {/* Financial Summary */}
                                 <div className="flex justify-between items-end border-t-2 border-slate-100 pt-6">
                                     <div className="text-sm text-slate-500">

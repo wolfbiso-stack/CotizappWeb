@@ -135,6 +135,40 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                         {/* Separator */}
                         <div className="border-b border-black my-2"></div>
 
+                        {/* Parts List */}
+                        {(() => {
+                            let parts = [];
+                            try {
+                                parts = JSON.parse(service.repuestos_descripcion || '[]');
+                                if (!Array.isArray(parts)) parts = [];
+                            } catch (e) {
+                                if (service.repuestos_descripcion && typeof service.repuestos_descripcion === 'string' && service.repuestos_descripcion.trim().length > 0) {
+                                    parts = [{ cantidad: 1, descripcion: service.repuestos_descripcion, precio_publico: service.repuestos_costo || 0 }];
+                                }
+                            }
+
+                            if (parts.length === 0) return null;
+
+                            return (
+                                <div className="mb-2">
+                                    <p className="font-bold mb-1">Refacciones:</p>
+                                    <div className="space-y-1">
+                                        {parts.map((part, idx) => (
+                                            <div key={idx} className="flex justify-between items-start">
+                                                <span className="flex-1">
+                                                    {part.cantidad} x {part.descripcion}
+                                                </span>
+                                                <span className="ml-2">
+                                                    {formatCurrency((part.cantidad || 0) * (part.precio_publico || 0))}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="border-b border-dotted border-black my-1"></div>
+                                </div>
+                            );
+                        })()}
+
                         {/* 5. Cost Breakdown */}
                         <div className="mb-2 space-y-1">
                             <div className="flex justify-between">
@@ -175,8 +209,8 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                         {/* Footer Disclaimer */}
                         <div className="mt-4 text-[8px] text-center text-justify">
                             <p>
-                                GARANTÍA: 30 días en mano de obra. No cubre partes eléctricas, mojadas o mal uso.
-                                Pasados 30 días sin reclamar el equipo, se donará o reciclará sin responsabilidad para el taller.
+                                GARANTÍA: 30 días en mano de obra. No cubre partes mojadas o mal uso.
+                                Equipos sin reclamar causan abandono en 60 días.
                             </p>
                         </div>
 

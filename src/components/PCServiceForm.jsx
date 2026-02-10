@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, Monitor, Settings, ShoppingCart, Calendar, Plus, Trash2, Image } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../../utils/supabase';
 
 const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     // Initial State derived from service prop or defaults
