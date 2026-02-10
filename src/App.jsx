@@ -3271,8 +3271,8 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, s
     const isDark = currentTheme === 'dark';
 
     const sidebarClasses = mobileMode
-        ? `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600'} ${isGlass ? 'text-amber-900' : 'text-white'} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
-        : `fixed inset-y-0 left-0 z-20 w-72 ${isGlass ? 'text-amber-900' : 'text-white'} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : 'bg-transparent'}`;
+        ? `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600'} ${isGlass ? 'text-amber-900' : 'text-white'} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
+        : `fixed inset-y-0 left-0 z-20 w-72 ${isGlass ? 'text-amber-900' : 'text-white'} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : 'bg-transparent'} no-print`;
 
     const textMuted = isGlass ? 'text-amber-700/70' : 'text-blue-200';
     const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : 'hover:text-white';
@@ -4411,7 +4411,7 @@ const App = () => {
         };
 
         return (
-            <div className={`w-full min-h-screen p-8 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+            <div className={`w-full min-h-screen p-8 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'} print:p-0 print:min-h-0 print:bg-white`}>
                 {/* Navigation Bar (No-Print) */}
                 <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center no-print">
                     <button
@@ -4429,7 +4429,7 @@ const App = () => {
                 </div>
 
                 {/* Contract Paper */}
-                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none">
+                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none print:overflow-visible print:rounded-none">
                     {/* Header */}
                     <div className="bg-[#1e3a8a] p-10 text-white flex justify-between items-center print:bg-[#1e3a8a] print:text-white">
                         <div className="flex items-center gap-6">
@@ -4454,10 +4454,10 @@ const App = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-12 text-gray-800 text-[13px] leading-relaxed text-justify">
-                        <h2 className="text-center font-bold text-lg mb-8 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Instalación de CCTV</h2>
+                    <div className="p-10 text-gray-800 text-[13px] leading-relaxed text-justify">
+                        <h2 className="text-center font-bold text-lg mb-6 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Instalación de CCTV</h2>
 
-                        <p className="mb-8">
+                        <p className="mb-6">
                             CONTRATO DE PRESTACIÓN DE SERVICIOS DE INSTALACIÓN DE SISTEMAS DE VIDEOVIGILANCIA (CCTV) que celebran por una parte <strong>{company?.nombre}</strong>, con domicilio en <strong>{company?.direccion}, {company?.ciudad}</strong>, a quien en lo sucesivo se le denominará “EL PRESTADOR”, y por la otra <span
                                 contentEditable
                                 suppressContentEditableWarning
@@ -4465,7 +4465,7 @@ const App = () => {
                             >{clientName}</span>, a quien en lo sucesivo se le denominará “EL CLIENTE”, al tenor de las siguientes declaraciones y cláusulas:
                         </p>
 
-                        <div className="space-y-8">
+                        <div className="space-y-6">
                             <section>
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">DECLARACIONES</h3>
                                 <div className="space-y-4">
@@ -4492,7 +4492,7 @@ const App = () => {
                             </section>
 
                             <section>
-                                <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-4">CLÁUSULAS</h3>
+                                <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">CLÁUSULAS</h3>
 
                                 <div className="space-y-6">
                                     <div>
@@ -4538,18 +4538,16 @@ const App = () => {
                                         <p><strong>NOVENA. CANCELACIÓN.</strong> El anticipo no será reembolsable si ya se adquirieron equipos. Si la instalación comenzó, se cobrará el trabajo realizado proporcionalmente.</p>
                                     </div>
 
-                                    <div>
-                                        <p><strong>DÉCIMA. JURISDICCIÓN.</strong> Ambas partes se someten a las leyes y tribunales competentes de <strong>{company?.ciudad}</strong>.</p>
-                                    </div>
+
                                 </div>
                             </section>
 
-                            <section className="mt-12 break-inside-avoid">
-                                <p className="mb-12">
+                            <section className="mt-6 break-inside-avoid">
+                                <p className="mb-6">
                                     Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{year}</span>.
                                 </p>
 
-                                <div className="grid grid-cols-2 gap-20 text-center mt-16">
+                                <div className="grid grid-cols-2 gap-20 text-center mt-10">
                                     <div>
                                         <div className="h-20 border-b border-slate-900 mx-auto w-4/5 italic text-blue-700 underline uppercase"></div>
                                         <p className="mt-4 font-bold uppercase text-xs italic text-blue-700 underline uppercase">EL PRESTADOR</p>
@@ -4574,8 +4572,8 @@ const App = () => {
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     @media print {
-                        @page { margin: 0; size: auto; }
-                        body { background: white; padding: 0; margin: 0; }
+                        @page { margin: 1cm; size: auto; }
+                        body { background: white !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
                         .no-print { display: none !important; }
                         .print\\:shadow-none { box-shadow: none !important; }
                         .print\\:border-none { border: none !important; }
@@ -4583,7 +4581,23 @@ const App = () => {
                         .print\\:max-w-none { max-width: none !important; }
                         .print\\:text-white { color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         .print\\:bg-\\[\\#1e3a8a\\] { background-color: #1e3a8a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        [contenteditable] { background-color: transparent !important; border-bottom: none !important; }
+                        .print\\:overflow-visible { overflow: visible !important; }
+                        .print\\:rounded-none { border-radius: 0 !important; }
+                        .print\\:min-h-0 { min-height: 0 !important; }
+                        .print\\:bg-white { background-color: white !important; }
+                        .print\\:p-0 { padding: 0 !important; }
+                        [contenteditable] { 
+                            background-color: transparent !important; 
+                            border: none !important; 
+                            color: black !important;
+                            padding: 0 !important;
+                            box-shadow: none !important;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        .bg-green-50, .bg-slate-100, .bg-slate-50 {
+                            background-color: transparent !important;
+                        }
                     }
                 `}} />
             </div>
@@ -4608,7 +4622,7 @@ const App = () => {
         };
 
         return (
-            <div className={`w-full min-h-screen p-8 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+            <div className={`w-full min-h-screen p-8 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'} print:p-0 print:min-h-0 print:bg-white`}>
                 {/* Navigation Bar (No-Print) */}
                 <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center no-print">
                     <button
@@ -4626,7 +4640,7 @@ const App = () => {
                 </div>
 
                 {/* Contract Paper */}
-                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none">
+                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none print:overflow-visible print:rounded-none">
                     {/* Header */}
                     <div className="bg-[#1e3a8a] p-10 text-white flex justify-between items-center print:bg-[#1e3a8a] print:text-white">
                         <div className="flex items-center gap-6">
@@ -4653,11 +4667,11 @@ const App = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-12 text-gray-800 text-[13px] leading-relaxed text-justify">
+                    <div className="p-10 text-gray-800 text-[13px] leading-relaxed text-justify">
 
-                        <h2 className="text-center font-bold text-lg mb-8 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Ensamble de Computadoras</h2>
+                        <h2 className="text-center font-bold text-lg mb-6 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Ensamble de Computadoras</h2>
 
-                        <p className="mb-8">
+                        <p className="mb-6">
                             CONTRATO DE PRESTACIÓN DE SERVICIOS DE ENSAMBLE, CONFIGURACIÓN Y OPTIMIZACIÓN DE EQUIPO DE CÓMPUTO que celebran por una parte <strong>{company?.nombre}</strong>, con domicilio en <strong>{company?.direccion}, {company?.ciudad}</strong>, a quien en lo sucesivo se le denominará “EL PRESTADOR”, y por la otra <span
                                 contentEditable
                                 suppressContentEditableWarning
@@ -4665,7 +4679,7 @@ const App = () => {
                             >{clientName}</span>, a quien en lo sucesivo se le denominará “EL CLIENTE”, al tenor de las siguientes declaraciones y cláusulas:
                         </p>
 
-                        <div className="space-y-8">
+                        <div className="space-y-6">
                             <section>
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">DECLARACIONES</h3>
                                 <div className="space-y-4">
@@ -4691,7 +4705,7 @@ const App = () => {
                             </section>
 
                             <section>
-                                <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-4">CLÁUSULAS</h3>
+                                <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">CLÁUSULAS</h3>
 
                                 <div className="space-y-6">
                                     <div>
@@ -4725,18 +4739,16 @@ const App = () => {
                                         <p><strong>SEXTA. EXCLUSIÓN DE RESPONSABILIDAD.</strong> EL PRESTADOR no es responsable por daños derivados de: Inestabilidad eléctrica en el domicilio del cliente, manipulación posterior por terceros, o instalación de software malicioso (virus/malware) posterior a la entrega.</p>
                                     </div>
 
-                                    <div>
-                                        <p><strong>SÉPTIMA. JURISDICCIÓN.</strong> Ambas partes se someten a las leyes y tribunales competentes de <strong>{company?.ciudad}</strong>.</p>
-                                    </div>
+
                                 </div>
                             </section>
 
-                            <section className="mt-12 break-inside-avoid">
-                                <p className="mb-12">
+                            <section className="mt-6 break-inside-avoid">
+                                <p className="mb-6">
                                     Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{year}</span>.
                                 </p>
 
-                                <div className="grid grid-cols-2 gap-20 text-center mt-16">
+                                <div className="grid grid-cols-2 gap-20 text-center mt-10">
                                     <div>
                                         <div className="h-20 border-b border-slate-900 mx-auto w-4/5 italic text-blue-700 underline uppercase"></div>
                                         <p className="mt-4 font-bold uppercase text-xs italic text-blue-700 underline uppercase">EL PRESTADOR</p>
@@ -4753,16 +4765,14 @@ const App = () => {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 border-t p-6 text-center print:bg-white print:border-none">
-                        <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em]">Ensambles • Configuración • Rendimiento</p>
-                    </div>
+
                 </div>
 
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     @media print {
-                        @page { margin: 0; size: auto; }
-                        body { background: white; padding: 0; margin: 0; }
+                        @page { margin: 1cm; size: auto; }
+                        body { background: white !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
                         .no-print { display: none !important; }
                         .print\\:shadow-none { box-shadow: none !important; }
                         .print\\:border-none { border: none !important; }
@@ -4770,15 +4780,30 @@ const App = () => {
                         .print\\:max-w-none { max-width: none !important; }
                         .print\\:text-white { color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         .print\\:bg-\\[\\#1e3a8a\\] { background-color: #1e3a8a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .print\\:overflow-visible { overflow: visible !important; }
+                        .print\\:rounded-none { border-radius: 0 !important; }
+                        .print\\:min-h-0 { min-height: 0 !important; }
+                        .print\\:bg-white { background-color: white !important; }
+                        .print\\:p-0 { padding: 0 !important; }
                         .print-gradient-text {
-                            background-image: linear-gradient(to right, #2563eb, #a855f7, #9333ea) !important;
-                            -webkit-background-clip: text !important;
-                            background-clip: text !important;
-                            color: transparent !important;
+                            background-image: none !important;
+                            color: black !important;
+                            -webkit-background-clip: initial !important;
+                            background-clip: initial !important;
+                            -webkit-text-fill-color: initial !important;
+                        }
+                        [contenteditable] { 
+                            background-color: transparent !important; 
+                            border: none !important; 
+                            color: black !important;
+                            padding: 0 !important;
+                            box-shadow: none !important;
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
                         }
-                        [contenteditable] { background-color: transparent !important; border-bottom: none !important; }
+                        .bg-green-50, .bg-slate-100, .bg-slate-50 {
+                            background-color: transparent !important;
+                        }
                     }
                 `}} />
             </div>
@@ -4879,7 +4904,8 @@ const App = () => {
 
     return (
         <ErrorBoundary>
-            <div className={`min-h-screen flex ${getBackgroundClass()} ${currentTheme === 'dark' ? 'dark' : ''}`}>
+            <style dangerouslySetInnerHTML={{ __html: `@media print { .no-print { display: none !important; } }` }} />
+            <div className={`min-h-screen flex ${getBackgroundClass()} ${currentTheme === 'dark' ? 'dark' : ''} print:bg-white`}>
                 <Sidebar
                     activeTab={activeTab}
                     setActiveTab={handleNavigation} // Pass the wrapper instead of direct setter
@@ -4931,7 +4957,7 @@ const App = () => {
 
                 {/* Mobile Header */}
                 {mobileMode && (
-                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-blue-600 text-white border-blue-500'}`}>
+                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-blue-600 text-white border-blue-500'} no-print`}>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setSidebarOpen(true)}
@@ -4946,8 +4972,8 @@ const App = () => {
                     </div>
                 )}
 
-                <main className={`flex-1 transition-all duration-300 p-8 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'}`}>
-                    <div className={`w-full h-full rounded-[2.5rem] shadow-2xl overflow-y-auto px-8 py-10 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'}`}>
+                <main className={`flex-1 transition-all duration-300 p-8 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
+                    <div className={`w-full h-full rounded-[2.5rem] shadow-2xl overflow-y-auto px-8 py-10 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'} print:bg-white print:p-0 print:rounded-none print:shadow-none print:h-auto print:overflow-visible`}>
 
                         {activeTab === 'cotizaciones-list' && (
                             <QuotationList
