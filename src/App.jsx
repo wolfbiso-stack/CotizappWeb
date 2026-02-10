@@ -13,6 +13,14 @@ import PCServiceForm from './components/PCServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate } from './utils/format';
 
+// --- UTILS ---
+const computeFileHash = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -3078,6 +3086,23 @@ const App = () => {
                 console.log(`Uploading ${files.length} photos for service ${data.id}...`);
                 const uploadPromises = files.map(async (file) => {
                     try {
+                        // 1. Compute Hash
+                        const hash = await computeFileHash(file);
+
+                        // 2. Check for Duplicates
+                        const { data: existingPhoto } = await supabase
+                            .from('servicio_fotos')
+                            .select('id')
+                            .eq('servicio_id', data.id)
+                            .eq('hash', hash)
+                            .maybeSingle();
+
+                        if (existingPhoto) {
+                            console.log(`Duplicate photo detected (hash: ${hash}), skipping upload.`);
+                            return { success: true, skipped: true };
+                        }
+
+                        // 3. Unique Photo: Proceed with upload
                         const fileExt = file.name.split('.').pop();
                         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
                         const filePath = `${session.user.id}/${data.id}/${fileName}`;
@@ -3092,19 +3117,20 @@ const App = () => {
                             .from('servicio-files-v2')
                             .getPublicUrl(filePath);
 
-                        // Link to service_fotos table
+                        // 4. Link to service_fotos table with HASH
                         const { error: dbError } = await supabase
                             .from('servicio_fotos')
                             .insert({
                                 servicio_id: data.id,
                                 user_id: session.user.id,
                                 uri: publicUrl,
-                                tipo_servicio: 'servicio_pc'
+                                tipo_servicio: 'servicio_pc',
+                                hash: hash
                             });
 
                         if (dbError) throw dbError;
 
-                        return { success: true, url: publicUrl };
+                        return { success: true, url: publicUrl, hash: hash };
                     } catch (uploadErr) {
                         console.error('Error uploading file:', uploadErr);
                         return { success: false, error: uploadErr };
