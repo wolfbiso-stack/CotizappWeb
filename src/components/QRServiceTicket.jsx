@@ -233,7 +233,7 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
                                         if (!Array.isArray(parts)) parts = [];
                                     } catch (e) {
                                         if (service.repuestos_descripcion && typeof service.repuestos_descripcion === 'string' && service.repuestos_descripcion.trim().length > 0) {
-                                            parts = [{ id: 'legacy', cantidad: 1, descripcion: service.repuestos_descripcion, precio_publico: service.repuestos_costo || 0 }];
+                                            parts = [{ id: 'legacy', cantidad: 1, producto: service.repuestos_descripcion, costoPublico: service.repuestos_costo || 0 }];
                                         }
                                     }
 
@@ -256,9 +256,9 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
                                                         {parts.map((part, idx) => (
                                                             <tr key={idx} className="text-slate-700">
                                                                 <td className="py-2 text-center font-bold text-slate-500">{part.cantidad}</td>
-                                                                <td className="py-2 pr-4">{part.descripcion}</td>
-                                                                <td className="py-2 text-right font-mono text-xs text-slate-500">${formatCurrency(part.precio_publico)}</td>
-                                                                <td className="py-2 text-right font-mono text-xs font-bold">${formatCurrency((part.cantidad || 0) * (part.precio_publico || 0))}</td>
+                                                                <td className="py-2 pr-4">{part.producto || part.descripcion}</td>
+                                                                <td className="py-2 text-right font-mono text-xs text-slate-500">${formatCurrency(part.costoPublico || part.precio_publico)}</td>
+                                                                <td className="py-2 text-right font-mono text-xs font-bold">${formatCurrency((part.cantidad || 0) * (part.costoPublico || part.precio_publico || 0))}</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>

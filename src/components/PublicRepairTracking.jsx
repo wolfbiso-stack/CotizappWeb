@@ -277,8 +277,8 @@ const PublicRepairTracking = () => {
                                             {JSON.parse(service.repuestos_descripcion).map((part, i) => (
                                                 <div key={i} className="flex items-center text-sm py-2 border-b border-slate-100 last:border-0">
                                                     <div className="w-16 text-center text-slate-500 font-bold">{part.cantidad || 1}</div>
-                                                    <div className="flex-1 text-slate-700 font-medium">{part.descripcion}</div>
-                                                    <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.precio_publico)}</div>
+                                                    <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
+                                                    <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico)}</div>
                                                 </div>
                                             ))}
                                         </div>

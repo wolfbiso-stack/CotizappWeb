@@ -143,7 +143,7 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                                 if (!Array.isArray(parts)) parts = [];
                             } catch (e) {
                                 if (service.repuestos_descripcion && typeof service.repuestos_descripcion === 'string' && service.repuestos_descripcion.trim().length > 0) {
-                                    parts = [{ cantidad: 1, descripcion: service.repuestos_descripcion, precio_publico: service.repuestos_costo || 0 }];
+                                    parts = [{ cantidad: 1, producto: service.repuestos_descripcion, costoPublico: service.repuestos_costo || 0 }];
                                 }
                             }
 
@@ -156,10 +156,10 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                                         {parts.map((part, idx) => (
                                             <div key={idx} className="flex justify-between items-start">
                                                 <span className="flex-1">
-                                                    {part.cantidad} x {part.descripcion}
+                                                    {part.cantidad} x {part.producto || part.descripcion}
                                                 </span>
                                                 <span className="ml-2">
-                                                    {formatCurrency((part.cantidad || 0) * (part.precio_publico || 0))}
+                                                    {formatCurrency((part.cantidad || 0) * (part.costoPublico || part.precio_publico || 0))}
                                                 </span>
                                             </div>
                                         ))}

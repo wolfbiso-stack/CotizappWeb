@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, Monitor, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, ShieldCheck, HardDrive } from 'lucide-react';
+import { X, Save, User, Smartphone, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, ShieldCheck } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { supabase } from '../../utils/supabase';
 
-const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
+const PhoneServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     // Initial State derived from service prop or defaults
     const [formData, setFormData] = useState({
         orden_numero: '',
@@ -14,18 +14,16 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         cliente_telefono: '',
 
         // Equipo
-        equipo_tipo: 'Laptop',
         equipo_modelo: '',
-        equipo_serie: '',
-        equipo_password: '',
+        equipo_imei: '',
+        equipo_pass: '',
+        estado_fisico: '',
 
         // Técnico
         tecnico_nombre: '',
 
         // Detalles
-        problema_reportado: '',
-        diagnostico_tecnico: '',
-        trabajo_realizado: '',
+        trabajo_realizado: '', // Can be stored as JSON or text depending on App.jsx handling
         observaciones: '',
         repuestos_descripcion: '', // Stores JSON string of parts
 
@@ -40,7 +38,8 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
         // Status
         pagado: false,
-        entregado: false
+        entregado: false,
+        status: 'recibido'
     });
 
     // Valid parts array state
@@ -81,20 +80,9 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             }
             setParts(loadedParts);
 
-            // Workaround logic for legacy password in observations if needed
-            let servicioObservaciones = service.observaciones || '';
-            let servicioPassword = service.equipo_password || '';
-            const passwordMatch = servicioObservaciones.match(/\[Contraseña: (.*?)\]/);
-            if (passwordMatch && !servicioPassword) {
-                servicioPassword = passwordMatch[1];
-                servicioObservaciones = servicioObservaciones.replace(passwordMatch[0], '').trim();
-            }
-
             setFormData({
                 ...formData,
                 ...service,
-                observaciones: servicioObservaciones,
-                equipo_password: servicioPassword,
                 fecha: service.fecha ? service.fecha.split('T')[0] : new Date().toLocaleDateString('en-CA'),
                 mano_obra: service.mano_obra || 0,
                 repuestos_costo: service.repuestos_costo || 0,
@@ -218,15 +206,15 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 {/* Header */}
                 <div className={`px-8 py-6 flex justify-between items-center border-b ${darkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-gray-50/50'}`}>
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20 text-white">
-                            <Monitor className="w-6 h-6" />
+                        <div className="p-3 bg-rose-500 rounded-2xl shadow-lg shadow-rose-500/20 text-white">
+                            <Smartphone className="w-6 h-6" />
                         </div>
                         <div>
                             <h2 className={`text-2xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                                {service ? 'Editar Servicio' : 'Nuevo Servicio'} <span className="text-blue-600">PC</span>
+                                {service ? 'Editar Servicio' : 'Nuevo Servicio'} <span className="text-rose-500">Celular</span>
                             </h2>
                             <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                {service ? `Orden: #${service.orden_numero}` : 'Complete los datos del equipo'}
+                                {service ? `Orden: #${service.orden_numero}` : 'Complete los datos del dispositivo'}
                             </p>
                         </div>
                     </div>
@@ -290,118 +278,85 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 value={formData.tecnico_nombre}
                                 onChange={handleChange}
                                 className={inputClass}
-                                placeholder="Nombre del técnico experto"
+                                placeholder="Nombre del técnico que repara"
                             />
                         </div>
                     </div>
 
                     {/* Device Specs Section */}
-                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-blue-50/30 border-blue-100'}`}>
-                        <div className="flex items-center gap-2 mb-6 text-blue-600">
-                            <HardDrive className="w-5 h-5" />
-                            <h3 className="font-bold uppercase text-xs tracking-widest">Especificaciones del Equipo</h3>
+                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-rose-50/30 border-rose-100'}`}>
+                        <div className="flex items-center gap-2 mb-6 text-rose-500">
+                            <Smartphone className="w-5 h-5" />
+                            <h3 className="font-bold uppercase text-xs tracking-widest">Especificaciones del Dispositivo</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div>
-                                <label className={labelClass}>Tipo de Equipo</label>
-                                <select
-                                    name="equipo_tipo"
-                                    value={formData.equipo_tipo}
-                                    onChange={handleChange}
-                                    className={inputClass}
-                                >
-                                    <option value="Laptop">Laptop</option>
-                                    <option value="Desktop">Desktop / All-in-One</option>
-                                    <option value="Server">Servidor</option>
-                                    <option value="Monitor">Monitor</option>
-                                    <option value="Other">Otro</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className={labelClass}>Modelo / Marca</label>
+                            <div className="md:col-span-2">
+                                <label className={labelClass}>Modelo del Equipo</label>
                                 <input
                                     type="text"
                                     name="equipo_modelo"
                                     value={formData.equipo_modelo}
                                     onChange={handleChange}
                                     className={inputClass}
-                                    placeholder="Ej: Dell Latitude 5420"
+                                    placeholder="Ej: iPhone 13 Pro, Samsung S21..."
                                     required
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Número de Serie</label>
+                                <label className={labelClass}>IMEI</label>
                                 <input
                                     type="text"
-                                    name="equipo_serie"
-                                    value={formData.equipo_serie}
+                                    name="equipo_imei"
+                                    value={formData.equipo_imei}
                                     onChange={handleChange}
                                     className={inputClass}
-                                    placeholder="S/N o Service Tag"
+                                    placeholder="15 dígitos"
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Contraseña/PIN Acceso</label>
+                                <label className={labelClass}>Contraseña/Patrón</label>
                                 <div className="relative">
                                     <ShieldCheck className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
                                     <input
                                         type="text"
-                                        name="equipo_password"
-                                        value={formData.equipo_password}
+                                        name="equipo_pass"
+                                        value={formData.equipo_pass}
                                         onChange={handleChange}
                                         className={`${inputClass} pl-10`}
-                                        placeholder="Clave de pantalla"
+                                        placeholder="Acceso"
                                     />
                                 </div>
                             </div>
                         </div>
+                        <div className="mt-6">
+                            <label className={labelClass}>Estado Físico / Estético</label>
+                            <textarea
+                                name="estado_fisico"
+                                value={formData.estado_fisico}
+                                onChange={handleChange}
+                                className={`${inputClass} h-20 resize-none`}
+                                placeholder="Rayones, golpes, falta de botones..."
+                            ></textarea>
+                        </div>
                     </div>
 
                     {/* Report Section */}
-                    <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <div className="flex items-center gap-2 mb-4 text-amber-500">
+                            <div className="flex items-center gap-2 mb-4 text-orange-500">
                                 <Settings className="w-5 h-5" />
-                                <h3 className="font-bold uppercase text-xs tracking-widest">Problema Reportado</h3>
+                                <h3 className="font-bold uppercase text-xs tracking-widest">Trabajo Realizado / Notas</h3>
                             </div>
                             <textarea
-                                name="problema_reportado"
-                                value={formData.problema_reportado}
+                                name="trabajo_realizado"
+                                value={formData.trabajo_realizado}
                                 onChange={handleChange}
-                                className={`${inputClass} h-24 resize-none`}
-                                placeholder="Falla comentada por el cliente..."
+                                className={`${inputClass} h-40 resize-none`}
+                                placeholder="Describe el trabajo realizado..."
                             ></textarea>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                                    <Settings className="w-5 h-5" />
-                                    <h3 className="font-bold uppercase text-xs tracking-widest">Diagnóstico Técnico</h3>
-                                </div>
-                                <textarea
-                                    name="diagnostico_tecnico"
-                                    value={formData.diagnostico_tecnico}
-                                    onChange={handleChange}
-                                    className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Lo que se encontró al revisar..."
-                                ></textarea>
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2 mb-4 text-emerald-500">
-                                    <Settings className="w-5 h-5" />
-                                    <h3 className="font-bold uppercase text-xs tracking-widest">Trabajo Realizado</h3>
-                                </div>
-                                <textarea
-                                    name="trabajo_realizado"
-                                    value={formData.trabajo_realizado}
-                                    onChange={handleChange}
-                                    className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Acciones correctivas aplicadas..."
-                                ></textarea>
-                            </div>
-                        </div>
                         <div>
-                            <div className="flex items-center gap-2 mb-4 text-slate-500">
+                            <div className="flex items-center gap-2 mb-4 text-blue-500">
                                 <Settings className="w-5 h-5" />
                                 <h3 className="font-bold uppercase text-xs tracking-widest">Observaciones Internas</h3>
                             </div>
@@ -409,8 +364,8 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 name="observaciones"
                                 value={formData.observaciones}
                                 onChange={handleChange}
-                                className={`${inputClass} h-20 resize-none`}
-                                placeholder="Notas internas que no ve el cliente..."
+                                className={`${inputClass} h-40 resize-none`}
+                                placeholder="Notas adicionales del equipo..."
                             ></textarea>
                         </div>
                     </div>
@@ -598,7 +553,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                         {formData.incluir_iva && <span className="bg-blue-100 text-blue-600 text-[8px] px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase">Con IVA</span>}
                                     </div>
                                     <div className="flex items-baseline gap-2">
-                                        <span className={`text-4xl font-black ${restante > 0 ? 'text-slate-800' : 'text-green-500'}`}>
+                                        <span className={`text-4xl font-black ${restante > 0 ? 'text-rose-500' : 'text-green-500'}`}>
                                             ${formatCurrency(restante)}
                                         </span>
                                         <span className={`text-xs font-bold ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -637,4 +592,4 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     );
 };
 
-export default PCServiceForm;
+export default PhoneServiceForm;

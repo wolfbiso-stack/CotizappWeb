@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, Calendar } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -10,6 +10,7 @@ import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
 import ServiceReceipt from './components/ServiceReceipt';
 import PCServiceForm from './components/PCServiceForm';
+import PhoneServiceForm from './components/PhoneServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate } from './utils/format';
 
@@ -1564,6 +1565,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'servicio_fecha', direction: 'desc' });
 
     useEffect(() => {
         fetchServices();
@@ -1586,6 +1588,50 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
             setRefreshing(false);
         }
     };
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedServices = React.useMemo(() => {
+        let sortableItems = [...services];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                // Check if sorting by date
+                if (sortConfig.key.includes('fecha')) {
+                    const parseDate = (d) => {
+                        if (!d) return 0;
+                        // For YYYY-MM-DD, append time to ensure local interpretation
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                            const date = new Date(d + 'T00:00:00');
+                            if (!isNaN(date.getTime())) return date.getTime();
+                        }
+                        const date = new Date(d);
+                        if (!isNaN(date.getTime())) return date.getTime();
+                        const parts = d.split('/');
+                        if (parts.length === 3) {
+                            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`).getTime();
+                        }
+                        return 0;
+                    };
+                    aVal = parseDate(aVal);
+                    bVal = parseDate(bVal);
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [services, sortConfig]);
 
     const handleDelete = async (numero) => {
         if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
@@ -1638,15 +1684,25 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
                     <table className="w-full">
                         <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                             <tr>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>No. Servicio</th>
+                                <th onClick={() => requestSort('servicio_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                    <div className="flex items-center gap-1">
+                                        No. Servicio
+                                        {sortConfig.key === 'servicio_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                    </div>
+                                </th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                <th onClick={() => requestSort('servicio_fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                    <div className="flex items-center gap-1">
+                                        Fecha
+                                        {sortConfig.key === 'servicio_fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                    </div>
+                                </th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
                                 <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                            {services.map((service) => (
+                            {sortedServices.map((service) => (
                                 <tr key={service.servicio_numero} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-bold text-blue-600">#{service.servicio_numero}</span>
@@ -1903,7 +1959,7 @@ const CCTVServiceView = ({ service, onBack, darkMode }) => {
 };
 
 // Status Dropdown Component
-const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
+const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servicios_pc' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
     const [openUpward, setOpenUpward] = useState(false);
@@ -1923,16 +1979,29 @@ const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
     const handleStatusUpdate = async (newStatus) => {
         setUpdating(true);
         try {
+            const updatePayload = { status: newStatus };
+
+            // Sync paid/delivered status for PC and Phone services
+            if (tableName === 'servicios_pc' || tableName === 'servicios_celular') {
+                if (newStatus === 'entregado') {
+                    updatePayload.pagado = true;
+                    updatePayload.entregado = true;
+                } else {
+                    updatePayload.pagado = false;
+                    updatePayload.entregado = false;
+                }
+            }
+
             const { error } = await supabase
-                .from('servicios_pc')
-                .update({ status: newStatus })
+                .from(tableName)
+                .update(updatePayload)
                 .eq('id', service.id);
 
             if (error) throw error;
             onStatusChange();
             setIsOpen(false);
         } catch (error) {
-            console.error('Error updating status:', error);
+            console.error(`Error updating status in ${tableName}:`, error);
             alert('Error al actualizar estado');
         } finally {
             setUpdating(false);
@@ -2015,6 +2084,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
     const [showQRTicket, setShowQRTicket] = useState(false);
     const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
     const [showReceipt, setShowReceipt] = useState(false);
@@ -2041,6 +2111,50 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
             setRefreshing(false);
         }
     };
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedServices = React.useMemo(() => {
+        let sortableItems = [...services];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                // Check if sorting by date
+                if (sortConfig.key.includes('fecha')) {
+                    const parseDate = (d) => {
+                        if (!d) return 0;
+                        // For YYYY-MM-DD, append time to ensure local interpretation
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                            const date = new Date(d + 'T00:00:00');
+                            if (!isNaN(date.getTime())) return date.getTime();
+                        }
+                        const date = new Date(d);
+                        if (!isNaN(date.getTime())) return date.getTime();
+                        const parts = d.split('/');
+                        if (parts.length === 3) {
+                            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`).getTime();
+                        }
+                        return 0;
+                    };
+                    aVal = parseDate(aVal);
+                    bVal = parseDate(bVal);
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [services, sortConfig]);
 
     // ... (rest of handlers)
 
@@ -2108,16 +2222,26 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>No. Servicio</th>
+                                    <th onClick={() => requestSort('orden_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            No. Servicio
+                                            {sortConfig.key === 'orden_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
                                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                    <th onClick={() => requestSort('fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            Fecha
+                                            {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
                                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
                                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
                                     <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                                {services.map((service) => (
+                                {sortedServices.map((service) => (
                                     <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="text-sm font-bold text-blue-600">#{service.orden_numero}</span>
@@ -2271,61 +2395,38 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
     return (
         <div className="w-full min-h-screen p-6 md:p-10">
-            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden">
+            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden shadow-2xl border border-blue-100">
 
-                {/* Header */}
-                <div className="p-6 md:p-8 bg-blue-50 border-b border-blue-100">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        {/* Left: Company Info */}
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={onBack}
-                                className="p-2 rounded-full hover:bg-white/50 transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5 text-slate-600" />
+                {/* Header Section */}
+                <div className="p-8 bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex items-center gap-5">
+                            <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-blue-600">
+                                <ArrowLeft className="w-6 h-6" />
                             </button>
-
                             <div className="flex items-center gap-4">
                                 {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain bg-white rounded-xl shadow-sm p-1" />
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
                                 ) : (
-                                    <div className="w-20 h-20 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
-                                        {company?.nombre?.charAt(0) || 'C'}
-                                    </div>
+                                    <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
                                 <div>
-                                    <h2 className="text-xl font-bold text-slate-800 leading-tight">
-                                        {company?.nombre || 'Mi Empresa'}
-                                    </h2>
-                                    <p className="text-xs text-slate-600 font-medium mt-1">
-                                        {company?.telefono}
-                                    </p>
-                                    <div className="flex gap-2 mt-2">
-                                        <button
-                                            onClick={() => onEdit(service)}
-                                            className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-1 shadow-sm"
-                                        >
-                                            <Edit2 className="w-3 h-3" />
-                                            Editar
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    <div className="flex gap-3 mt-2">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                                            <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right: Service Number & Date */}
                         <div className="text-left md:text-right">
-                            <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 mb-1">
-                                Reporte de Servicio
-                            </span>
-                            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-blue-800 mb-2">
-                                #{service.orden_numero}
-                            </h1>
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/60 rounded-lg border border-blue-100 shadow-sm">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">FECHA:</span>
-                                <span className="text-xs font-mono font-bold text-slate-700">
-                                    {formatServiceDate(service.fecha)}
-                                </span>
+                            <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-1">Reparación de PC</span>
+                            <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">#{service.orden_numero}</h1>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg">
+                                <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                                <span className="text-xs font-mono font-bold">{formatServiceDate(service.fecha)}</span>
                             </div>
                         </div>
                     </div>
@@ -2461,8 +2562,8 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                                                     {parts.map((part, i) => (
                                                                         <div key={i} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
                                                                             <div className="w-12 text-center text-slate-500">{part.cantidad || 1}</div>
-                                                                            <div className="flex-1 text-slate-700 font-medium">{part.descripcion}</div>
-                                                                            <div className="w-20 text-right text-slate-600 font-mono">${formatCurrency(part.precio_publico)}</div>
+                                                                            <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
+                                                                            <div className="w-20 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico)}</div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -2620,6 +2721,8 @@ const ServiciosView = ({ darkMode, onNavigate }) => {
                                 onNavigate('services-cctv-list');
                             } else if (service.id === 'pc') {
                                 onNavigate('services-pc-list');
+                            } else if (service.id === 'celulares') {
+                                onNavigate('services-phone-list');
                             } else {
                                 alert(`Navegar a ${service.title} (Pendiente)`);
                             }
@@ -2637,7 +2740,530 @@ const ServiciosView = ({ darkMode, onNavigate }) => {
     );
 };
 
-// --- SIDEBAR COMPONENT ---
+const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
+    const fetchServices = async () => {
+        setRefreshing(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicios_celular')
+                .select('*')
+                .order('fecha', { ascending: false });
+
+            if (error) throw error;
+            setServices(data || []);
+        } catch (error) {
+            console.error('Error loading Phone services:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedServices = React.useMemo(() => {
+        let sortableItems = [...services];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                // Check if sorting by date
+                if (sortConfig.key.includes('fecha')) {
+                    const parseDate = (d) => {
+                        if (!d) return 0;
+                        // For YYYY-MM-DD, append time to ensure local interpretation
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                            const date = new Date(d + 'T00:00:00');
+                            if (!isNaN(date.getTime())) return date.getTime();
+                        }
+                        const date = new Date(d);
+                        if (!isNaN(date.getTime())) return date.getTime();
+                        const parts = d.split('/');
+                        if (parts.length === 3) {
+                            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`).getTime();
+                        }
+                        return 0;
+                    };
+                    aVal = parseDate(aVal);
+                    bVal = parseDate(bVal);
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [services, sortConfig]);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
+        try {
+            const { error } = await supabase
+                .from('servicios_celular')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            setServices(services.filter(s => s.id !== id));
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Error al eliminar servicio');
+        }
+    };
+
+    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-4">
+                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicios <span className="text-rose-600">Celulares</span>
+                    </h1>
+                    <button
+                        onClick={fetchServices}
+                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        title="Actualizar lista"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-rose-600' : ''}`} />
+                    </button>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={onCreateNew}
+                        className="btn bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Nuevo Servicio
+                    </button>
+                </div>
+            </div>
+
+            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                {services.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500">
+                        No hay servicios de celulares registrados.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto pb-64">
+                        <table className="w-full">
+                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <tr>
+                                    <th onClick={() => requestSort('orden_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            No. Servicio
+                                            {sortConfig.key === 'orden_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th onClick={() => requestSort('fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            Fecha
+                                            {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                                {sortedServices.map((service) => (
+                                    <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-rose-50/30'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-rose-600">#{service.orden_numero}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <StatusDropdown
+                                                service={service}
+                                                darkMode={darkMode}
+                                                onStatusChange={fetchServices}
+                                                tableName="servicios_celular"
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleShowQR(service)}
+                                                    className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                    title="Ver QR de Seguimiento"
+                                                >
+                                                    <QrCode className="w-5 h-5" />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleShowReceipt(service)}
+                                                    className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Imprimir Ticket"
+                                                >
+                                                    <ScrollText className="w-5 h-5" />
+                                                </button>
+
+                                                {service.pagado && service.entregado ? (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
+                                                        Pagado y Entregado
+                                                    </span>
+                                                ) : (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
+                                                        Pendiente de Entregar/Pagar
+                                                    </span>
+                                                )}
+
+                                                <button
+                                                    onClick={() => onViewService(service)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver Servicio"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onEdit(service)}
+                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar Servicio"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(service.id)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Servicio"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+        </div >
+    );
+};
+
+const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
+    if (!service) return null;
+
+    const [photos, setPhotos] = useState([]);
+    const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    useEffect(() => {
+        if (service?.id) fetchPhotos();
+    }, [service]);
+
+    const fetchPhotos = async () => {
+        setLoadingPhotos(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicio_fotos')
+                .select('*')
+                .eq('servicio_id', service.id)
+                .eq('tipo_servicio', 'servicio_celular');
+
+            if (error) throw error;
+            setPhotos(data || []);
+        } catch (error) {
+            console.error('Error fetching photos:', error);
+        } finally {
+            setLoadingPhotos(false);
+        }
+    };
+
+    const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
+
+    return (
+        <div className="w-full min-h-screen p-6 md:p-10">
+            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden shadow-2xl border border-rose-100">
+                {/* Header Section */}
+                <div className="p-8 bg-gradient-to-r from-rose-50 to-white border-b border-rose-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex items-center gap-5">
+                            <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-rose-600">
+                                <ArrowLeft className="w-6 h-6" />
+                            </button>
+                            <div className="flex items-center gap-4">
+                                {company?.logo_uri ? (
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                ) : (
+                                    <div className="w-20 h-20 bg-rose-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-rose-600/20">
+                                        {company?.nombre?.charAt(0) || 'C'}
+                                    </div>
+                                )}
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    <div className="flex gap-3 mt-2">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all flex items-center gap-2 shadow-lg shadow-rose-600/20">
+                                            <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="text-left md:text-right">
+                            <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-rose-400 mb-1">Reparación de Celular</span>
+                            <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">#{service.orden_numero}</h1>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg">
+                                <Calendar className="w-3.5 h-3.5 text-rose-400" />
+                                <span className="text-xs font-mono font-bold">{formatServiceDate(service.fecha)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Info Cards Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 shadow-sm">
+                                <div className="flex items-center gap-3 mb-4 text-blue-600">
+                                    <User className="w-5 h-5" />
+                                    <h3 className="text-xs font-black uppercase tracking-widest">Información del Cliente</h3>
+                                </div>
+                                <p className="text-xl font-bold text-slate-800 mb-1">{service.cliente_nombre}</p>
+                                <p className="text-sm font-medium text-slate-500">{service.cliente_telefono || "Sin teléfono"}</p>
+                            </div>
+
+                            <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 shadow-sm">
+                                <div className="flex items-center gap-3 mb-4 text-orange-600">
+                                    <User className="w-5 h-5" />
+                                    <h3 className="text-xs font-black uppercase tracking-widest">Atendido por</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-orange-600 text-white flex items-center justify-center font-black">
+                                        {service.tecnico_nombre ? service.tecnico_nombre.charAt(0) : 'T'}
+                                    </div>
+                                    <p className="text-xl font-bold text-slate-800">{service.tecnico_nombre || "Público General"}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Device Section */}
+                        <div className="p-8 rounded-3xl bg-slate-900 text-white shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-10">
+                                <Smartphone className="w-32 h-32" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-6 text-rose-400">
+                                    <Smartphone className="w-5 h-5" />
+                                    <h3 className="text-xs font-black uppercase tracking-widest">Detalles del Dispositivo</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    <div>
+                                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Modelo / Equipo</p>
+                                        <p className="text-xl font-bold">{service.equipo_modelo}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">IMEI de Seguridad</p>
+                                        <p className="text-xl font-mono font-bold tracking-tighter text-slate-300">{service.equipo_imei || "----------------"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Acceso / Pass</p>
+                                        <p className="text-xl font-bold bg-white/10 px-3 py-1 rounded-lg inline-block">{service.equipo_pass || "LIBRE"}</p>
+                                    </div>
+                                </div>
+                                {service.estado_fisico && (
+                                    <div className="mt-8 pt-6 border-t border-white/10">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado Físico Reportado</p>
+                                        <p className="text-sm italic text-slate-300">"{service.estado_fisico}"</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Analysis Section */}
+                        <div className="p-8 rounded-3xl border border-slate-100 bg-white shadow-sm space-y-8">
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2">
+                                    <Settings className="w-4 h-4" /> TRABAJO REALIZADO
+                                </h3>
+                                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
+                                    <p className="text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">{service.trabajo_realizado || "Sin descripción de trabajo."}</p>
+                                </div>
+                            </div>
+
+                            {service.repuestos_descripcion && service.repuestos_descripcion !== '[]' && (
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2">
+                                        <ShoppingCart className="w-4 h-4" /> REFACCIONES UTILIZADAS
+                                    </h3>
+                                    <div className="overflow-hidden rounded-2xl border border-slate-100">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b border-slate-100">
+                                                <tr>
+                                                    <th className="px-5 py-3 text-center">Cant</th>
+                                                    <th className="px-5 py-3 text-left">Descripción del Componente</th>
+                                                    <th className="px-5 py-3 text-right">Precio</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {(() => {
+                                                    try {
+                                                        const p = JSON.parse(service.repuestos_descripcion);
+                                                        return p.map((item, idx) => (
+                                                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                                <td className="px-5 py-4 text-center font-bold text-slate-400">{item.cantidad}</td>
+                                                                <td className="px-5 py-4 font-bold text-slate-700">{item.producto || item.descripcion}</td>
+                                                                <td className="px-5 py-4 text-right font-mono font-bold text-slate-900">${formatCurrency(item.costoPublico || item.precio_publico)}</td>
+                                                            </tr>
+                                                        ));
+                                                    } catch { return null; }
+                                                })()}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {service.observaciones && (
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">NOTAS ADICIONALES</h3>
+                                    <p className="text-sm italic text-slate-500">{service.observaciones}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Financial Summary */}
+                    <div className="space-y-6">
+                        <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl sticky top-10">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-rose-400 mb-8 border-b border-white/10 pb-4">Resumen de Cuenta</h3>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Servicio / M.O.</span>
+                                    <span className="font-bold">{formatMoney(service.mano_obra)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Refacciones</span>
+                                    <span className="font-bold">{formatMoney(service.repuestos_costo)}</span>
+                                </div>
+                                {service.incluir_iva && (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">IVA (16%)</span>
+                                        <span className="font-bold">{formatMoney(service.iva)}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-white/5 p-6 rounded-3xl border border-white/10 mb-8">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400 mb-2 text-center">TOTAL NETO</p>
+                                <p className="text-5xl font-black text-center tracking-tighter text-white">
+                                    {formatMoney(service.total)}
+                                </p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Anticipo</span>
+                                    <span className="font-black text-emerald-400">-{formatMoney(service.anticipo)}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-4 rounded-2xl bg-rose-500 shadow-lg shadow-rose-500/20">
+                                    <span className="text-xs font-black text-rose-100 uppercase tracking-widest">POR LIQUIDAR</span>
+                                    <span className="text-2xl font-black text-white">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mini Gallery */}
+                        <div className="p-6 rounded-3xl border border-slate-100 bg-white">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Evidencia ({photos.length})</h3>
+                            {loadingPhotos ? (
+                                <Loader className="animate-spin w-5 h-5 text-slate-300 mx-auto" />
+                            ) : photos.length === 0 ? (
+                                <p className="text-xs text-center text-slate-300 italic py-4 font-medium">Sin fotografías adjuntas.</p>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3">
+                                    {photos.map(p => (
+                                        <div key={p.id} className="aspect-square rounded-2xl overflow-hidden border border-slate-100 group relative">
+                                            <img src={p.uri} alt="evidencia" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                            <button onClick={() => window.open(p.uri, '_blank')} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <Eye className="w-5 h-5 text-white" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 // --- SIDEBAR COMPONENT ---
 
 const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName }) => {
@@ -3004,6 +3630,112 @@ const App = () => {
         return () => subscription.unsubscribe();
     }, []);
 
+    // PHONE SERVICE FORM STATE & HANDLERS
+    const [editingPhoneService, setEditingPhoneService] = useState(null); // null, 'new', or service object
+
+    const handleSavePhoneService = async (serviceData) => {
+        try {
+            let data, error;
+            const { files, photosToDelete, ...payloadData } = serviceData;
+            let payload = { ...payloadData };
+
+            if (editingPhoneService === 'new') {
+                const newOrden = await fetchNextPhoneServiceFolio(session.user.id);
+
+                const newService = {
+                    ...payload,
+                    user_id: session.user.id,
+                    orden_numero: newOrden,
+                    status: 'recibido'
+                };
+
+                const result = await supabase
+                    .from('servicios_celular')
+                    .insert(newService)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            } else {
+                // Update existing
+                const { id, created_at, updated_at, ...updateData } = payload;
+                const result = await supabase
+                    .from('servicios_celular')
+                    .update(updateData)
+                    .eq('id', editingPhoneService.id)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            }
+
+            if (error) throw error;
+
+            // --- PHOTO DELETION LOGIC ---
+            if (photosToDelete && photosToDelete.length > 0) {
+                await supabase
+                    .from('servicio_fotos')
+                    .delete()
+                    .in('id', photosToDelete);
+            }
+
+            // --- PHOTO UPLOAD LOGIC with Deduplication ---
+            if (files && files.length > 0 && data) {
+                const uploadPromises = files.map(async (file) => {
+                    try {
+                        const hash = await computeFileHash(file);
+                        const { data: existingPhoto } = await supabase
+                            .from('servicio_fotos')
+                            .select('id')
+                            .eq('servicio_id', data.id)
+                            .eq('hash', hash)
+                            .maybeSingle();
+
+                        if (existingPhoto) return { success: true, skipped: true };
+
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const filePath = `${session.user.id}/${data.id}/${fileName}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('servicio-files-v2')
+                            .upload(filePath, file);
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('servicio-files-v2')
+                            .getPublicUrl(filePath);
+
+                        const { error: dbError } = await supabase
+                            .from('servicio_fotos')
+                            .insert({
+                                servicio_id: data.id,
+                                user_id: session.user.id,
+                                uri: publicUrl,
+                                tipo_servicio: 'servicio_celular',
+                                hash: hash
+                            });
+
+                        if (dbError) throw dbError;
+                        return { success: true };
+                    } catch (err) {
+                        return { success: false, error: err };
+                    }
+                });
+                await Promise.all(uploadPromises);
+            }
+
+            alert('Servicio de celular guardado correctamente');
+            setEditingPhoneService(null);
+        } catch (error) {
+            console.error('Error saving phone service:', error);
+            alert('Error al guardar el servicio');
+        }
+    };
+
     // PC SERVICE FORM STATE & HANDLERS
     const [editingPCService, setEditingPCService] = useState(null); // null, 'new', or service object
 
@@ -3029,16 +3761,13 @@ const App = () => {
 
             if (editingPCService === 'new') {
                 // Generate Orden Numero logic
-                const date = new Date();
-                const year = date.getFullYear().toString().slice(-2);
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                const newOrden = `PC-${year}${month}-${random}`;
+                const newOrden = await fetchNextPCServiceFolio(session.user.id);
 
                 const newService = {
                     ...payload,
                     user_id: session.user.id,
                     orden_numero: newOrden,
+                    status: 'recibido',
                     public_token: crypto.randomUUID()
                 };
 
@@ -3200,6 +3929,64 @@ const App = () => {
             const defaultFolio = `COT-${currentYear}-100`;
             setFolio(defaultFolio);
             return defaultFolio;
+        }
+    };
+
+    const fetchNextPCServiceFolio = async (userId) => {
+        try {
+            const currentYear = new Date().getFullYear();
+            const folioPrefix = `P-${currentYear}-`;
+
+            const { data, error } = await supabase
+                .from('servicios_pc')
+                .select('orden_numero')
+                .eq('user_id', userId)
+                .like('orden_numero', `${folioPrefix}%`)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const lastFolio = data[0].orden_numero;
+                const parts = lastFolio.split('-');
+                const lastNumber = parseInt(parts[2]) || 99;
+                return `${folioPrefix}${lastNumber + 1}`;
+            }
+            return `${folioPrefix}100`;
+        } catch (error) {
+            console.error('Error fetching next PC folio:', error);
+            const currentYear = new Date().getFullYear();
+            return `P-${currentYear}-100`;
+        }
+    };
+
+    const fetchNextPhoneServiceFolio = async (userId) => {
+        try {
+            const currentYear = new Date().getFullYear();
+            const folioPrefix = `C-${currentYear}-`;
+
+            const { data, error } = await supabase
+                .from('servicios_celular')
+                .select('orden_numero')
+                .eq('user_id', userId)
+                .like('orden_numero', `${folioPrefix}%`)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const lastFolio = data[0].orden_numero;
+                const parts = lastFolio.split('-');
+                const lastNumber = parseInt(parts[2]) || 99;
+                return `${folioPrefix}${lastNumber + 1}`;
+            }
+            return `${folioPrefix}100`;
+        } catch (error) {
+            console.error('Error fetching next Phone folio:', error);
+            const currentYear = new Date().getFullYear();
+            return `C-${currentYear}-100`;
         }
     };
 
@@ -4381,6 +5168,27 @@ const App = () => {
                                 company={company}
                             />
                         )}
+                        {activeTab === 'services-phone-list' && (
+                            <PhoneList
+                                darkMode={isDark}
+                                onNavigate={setActiveTab}
+                                onViewService={(service) => {
+                                    setSelectedService(service);
+                                    setActiveTab('services-phone-view');
+                                }}
+                                onCreateNew={() => setEditingPhoneService('new')}
+                                onEdit={(service) => setEditingPhoneService(service)}
+                            />
+                        )}
+                        {activeTab === 'services-phone-view' && (
+                            <PhoneServiceView
+                                service={selectedService}
+                                onBack={() => setActiveTab('services-phone-list')}
+                                onEdit={(service) => setEditingPhoneService(service)}
+                                darkMode={isDark}
+                                company={company}
+                            />
+                        )}
 
                         {/* PC Service Form Modal */}
                         {editingPCService && (
@@ -4388,6 +5196,16 @@ const App = () => {
                                 service={editingPCService === 'new' ? null : editingPCService}
                                 onSave={handleSavePCService}
                                 onCancel={() => setEditingPCService(null)}
+                                darkMode={isDark}
+                            />
+                        )}
+
+                        {/* Phone Service Form Modal */}
+                        {editingPhoneService && (
+                            <PhoneServiceForm
+                                service={editingPhoneService === 'new' ? null : editingPhoneService}
+                                onSave={handleSavePhoneService}
+                                onCancel={() => setEditingPhoneService(null)}
                                 darkMode={isDark}
                             />
                         )}
