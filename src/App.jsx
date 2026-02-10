@@ -9,7 +9,9 @@ import { supabase } from '../utils/supabase';
 import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
 import ServiceReceipt from './components/ServiceReceipt';
+import PCServiceForm from './components/PCServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
+import { formatCurrency, formatServiceDate } from './utils/format';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -49,34 +51,6 @@ class ErrorBoundary extends React.Component {
         return this.props.children;
     }
 }
-
-// Utility function to format currency with thousand separators
-const formatCurrency = (amount) => {
-    return amount.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-};
-
-// Utility function to format dates that might be in text format (DD/MM/YYYY)
-const formatServiceDate = (dateString) => {
-    if (!dateString) return '-';
-    // Check if it's already a valid date string for parsing (e.g. ISO)
-    let date = new Date(dateString);
-    if (!isNaN(date.getTime())) {
-        return date.toLocaleDateString();
-    }
-    // Try parsing DD/MM/YYYY
-    const parts = dateString.split('/');
-    if (parts.length === 3) {
-        const [day, month, year] = parts;
-        date = new Date(`${year}-${month}-${day}`);
-        if (!isNaN(date.getTime())) {
-            return date.toLocaleDateString();
-        }
-    }
-    return dateString; // Fallback to original string
-};
 
 // --- COMPONENTS ---
 
@@ -2029,7 +2003,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange }) => {
     );
 };
 
-const PCList = ({ darkMode, onNavigate, onViewService }) => {
+const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -2060,65 +2034,20 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
         }
     };
 
-    const handleShowQR = async (service) => {
-        // Generate public_token if it doesn't exist
-        if (!service.public_token) {
-            try {
-                const newToken = crypto.randomUUID();
-                const { data, error } = await supabase
-                    .from('servicios_pc')
-                    .update({ public_token: newToken })
-                    .eq('id', service.id)
-                    .select()
-                    .single();
+    // ... (rest of handlers)
 
-                if (error) throw error;
-
-                const updatedService = { ...service, public_token: newToken };
-                setSelectedServiceForQR(updatedService);
-                setShowQRTicket(true);
-                fetchServices(); // Refresh to get updated token
-            } catch (error) {
-                console.error('Error generating token:', error);
-                alert('Error al generar código QR');
-            }
-        } else {
-            setSelectedServiceForQR(service);
-            setShowQRTicket(true);
-        }
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
     };
 
-    const handleShowReceipt = async (service) => {
-        // Generate public_token if it doesn't exist (needed for QR in receipt)
-        if (!service.public_token) {
-            try {
-                const newToken = crypto.randomUUID();
-                const { data, error } = await supabase
-                    .from('servicios_pc')
-                    .update({ public_token: newToken })
-                    .eq('id', service.id)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                const updatedService = { ...service, public_token: newToken };
-                setSelectedServiceForReceipt(updatedService);
-                setShowReceipt(true);
-                fetchServices();
-            } catch (error) {
-                console.error('Error generating token:', error);
-                alert('Error al generar ticket');
-            }
-        } else {
-            setSelectedServiceForReceipt(service);
-            setShowReceipt(true);
-        }
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
     };
-
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
+        if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
             const { error } = await supabase
                 .from('servicios_pc')
@@ -2126,8 +2055,7 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                 .eq('id', id);
 
             if (error) throw error;
-            fetchServices();
-            alert('Servicio eliminado correctamente');
+            setServices(services.filter(s => s.id !== id));
         } catch (error) {
             console.error('Error deleting service:', error);
             alert('Error al eliminar servicio');
@@ -2151,12 +2079,15 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                         <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
                     </button>
                 </div>
-                <button
-                    onClick={() => onNavigate('servicios')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${darkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
-                >
-                    <ArrowLeft className="w-5 h-5" /> Regresar
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={onCreateNew}
+                        className="btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Nuevo Servicio
+                    </button>
+                </div>
             </div>
 
             <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
@@ -2236,6 +2167,7 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
                                                     <Eye className="w-5 h-5" />
                                                 </button>
                                                 <button
+                                                    onClick={() => onEdit(service)}
                                                     className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                                                     title="Editar Servicio"
                                                 >
@@ -2259,33 +2191,37 @@ const PCList = ({ darkMode, onNavigate, onViewService }) => {
             </div>
 
             {/* QR Ticket Modal */}
-            {showQRTicket && selectedServiceForQR && (
-                <QRServiceTicket
-                    service={selectedServiceForQR}
-                    onClose={() => {
-                        setShowQRTicket(false);
-                        setSelectedServiceForQR(null);
-                    }}
-                    darkMode={darkMode}
-                />
-            )}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
 
             {/* Receipt Modal */}
-            {showReceipt && selectedServiceForReceipt && (
-                <ServiceReceipt
-                    service={selectedServiceForReceipt}
-                    onClose={() => {
-                        setShowReceipt(false);
-                        setSelectedServiceForReceipt(null);
-                    }}
-                    darkMode={darkMode}
-                />
-            )}
-        </div>
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+        </div >
     );
 };
 
-const PCServiceView = ({ service, onBack, darkMode, company }) => {
+const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
 
     const [photos, setPhotos] = useState([]);
@@ -2298,13 +2234,24 @@ const PCServiceView = ({ service, onBack, darkMode, company }) => {
     const fetchPhotos = async () => {
         setLoadingPhotos(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
             const { data, error } = await supabase
                 .from('servicio_fotos')
                 .select('*')
                 .eq('servicio_id', service.id)
-                .order('created_at', { ascending: false });
+                .eq('user_id', user.id);
+
             if (error) throw error;
-            setPhotos(data || []);
+
+            // Map the data to ensure 'uri' property exists (assuming 'foto_url' or 'url' is used in the database if 'uri' is missing)
+            const mappedPhotos = (data || []).map(photo => ({
+                ...photo,
+                uri: photo.foto_url || photo.url || photo.uri || ''
+            }));
+
+            setPhotos(mappedPhotos);
         } catch (error) {
             console.error('Error fetching photos:', error);
         } finally {
@@ -2345,16 +2292,15 @@ const PCServiceView = ({ service, onBack, darkMode, company }) => {
                                     <p className="text-xs text-slate-600 font-medium mt-1">
                                         {company?.telefono}
                                     </p>
-                                    {company?.direccion && (
-                                        <p className="text-xs text-slate-500">
-                                            {company.direccion}
-                                        </p>
-                                    )}
-                                    {company?.email && (
-                                        <p className="text-xs text-slate-500">
-                                            {company.email}
-                                        </p>
-                                    )}
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            onClick={() => onEdit(service)}
+                                            className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-1 shadow-sm"
+                                        >
+                                            <Edit2 className="w-3 h-3" />
+                                            Editar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2487,11 +2433,41 @@ const PCServiceView = ({ service, onBack, darkMode, company }) => {
                                 )}
 
                                 {/* Repuestos */}
-                                {service.repuestos_descripcion && service.repuestos_descripcion !== '[]' && (
+                                {(service.repuestos_descripcion && service.repuestos_descripcion !== '[]') && (
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Repuestos & Materiales</p>
                                         <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                                            <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>
+                                            {(() => {
+                                                try {
+                                                    // Try to parse as JSON for new format
+                                                    if (service.repuestos_descripcion.startsWith('[')) {
+                                                        const parts = JSON.parse(service.repuestos_descripcion);
+                                                        return (
+                                                            <div className="w-full">
+                                                                <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
+                                                                    <div className="w-12 text-center">Cant</div>
+                                                                    <div className="flex-1">Articulo</div>
+                                                                    <div className="w-20 text-right">Precio</div>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    {parts.map((part, i) => (
+                                                                        <div key={i} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
+                                                                            <div className="w-12 text-center text-slate-500">{part.cantidad || 1}</div>
+                                                                            <div className="flex-1 text-slate-700 font-medium">{part.descripcion}</div>
+                                                                            <div className="w-20 text-right text-slate-600 font-mono">${formatCurrency(part.precio_publico)}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    // Fallback for simple string
+                                                    return <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>;
+                                                } catch (e) {
+                                                    // Fallback for string or invalid JSON
+                                                    return <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>;
+                                                }
+                                            })()}
                                         </div>
                                     </div>
                                 )}
@@ -2867,14 +2843,13 @@ const App = () => {
 
     const toggleMobileMode = () => setMobileMode(!mobileMode);
 
+    // Navigation State
     const [activeTab, setActiveTabState] = useState(() => {
         return localStorage.getItem('activeTab') || 'cotizaciones-list';
     });
 
-    const setActiveTab = (tab) => {
-        setActiveTabState(tab);
-        localStorage.setItem('activeTab', tab);
-    };
+
+
 
     // Updated Company State to match DB Schema
     const [company, setCompany] = useState({
@@ -2906,6 +2881,57 @@ const App = () => {
     const [folio, setFolio] = useState('COT-' + new Date().getFullYear() + '-100');
 
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // Initial State for Dirty Check (Deep Compare)
+    const [initialState, setInitialState] = useState({
+        client: { name: '', phone: '', email: '', address: '' },
+        items: []
+    });
+
+    // Check for unsaved changes in Quotation Form
+    const hasUnsavedChanges = () => {
+        if (activeTab !== 'cotizaciones-new') return false;
+
+        // Deep comparison of current state vs initial state
+        const currentClientStr = JSON.stringify(client);
+        const initialClientStr = JSON.stringify(initialState.client);
+
+        const currentItemsStr = JSON.stringify(items);
+        const initialItemsStr = JSON.stringify(initialState.items);
+
+        return currentClientStr !== initialClientStr || currentItemsStr !== initialItemsStr;
+    };
+
+    // Original setter wrapped
+    const setActiveTab = (tab) => {
+        setActiveTabState(tab);
+        localStorage.setItem('activeTab', tab);
+    };
+
+    const handleNavigation = (newTab) => {
+        if (hasUnsavedChanges()) {
+            if (window.confirm('Tienes cambios sin guardar en tu cotización. ¿Estás seguro de que quieres salir? Los datos no guardados se perderán.')) {
+                setActiveTab(newTab);
+            }
+        } else {
+            setActiveTab(newTab);
+        }
+    };
+
+    // Handle Browser Close / Refresh
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (hasUnsavedChanges()) {
+                e.preventDefault();
+                e.returnValue = ''; // Chrome requires returnValue to be set
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [activeTab, items, client]);
+
+    // --- END UNSAVED CHANGES LOGIC ---
 
     // Theme State
     const [currentTheme, setCurrentTheme] = useState(() => {
@@ -2969,6 +2995,145 @@ const App = () => {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    // PC SERVICE FORM STATE & HANDLERS
+    const [editingPCService, setEditingPCService] = useState(null); // null, 'new', or service object
+
+    const handleSavePCService = async (serviceData) => {
+        try {
+            let data, error;
+            const { files, photosToDelete, ...payloadData } = serviceData; // Extract files and photosToDelete
+            let payload = { ...payloadData };
+
+            // Workaround for missing 'equipo_password' column in DB
+            // We append it to observations to persist it without schema change
+            if (payload.equipo_password) {
+                const passwordNote = `[Contraseña: ${payload.equipo_password}]`;
+                // Avoid duplicating if already present
+                if (!payload.observaciones || !payload.observaciones.includes(passwordNote)) {
+                    payload.observaciones = payload.observaciones
+                        ? `${payload.observaciones}\n${passwordNote}`
+                        : passwordNote;
+                }
+            }
+            // Remove the field that causes the error
+            delete payload.equipo_password;
+
+            if (editingPCService === 'new') {
+                // Generate Orden Numero logic
+                const date = new Date();
+                const year = date.getFullYear().toString().slice(-2);
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const newOrden = `PC-${year}${month}-${random}`;
+
+                const newService = {
+                    ...payload,
+                    user_id: session.user.id,
+                    orden_numero: newOrden,
+                    public_token: crypto.randomUUID()
+                };
+
+                const result = await supabase
+                    .from('servicios_pc')
+                    .insert(newService)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            } else {
+                // Update existing
+                const { id, created_at, ...updateData } = payload;
+                const result = await supabase
+                    .from('servicios_pc')
+                    .update(updateData)
+                    .eq('id', editingPCService.id)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            }
+
+            if (error) throw error;
+
+            // --- PHOTO DELETION LOGIC ---
+            if (photosToDelete && photosToDelete.length > 0) {
+                console.log(`Deleting ${photosToDelete.length} photos...`);
+                const { error: deleteError } = await supabase
+                    .from('servicio_fotos')
+                    .delete()
+                    .in('id', photosToDelete);
+
+                if (deleteError) {
+                    console.error('Error deleting photos:', deleteError);
+                    // We don't throw here to allow saves even if deletion fails, but warn user?
+                    // alert('Error al eliminar algunas fotos');
+                }
+            }
+
+            // --- PHOTO UPLOAD LOGIC ---
+            if (files && files.length > 0 && data) {
+                console.log(`Uploading ${files.length} photos for service ${data.id}...`);
+                const uploadPromises = files.map(async (file) => {
+                    try {
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const filePath = `${session.user.id}/${data.id}/${fileName}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('servicio-files-v2')
+                            .upload(filePath, file);
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('servicio-files-v2')
+                            .getPublicUrl(filePath);
+
+                        // Link to service_fotos table
+                        const { error: dbError } = await supabase
+                            .from('servicio_fotos')
+                            .insert({
+                                servicio_id: data.id,
+                                user_id: session.user.id,
+                                uri: publicUrl,
+                                tipo_servicio: 'servicio_pc'
+                            });
+
+                        if (dbError) throw dbError;
+
+                        return { success: true, url: publicUrl };
+                    } catch (uploadErr) {
+                        console.error('Error uploading file:', uploadErr);
+                        return { success: false, error: uploadErr };
+                    }
+                });
+
+                await Promise.all(uploadPromises);
+            }
+
+            alert('Servicio guardado correctamente');
+            setEditingPCService(null);
+
+            // Refresh PC List/View if needed
+            if (activeTab === 'services-pc-view' && selectedService?.id === data.id) {
+                // Determine if we need to fetch photos again? 
+                // The PCServiceView component fetches photos on mount/update of service.id.
+                // We might need to trigger a re-mount or re-fetch.
+                // For now, updating selectedService might be enough to show text data, 
+                // but photos are fetched separately in PCServiceView.
+                setSelectedService(data);
+                // Force photo refresh could be handled by a signal or just re-opening
+            }
+
+        } catch (error) {
+            console.error('Error saving PC service:', error);
+            alert('Error al guardar el servicio: ' + error.message);
+        }
+    };
+
 
     const fetchNextFolio = async (userId) => {
         try {
@@ -3133,6 +3298,12 @@ const App = () => {
             const { data, error } = result;
             if (error) throw error;
 
+            // Updated initial state to prevent unsaved changes warning
+            setInitialState({
+                client: { ...client },
+                items: JSON.parse(JSON.stringify(items))
+            });
+
             alert(editingQuotationId ? 'Cotización actualizada' : 'Cotización guardada');
             fetchQuotations(session.user.id);
             setEditingQuotationId(null);
@@ -3192,6 +3363,18 @@ const App = () => {
         setQuotationDate(quotation.fecha || new Date().toISOString().split('T')[0]);
         setExpirationDate(quotation.fecha_vencimiento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
         setEditingQuotationId(quotation.id);
+
+        // Set Initial State for Dirty Check
+        setInitialState({
+            client: {
+                name: quotation.nombre_cliente,
+                phone: quotation.telefono,
+                email: quotation.correo,
+                address: ''
+            },
+            items: loadedItems
+        });
+
         setActiveTab('cotizaciones-new');
     };
 
@@ -3886,20 +4069,43 @@ const App = () => {
             <div className={`min-h-screen flex ${getBackgroundClass()} ${currentTheme === 'dark' ? 'dark' : ''}`}>
                 <Sidebar
                     activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    onLogout={handleLogout}
+                    setActiveTab={handleNavigation} // Pass the wrapper instead of direct setter
+                    onLogout={async () => {
+                        if (hasUnsavedChanges()) {
+                            if (window.confirm('Tienes cambios sin guardar. ¿Quieres cerrar sesión?')) {
+                                await handleLogout();
+                            }
+                        } else {
+                            await handleLogout();
+                        }
+                    }}
                     userEmail={session.user.email}
                     currentTheme={currentTheme}
                     setTheme={setTheme}
-                    companyLogo={company.logo_uri}
-                    companyName={company.nombre}
+                    companyLogo={company?.logo_uri}
+                    companyName={company?.nombre}
                     mobileMode={mobileMode}
                     toggleMobileMode={toggleMobileMode}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     onCreateNew={() => {
-                        setClient({ name: '', phone: '', email: '', address: '' });
+                        // Check unsaved changes before resetting for "New"
+                        if (hasUnsavedChanges()) {
+                            if (!window.confirm('Tienes cambios sin guardar. ¿Quieres descartarlos e iniciar una nueva cotización?')) {
+                                return;
+                            }
+                        }
+
+                        const emptyClient = { name: '', phone: '', email: '', address: '' };
+                        setClient(emptyClient);
                         setItems([]);
+
+                        // Reset Initial State
+                        setInitialState({
+                            client: emptyClient,
+                            items: []
+                        });
+
                         setTerms(localStorage.getItem('defaultTerms') || '');
                         setQuotationDate(new Date().toISOString().split('T')[0]);
                         setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
@@ -4131,8 +4337,34 @@ const App = () => {
                         {activeTab === 'servicios' && <ServiciosView darkMode={isDark} onNavigate={setActiveTab} />}
                         {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
                         {activeTab === 'services-cctv-view' && <CCTVServiceView service={selectedService} onBack={() => setActiveTab('services-cctv-list')} darkMode={isDark} />}
-                        {activeTab === 'services-pc-list' && <PCList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewPCService} />}
-                        {activeTab === 'services-pc-view' && <PCServiceView service={selectedService} onBack={() => setActiveTab('services-pc-list')} darkMode={isDark} company={company} />}
+                        {activeTab === 'services-pc-list' && (
+                            <PCList
+                                darkMode={isDark}
+                                onNavigate={setActiveTab}
+                                onViewService={handleViewPCService}
+                                onCreateNew={() => setEditingPCService('new')}
+                                onEdit={(service) => setEditingPCService(service)}
+                            />
+                        )}
+                        {activeTab === 'services-pc-view' && (
+                            <PCServiceView
+                                service={selectedService}
+                                onBack={() => setActiveTab('services-pc-list')}
+                                onEdit={(service) => setEditingPCService(service)}
+                                darkMode={isDark}
+                                company={company}
+                            />
+                        )}
+
+                        {/* PC Service Form Modal */}
+                        {editingPCService && (
+                            <PCServiceForm
+                                service={editingPCService === 'new' ? null : editingPCService}
+                                onSave={handleSavePCService}
+                                onCancel={() => setEditingPCService(null)}
+                                darkMode={isDark}
+                            />
+                        )}
                         {activeTab === 'contratos' && (
                             <ContractsView darkMode={isDark} company={company} />
                         )}

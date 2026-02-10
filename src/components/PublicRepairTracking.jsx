@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { getProgressFromStatus, STATUS_OPTIONS } from '../utils/statusMapper';
-import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock } from 'lucide-react';
+import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock, Package } from 'lucide-react';
 
 const PublicRepairTracking = () => {
     // Modified for Hash Routing compatibility
@@ -162,12 +162,21 @@ const PublicRepairTracking = () => {
 
                 {/* Status Timeline - Horizontal */}
                 <div className="bg-white/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg border border-white/40 p-5 sm:p-10">
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-6 sm:mb-10 flex items-center gap-3">
-                        <div className="p-2 sm:p-2.5 bg-green-100 rounded-xl text-green-600 shadow-sm">
-                            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
-                        Estado del Servicio
-                    </h2>
+                    {service.status === 'no_reparable' ? (
+                        <h2 className="text-lg sm:text-xl font-bold text-red-600 mb-6 sm:mb-10 flex items-center gap-3">
+                            <div className="p-2 sm:p-2.5 bg-red-100 rounded-xl text-red-600 shadow-sm">
+                                <XCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </div>
+                            NO se pudo reparar
+                        </h2>
+                    ) : (
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-6 sm:mb-10 flex items-center gap-3">
+                            <div className="p-2 sm:p-2.5 bg-green-100 rounded-xl text-green-600 shadow-sm">
+                                <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </div>
+                            Estado del Servicio
+                        </h2>
+                    )}
 
                     <div className="relative py-2 sm:py-4">
                         {/* Background Track */}
@@ -175,7 +184,7 @@ const PublicRepairTracking = () => {
 
                         {/* Progress Fill */}
                         <div
-                            className="absolute top-1/2 left-0 h-2 sm:h-3 bg-green-500 rounded-full -translate-y-1/2 z-0 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+                            className={`absolute top-1/2 left-0 h-2 sm:h-3 rounded-full -translate-y-1/2 z-0 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.4)] ${service.status === 'no_reparable' ? 'bg-red-500 shadow-red-500/40' : 'bg-green-500 shadow-green-500/40'}`}
                             style={{ width: `${currentProgress}%` }}
                         ></div>
 
@@ -183,16 +192,17 @@ const PublicRepairTracking = () => {
                             {displayStatuses.map((status, index) => {
                                 const isCompleted = currentProgress >= status.progress;
                                 const isCurrent = currentStatusIndex === STATUS_OPTIONS.findIndex(s => s.value === status.value);
+                                const isUnrepairable = service.status === 'no_reparable';
 
                                 return (
                                     <div key={status.value} className="flex flex-col items-center gap-2 sm:gap-3 relative group flex-1">
                                         {/* Status Node */}
                                         <div className={`w-8 h-8 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-500 z-10 border-2 sm:border-4 ${isCompleted
-                                            ? 'bg-green-500 border-green-500 shadow-md scale-110'
+                                            ? isUnrepairable ? 'bg-red-500 border-red-500 shadow-md scale-110' : 'bg-green-500 border-green-500 shadow-md scale-110'
                                             : 'bg-white border-slate-200'
                                             }`}>
                                             {isCompleted ? (
-                                                <CheckCircle2 className="w-5 h-5 sm:w-8 sm:h-8 text-white" strokeWidth={3} />
+                                                isUnrepairable ? <XCircle className="w-5 h-5 sm:w-8 sm:h-8 text-white" strokeWidth={3} /> : <CheckCircle2 className="w-5 h-5 sm:w-8 sm:h-8 text-white" strokeWidth={3} />
                                             ) : (
                                                 <div className="w-2 h-2 sm:w-4 sm:h-4 rounded-full bg-slate-200"></div>
                                             )}
@@ -200,7 +210,7 @@ const PublicRepairTracking = () => {
 
                                         {/* Label */}
                                         <div className={`text-center transition-all duration-300 absolute top-full mt-2 sm:mt-4 w-20 sm:w-32 ${isCompleted ? 'opacity-100' : 'opacity-40'}`}>
-                                            <p className={`font-bold text-[10px] sm:text-sm uppercase tracking-wide leading-tight ${isCurrent ? 'text-green-600' : 'text-slate-500'}`}>
+                                            <p className={`font-bold text-[10px] sm:text-sm uppercase tracking-wide leading-tight ${isCurrent ? (isUnrepairable ? 'text-red-600' : 'text-green-600') : 'text-slate-500'}`}>
                                                 {status.label}
                                             </p>
                                         </div>
@@ -244,6 +254,38 @@ const PublicRepairTracking = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Parts Used Section */}
+                        {service.repuestos_descripcion && service.repuestos_descripcion.startsWith('[') && (
+                            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+                                <div className="bg-slate-50/50 px-8 py-5 border-b border-white/50">
+                                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                                        <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                                            <Package className="w-5 h-5" />
+                                        </div>
+                                        Repuestos Utilizados
+                                    </h2>
+                                </div>
+                                <div className="p-8">
+                                    <div className="w-full">
+                                        <div className="flex text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-2 mb-2">
+                                            <div className="w-16 text-center">Cant</div>
+                                            <div className="flex-1">Artículo</div>
+                                            <div className="w-24 text-right">Precio</div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {JSON.parse(service.repuestos_descripcion).map((part, i) => (
+                                                <div key={i} className="flex items-center text-sm py-2 border-b border-slate-100 last:border-0">
+                                                    <div className="w-16 text-center text-slate-500 font-bold">{part.cantidad || 1}</div>
+                                                    <div className="flex-1 text-slate-700 font-medium">{part.descripcion}</div>
+                                                    <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.precio_publico)}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Two Columns Grid for Client/Tech */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
