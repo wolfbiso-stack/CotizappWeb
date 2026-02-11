@@ -438,9 +438,9 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                         <div className="space-y-3">
                             {parts.map((part) => (
-                                <div key={part.id} className={`grid grid-cols-12 gap-3 p-3 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-                                    <div className="col-span-1">
-                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1 text-center">Cant.</label>
+                                <div key={part.id} className={`grid grid-cols-1 md:grid-cols-12 gap-3 p-4 md:p-3 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                    <div className="md:col-span-1">
+                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1 md:text-center">Cant.</label>
                                         <input
                                             type="number"
                                             value={part.cantidad}
@@ -449,7 +449,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             min="1"
                                         />
                                     </div>
-                                    <div className="col-span-2">
+                                    <div className="md:col-span-2">
                                         <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">N° Serie</label>
                                         <input
                                             type="text"
@@ -459,7 +459,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             placeholder="Serie..."
                                         />
                                     </div>
-                                    <div className="col-span-4">
+                                    <div className="md:col-span-4">
                                         <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Producto / Refacción</label>
                                         <input
                                             type="text"
@@ -469,7 +469,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             placeholder="Descripción del artículo..."
                                         />
                                     </div>
-                                    <div className="col-span-2">
+                                    <div className="md:col-span-2">
                                         <label className="block text-[10px] uppercase font-black text-rose-400 mb-1 ml-1">Costo Empresa</label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
@@ -481,7 +481,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="col-span-2">
+                                    <div className="md:col-span-2">
                                         <label className="block text-[10px] uppercase font-black text-blue-400 mb-1 ml-1">Precio Público</label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
@@ -493,13 +493,14 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="col-span-1 flex items-end justify-center pb-1">
+                                    <div className="md:col-span-1 flex items-end justify-center pb-1">
                                         <button
                                             type="button"
                                             onClick={() => removePart(part.id)}
-                                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+                                            className="w-full md:w-auto p-2 text-rose-500 bg-rose-50 md:bg-transparent rounded-xl transition-colors flex items-center justify-center gap-2 md:block"
                                         >
                                             <Trash2 className="w-5 h-5" />
+                                            <span className="md:hidden font-bold text-xs uppercase">Eliminar</span>
                                         </button>
                                     </div>
                                 </div>
@@ -591,7 +592,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         </div>
 
                         <div className="lg:col-span-2 flex flex-col justify-end">
-                            <div className={`flex items-center justify-between p-4 rounded-2xl ${darkMode ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'} shadow-sm`}>
+                            <div className={`flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl ${darkMode ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'} shadow-sm gap-4`}>
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Por Pagar</span>

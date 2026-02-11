@@ -1008,7 +1008,7 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                     <Plus className="w-4 h-4" /> Agregar Producto
                 </button>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto hidden md:block">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className={`${darkMode ? 'bg-slate-800/50 text-slate-300' : 'bg-gray-50/50 text-slate-600'}`}>
@@ -1126,6 +1126,111 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-4">
+                {items.map((item, index) => (
+                    <div
+                        key={item.id}
+                        className={`p-4 rounded-xl border relative ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                    >
+                        <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                                    <ShoppingCart className="w-4 h-4" />
+                                </div>
+                                <span className={`font-bold text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Artículo #{index + 1}</span>
+                            </div>
+                            <button
+                                onClick={() => onRemoveItem(item.id)}
+                                className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Descripción</label>
+                                <input
+                                    type="text"
+                                    value={item.desc}
+                                    onChange={(e) => onUpdateItem(item.id, 'desc', e.target.value)}
+                                    className={`w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
+                                    placeholder="Nombre del producto..."
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Cantidad</label>
+                                    <input
+                                        type="number"
+                                        value={item.qty}
+                                        onChange={(e) => onUpdateItem(item.id, 'qty', parseInt(e.target.value))}
+                                        className={`w-full border rounded-lg p-3 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">% Descuento</label>
+                                    <input
+                                        type="number"
+                                        value={item.discount}
+                                        onChange={(e) => onUpdateItem(item.id, 'discount', parseFloat(e.target.value))}
+                                        className={`w-full border rounded-lg p-3 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Precio Empresa</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-3 text-slate-400 text-xs">$</span>
+                                        <input
+                                            type="number"
+                                            value={item.cost || 0}
+                                            onChange={(e) => onUpdateItem(item.id, 'cost', parseFloat(e.target.value))}
+                                            className={`w-full pl-6 border rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-orange-400' : 'bg-orange-50/50 border-orange-100 text-orange-700'}`}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Precio Público</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-3 text-slate-400 text-xs">$</span>
+                                        <input
+                                            type="number"
+                                            value={item.price}
+                                            onChange={(e) => onUpdateItem(item.id, 'price', parseFloat(e.target.value))}
+                                            className={`w-full pl-6 border rounded-lg p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-blue-400' : 'bg-white border-slate-200 text-blue-700'}`}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`p-3 rounded-xl flex justify-between items-center ${darkMode ? 'bg-slate-800' : 'bg-white border border-slate-100 shadow-sm'}`}>
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Subtotal Item</span>
+                                <div className="flex flex-col items-end">
+                                    <span className={`font-bold ${item.discount > 0 ? 'line-through text-slate-400 text-[10px]' : (darkMode ? 'text-indigo-400' : 'text-indigo-600')}`}>
+                                        ${formatCurrency(item.qty * item.price)}
+                                    </span>
+                                    {item.discount > 0 && (
+                                        <span className={`italic font-bold text-sm ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                            ${formatCurrency(calculateRowTotal(item.qty, item.price, item.discount))}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                <div className={`p-4 rounded-xl flex justify-between items-center ${darkMode ? 'bg-slate-700/50' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'}`}>
+                    <span className="font-bold text-xs uppercase tracking-widest">Total Venta Estimado:</span>
+                    <span className="font-black text-xl">${formatCurrency(totalSale)}</span>
+                </div>
             </div>
 
             {/* Profit Analysis Footer */}
@@ -5165,8 +5270,8 @@ const App = () => {
                     </div>
                 )}
 
-                <main className={`flex-1 transition-all duration-300 p-8 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
-                    <div className={`w-full h-full rounded-[2.5rem] shadow-2xl overflow-y-auto px-8 py-10 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'} print:bg-white print:p-0 print:rounded-none print:shadow-none print:h-auto print:overflow-visible`}>
+                <main className={`flex-1 transition-all duration-300 md:p-8 p-3 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
+                    <div className={`w-full h-full md:rounded-[2.5rem] rounded-3xl shadow-2xl overflow-y-auto md:px-8 px-4 md:py-10 py-6 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'} print:bg-white print:p-0 print:rounded-none print:shadow-none print:h-auto print:overflow-visible`}>
 
                         {activeTab === 'cotizaciones-list' && (
                             <QuotationList
@@ -5192,33 +5297,38 @@ const App = () => {
                         {activeTab === 'cotizaciones-new' && (
                             <div className="w-full px-4 md:px-8 py-8 pb-20">
                                 {/* Header */}
-                                <div className={`flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b pb-6 ${isDark ? 'border-slate-600' : ''}`}>
+                                <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b pb-6 ${isDark ? 'border-slate-600' : ''}`}>
                                     <div>
-                                        <h1 className={`text-3xl font-extrabold tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                                        <h1 className={`md:text-3xl text-2xl font-extrabold tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
                                             Generador de <span className="text-blue-600">Cotizaciones</span>
                                         </h1>
-                                        <p className={`mt-1 ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
+                                        <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
                                     </div>
-                                    <div className="flex gap-3">
+                                    <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 w-full md:w-auto">
                                         <button
                                             onClick={() => setShowPreview(true)}
-                                            className="btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                                            className="flex-1 md:flex-none btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                                             title="Vista Previa"
                                         >
                                             <Eye className="w-5 h-5" />
-                                            <span className="hidden sm:inline">Vista Previa</span>
+                                            <span className="sm:inline">Vista Previa</span>
                                         </button>
                                         <button
                                             onClick={saveQuotation}
-                                            className="btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                                            className="flex-1 md:flex-none btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                                         >
                                             <Download className="w-5 h-5" />
-                                            {editingQuotationId ? 'Actualizar' : 'Guardar'}
+                                            {editingQuotationId ? 'Actualizar' : (
+                                                <>
+                                                    <span className="md:hidden">Guardar</span>
+                                                    <span className="hidden md:inline">Guardar</span>
+                                                </>
+                                            )}
                                         </button>
                                         <button
                                             onClick={generatePDF}
                                             disabled={isGenerating}
-                                            className={`btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full md:w-auto btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             <Download className="w-5 h-5" />
                                             {isGenerating ? 'Generando...' : 'Descargar PDF'}
@@ -5229,9 +5339,9 @@ const App = () => {
                                 {/* Full Width Editor */}
                                 <div className="w-full max-w-5xl mx-auto space-y-6">
                                     {/* Company Data Auto-filled */}
-                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1">
+                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3 w-full">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1 shrink-0">
                                                 {company.logo_uri ? (
                                                     <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
                                                 ) : (
