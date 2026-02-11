@@ -956,6 +956,7 @@ const ClientForm = ({ data, onChange }) => (
 
 const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, darkMode }) => {
     const [draggedIndex, setDraggedIndex] = React.useState(null);
+    const [canDrag, setCanDrag] = React.useState(false);
 
     // Helpers
     const calculateRowTotal = (qty, price, discount) => {
@@ -1025,14 +1026,22 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                         {items.map((item, index) => (
                             <tr
                                 key={item.id}
-                                draggable
+                                draggable={canDrag}
                                 onDragStart={(e) => handleDragStart(e, index)}
-                                onDragEnd={handleDragEnd}
+                                onDragEnd={(e) => {
+                                    handleDragEnd(e);
+                                    setCanDrag(false);
+                                }}
                                 onDragOver={(e) => handleDragOver(e, index)}
                                 className={`transition-all group cursor-default ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'} ${draggedIndex === index ? 'opacity-20 bg-indigo-50' : ''}`}
                             >
                                 <td className="p-2 text-center pointer-events-none">
-                                    <div className="flex justify-center cursor-grab active:cursor-grabbing pointer-events-auto">
+                                    <div
+                                        className="flex justify-center cursor-grab active:cursor-grabbing pointer-events-auto"
+                                        onMouseDown={() => setCanDrag(true)}
+                                        onMouseUp={() => setCanDrag(false)}
+                                        onMouseLeave={() => !draggedIndex && setCanDrag(false)}
+                                    >
                                         <GripVertical className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
                                     </div>
                                 </td>
@@ -1077,9 +1086,16 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                     </div>
                                 </td>
                                 <td className="p-2 text-right">
-                                    <span className={`font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                                        ${formatCurrency(item.qty * item.price)}
-                                    </span>
+                                    <div className="flex flex-col items-end">
+                                        <span className={`font-bold ${item.discount > 0 ? 'line-through text-slate-400 text-xs' : (darkMode ? 'text-indigo-400' : 'text-indigo-600')}`}>
+                                            ${formatCurrency(item.qty * item.price)}
+                                        </span>
+                                        {item.discount > 0 && (
+                                            <span className={`italic font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                                ${formatCurrency(calculateRowTotal(item.qty, item.price, item.discount))}
+                                            </span>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="p-2">
                                     <input
@@ -1228,7 +1244,18 @@ const TemplateClassic = ({ company, client, items, terms, folio, date, dueDate, 
                                             )}
                                         </td>
                                         <td className="py-2 text-right text-sm text-gray-600 align-top">${formatCurrency(item.price)}</td>
-                                        <td className="py-2 text-right text-sm font-bold text-slate-700 align-top">${formatCurrency(total)}</td>
+                                        <td className="py-2 text-right text-sm font-bold text-slate-700 align-top">
+                                            <div className="flex flex-col items-end">
+                                                <span className={item.discount > 0 ? 'line-through text-gray-400 text-xs' : ''}>
+                                                    ${formatCurrency(item.qty * item.price)}
+                                                </span>
+                                                {item.discount > 0 && (
+                                                    <span className="italic text-slate-900">
+                                                        ${formatCurrency(total)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
                                     </tr>
                                 );
                             })}
@@ -1327,7 +1354,18 @@ const TemplateModern = ({ company, client, items, terms, folio, date, dueDate, s
                                         {(item.discount > 0 || item.tax > 0) && <p className="text-xs text-slate-400 mt-0.5">{item.discount > 0 && `-${item.discount}%`} {item.tax > 0 && `+IVA`}</p>}
                                     </td>
                                     <td className="py-3 px-4 text-right text-sm text-slate-600">${formatCurrency(item.price)}</td>
-                                    <td className="py-3 px-4 text-right text-sm font-bold text-slate-900">${formatCurrency(total)}</td>
+                                    <td className="py-3 px-4 text-right text-sm font-bold text-slate-900">
+                                        <div className="flex flex-col items-end">
+                                            <span className={item.discount > 0 ? 'line-through text-slate-400 text-xs font-normal' : ''}>
+                                                ${formatCurrency(item.qty * item.price)}
+                                            </span>
+                                            {item.discount > 0 && (
+                                                <span className="italic text-slate-900">
+                                                    ${formatCurrency(total)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -1419,7 +1457,18 @@ const TemplateFormal = ({ company, client, items, terms, folio, date, dueDate, s
                                         {(item.discount > 0) && <div className="text-xs text-gray-500 italic">Descuento aplicado: {item.discount}%</div>}
                                     </td>
                                     <td className="py-3 px-3 text-right text-sm">${formatCurrency(item.price)}</td>
-                                    <td className="py-3 px-3 text-right text-sm font-bold">${formatCurrency(total)}</td>
+                                    <td className="py-3 px-3 text-right text-sm font-bold">
+                                        <div className="flex flex-col items-end">
+                                            <span className={item.discount > 0 ? 'line-through text-gray-400 text-xs font-normal' : ''}>
+                                                ${formatCurrency(item.qty * item.price)}
+                                            </span>
+                                            {item.discount > 0 && (
+                                                <span className="italic text-gray-900">
+                                                    ${formatCurrency(total)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -1526,7 +1575,16 @@ const TemplateCreative = ({ company, client, items, terms, folio, date, dueDate,
                                 </div>
                                 <div className="w-32 text-right pl-4 border-l border-slate-100 ml-4">
                                     <div className="text-xs text-pink-500 font-bold">Total</div>
-                                    <div className="font-bold text-slate-900">${formatCurrency(total)}</div>
+                                    <div className="flex flex-col items-end">
+                                        <span className={`font-bold ${item.discount > 0 ? 'line-through text-slate-400 text-xs' : 'text-slate-900'}`}>
+                                            ${formatCurrency(item.qty * item.price)}
+                                        </span>
+                                        {item.discount > 0 && (
+                                            <span className="italic font-bold text-slate-900">
+                                                ${formatCurrency(total)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );
