@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -4709,9 +4709,9 @@ const App = () => {
         };
 
         return (
-            <div className={`w-full min-h-screen p-8 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'} print:p-0 print:min-h-0 print:bg-white`}>
+            <div className={`w-full min-h-screen md:p-8 p-3 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'} print:p-0 print:min-h-0 print:bg-white`}>
                 {/* Navigation Bar (No-Print) */}
-                <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center no-print">
+                <div className="max-w-4xl mx-auto mb-6 flex flex-wrap justify-between items-center gap-4 no-print">
                     <button
                         onClick={onBack}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${darkMode ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-white hover:shadow-sm'}`}
@@ -4722,27 +4722,27 @@ const App = () => {
                         onClick={handlePrint}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
                     >
-                        <Download className="w-4 h-4" /> Imprimir / Guardar PDF
+                        <Download className="w-4 h-4" /> Imprimir / PDF
                     </button>
                 </div>
 
                 {/* Contract Paper */}
-                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none print:overflow-visible print:rounded-none">
+                <div className="max-w-4xl mx-auto bg-white shadow-2xl md:rounded-xl rounded-lg border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none print:overflow-visible print:rounded-none overflow-hidden">
                     {/* Header */}
-                    <div className="bg-[#1e3a8a] p-10 text-white flex justify-between items-center print:bg-[#1e3a8a] print:text-white">
-                        <div className="flex items-center gap-6">
+                    <div className="bg-[#1e3a8a] md:p-10 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 print:bg-[#1e3a8a] print:text-white print:flex-row">
+                        <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="relative group">
                                 <div className="bg-white/10 p-2 rounded border border-dashed border-white/30 hover:border-white transition cursor-pointer">
                                     {company?.logo_uri ? (
-                                        <img src={company.logo_uri} alt="Logo" className="max-h-24 w-auto object-contain" />
+                                        <img src={company.logo_uri} alt="Logo" className="max-h-20 md:max-h-24 w-auto object-contain" />
                                     ) : (
-                                        <Building2 className="w-16 h-16 text-white" />
+                                        <Building2 className="w-12 h-12 md:w-16 md:h-16 text-white" />
                                     )}
                                 </div>
-                                <p className="text-blue-400 font-medium tracking-widest text-xs mt-1 uppercase">Soluciones a tu medida</p>
                             </div>
+                            <p className="text-blue-400 font-medium tracking-widest text-[10px] md:text-xs uppercase">Soluciones a tu medida</p>
                         </div>
-                        <div className="text-right text-xs space-y-1 text-slate-400">
+                        <div className="text-center md:text-right text-[10px] md:text-xs space-y-1 text-slate-400">
                             <p className="font-bold text-white uppercase italic">Dirección</p>
                             <p>{company?.direccion}</p>
                             <p>{company?.ciudad}</p>
@@ -4752,14 +4752,14 @@ const App = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-10 text-gray-800 text-[13px] leading-relaxed text-justify">
-                        <h2 className="text-center font-bold text-lg mb-6 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Instalación de CCTV</h2>
+                    <div className="md:p-10 p-5 text-gray-800 text-[12px] md:text-[13px] leading-relaxed text-justify">
+                        <h2 className="text-center font-bold text-base md:text-lg mb-6 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Instalación de CCTV</h2>
 
                         <p className="mb-6">
                             CONTRATO DE PRESTACIÓN DE SERVICIOS DE INSTALACIÓN DE SISTEMAS DE VIDEOVIGILANCIA (CCTV) que celebran por una parte <strong>{company?.nombre}</strong>, con domicilio en <strong>{company?.direccion}, {company?.ciudad}</strong>, a quien en lo sucesivo se le denominará “EL PRESTADOR”, y por la otra <span
                                 contentEditable
                                 suppressContentEditableWarning
-                                className="font-bold uppercase px-2 bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
+                                className="font-bold uppercase px-2 bg-green-500/10 border-b border-dashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
                             >{clientName}</span>, a quien en lo sucesivo se le denominará “EL CLIENTE”, al tenor de las siguientes declaraciones y cláusulas:
                         </p>
 
@@ -4768,23 +4768,15 @@ const App = () => {
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">DECLARACIONES</h3>
                                 <div className="space-y-4">
                                     <p><strong>I. Declara EL PRESTADOR que:</strong></p>
-                                    <ul className="list-disc ml-8 space-y-1">
+                                    <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Dedicado a la instalación, configuración y mantenimiento de sistemas de videovigilancia (CCTV).</li>
                                         <li>Cuenta con los conocimientos técnicos, herramientas y personal necesario para prestar el servicio objeto de este contrato.</li>
-                                        <li>Su domicilio comercial es el antes mencionado.</li>
                                     </ul>
 
                                     <p><strong>II. Declara EL CLIENTE que:</strong></p>
-                                    <ul className="list-disc ml-8 space-y-1">
+                                    <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Es una persona física o moral con capacidad legal para contratar.</li>
                                         <li>Es propietario o cuenta con autorización expresa sobre el inmueble donde se realizará la instalación.</li>
-                                        <li>Proporciona información veraz y acceso necesario para la correcta ejecución del servicio.</li>
-                                    </ul>
-
-                                    <p><strong>III. Declaran ambas partes que:</strong></p>
-                                    <ul className="list-disc ml-8 space-y-1">
-                                        <li>Se reconocen mutuamente la personalidad con la que comparecen.</li>
-                                        <li>Es su voluntad celebrar el presente contrato sin dolo, error o mala fe.</li>
                                     </ul>
                                 </div>
                             </section>
@@ -4793,69 +4785,36 @@ const App = () => {
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">CLÁUSULAS</h3>
 
                                 <div className="space-y-6">
-                                    <div>
-                                        <p><strong>PRIMERA. OBJETO DEL CONTRATO.</strong> EL PRESTADOR se obliga a proporcionar a EL CLIENTE el servicio de instalación y configuración de un sistema de videovigilancia (CCTV), conforme a lo acordado previamente, incluyendo número de cámaras, tipo de equipo, ubicación y funcionamiento básico.</p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>SEGUNDA. ALCANCE DEL SERVICIO.</strong> El servicio incluye: Instalación física de cámaras; Configuración básica del sistema (grabación, visualización local o remota); Pruebas de funcionamiento y Explicación básica de uso al cliente.
-                                            <br /><span className="italic text-gray-600 font-semibold italic text-blue-700 underline uppercase">No incluye, salvo pacto por escrito: Obras civiles adicionales, mantenimiento posterior o reposición de equipos por mal uso o fallas eléctricas.</span></p>
-                                    </div>
-
-                                    <div className="bg-blue-50 p-5 rounded-lg border border-blue-100 print:bg-blue-50 print:border-blue-100">
-                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-[#52D948]/20 px-1 border-b border-dashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
-                                        <ul className="list-disc ml-8 mt-2">
-                                            <li>Anticipo de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-[#52D948]/20 px-1 border-b border-dashed border-blue-500 outline-none">{advanceAmount}</span> al firmar el contrato.</li>
+                                    <div className="bg-blue-50 md:p-5 p-4 rounded-lg border border-blue-100 print:bg-blue-50 print:border-blue-100">
+                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-green-500/10 px-1 border-b border-dashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
+                                        <ul className="list-disc ml-6 md:ml-8 mt-2">
+                                            <li>Anticipo de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-green-500/10 px-1 border-b border-dashed border-blue-500 outline-none">{advanceAmount}</span> al firmar el contrato.</li>
                                             <li>Saldo restante al concluir la instalación.</li>
                                         </ul>
-                                        <p className="mt-2 text-[11px] uppercase font-bold text-slate-600">Ningún equipo o instalación será entregado o activado en su totalidad sin haber recibido el pago completo.</p>
                                     </div>
 
                                     <div>
-                                        <p><strong>CUARTA. TIEMPO DE EJECUCIÓN.</strong> EL PRESTADOR realizará la instalación en un plazo estimado de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{days}</span> días hábiles, contados a partir del acceso al inmueble.</p>
+                                        <p><strong>SEXTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{warrantyDays}</span> días sobre la instalación realizada.</p>
                                     </div>
-
-                                    <div>
-                                        <p><strong>QUINTA. OBLIGACIONES DEL CLIENTE.</strong> EL CLIENTE se compromete a: Proporcionar acceso al inmueble; Contar con instalación eléctrica funcional; No manipular los equipos durante la instalación y respetar las recomendaciones técnicas.</p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>SEXTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{warrantyDays}</span> días sobre la instalación realizada.
-                                            <br /><span className="text-[11px] italic">Nota: La garantía no cubre descargas eléctricas, vandalismo o manipulación por terceros. Los equipos cuentan con la garantía del fabricante.</span></p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>SÉPTIMA. LIMITACIÓN DE RESPONSABILIDAD.</strong> EL PRESTADOR no se hace responsable por robos, pérdidas o delitos ocurridos antes, durante o después. El sistema es disuasivo, no una garantía absoluta de seguridad.</p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>OCTAVA. CONFIDENCIALIDAD.</strong> EL PRESTADOR se compromete a guardar absoluta reserva sobre la información y datos a los que tenga acceso.</p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>NOVENA. CANCELACIÓN.</strong> El anticipo no será reembolsable si ya se adquirieron equipos. Si la instalación comenzó, se cobrará el trabajo realizado proporcionalmente.</p>
-                                    </div>
-
-
                                 </div>
                             </section>
 
                             <section className="mt-6 break-inside-avoid">
-                                <p className="mb-6">
-                                    Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-[#52D948]/20 border-b border-dashed border-blue-500 outline-none">{year}</span>.
+                                <p className="mb-8">
+                                    Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{year}</span>.
                                 </p>
 
-                                <div className="grid grid-cols-2 gap-20 text-center mt-10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 text-center mt-10">
                                     <div>
-                                        <div className="h-20 border-b border-slate-900 mx-auto w-4/5 italic text-blue-700 underline uppercase"></div>
-                                        <p className="mt-4 font-bold uppercase text-xs italic text-blue-700 underline uppercase">EL PRESTADOR</p>
-                                        <p className="text-[11px] italic text-blue-700 underline uppercase">{company?.nombre}</p>
-                                        <p className="text-[11px] mt-1 italic text-blue-700 underline uppercase" contentEditable suppressContentEditableWarning>{reprName}</p>
+                                        <div className="h-16 md:h-20 border-b border-slate-900 mx-auto w-4/5"></div>
+                                        <p className="mt-4 font-bold uppercase text-xs">EL PRESTADOR</p>
+                                        <p className="text-[11px]">{company?.nombre}</p>
+                                        <p className="text-[11px] mt-1 italic text-blue-700" contentEditable suppressContentEditableWarning>{reprName}</p>
                                     </div>
                                     <div>
-                                        <div className="h-20 border-b border-slate-900 mx-auto w-4/5 italic text-blue-700 underline uppercase"></div>
-                                        <p className="mt-4 font-bold uppercase text-xs italic text-blue-700 underline uppercase">EL CLIENTE</p>
-                                        <p className="text-[11px] mt-1 italic text-blue-700 underline uppercase" contentEditable suppressContentEditableWarning>{clientSignName}</p>
+                                        <div className="h-16 md:h-20 border-b border-slate-900 mx-auto w-4/5"></div>
+                                        <p className="mt-4 font-bold uppercase text-xs">EL CLIENTE</p>
+                                        <p className="text-[11px] mt-1 italic text-blue-700" contentEditable suppressContentEditableWarning>{clientSignName}</p>
                                     </div>
                                 </div>
                             </section>
@@ -4863,7 +4822,7 @@ const App = () => {
                     </div>
 
                     <div className="bg-slate-50 border-t p-6 text-center print:bg-white print:border-none">
-                        <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em]">Calidad • Confianza • Seguridad</p>
+                        <p className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-[0.3em]">Calidad • Confianza • Seguridad</p>
                     </div>
                 </div>
 
@@ -4920,9 +4879,9 @@ const App = () => {
         };
 
         return (
-            <div className={`w-full min-h-screen p-8 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'} print:p-0 print:min-h-0 print:bg-white`}>
+            <div className={`w-full min-h-screen md:p-8 p-3 transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'} print:p-0 print:min-h-0 print:bg-white`}>
                 {/* Navigation Bar (No-Print) */}
-                <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center no-print">
+                <div className="max-w-4xl mx-auto mb-6 flex flex-wrap justify-between items-center gap-4 no-print">
                     <button
                         onClick={onBack}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${darkMode ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-white hover:shadow-sm'}`}
@@ -4933,29 +4892,27 @@ const App = () => {
                         onClick={handlePrint}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2"
                     >
-                        <Download className="w-4 h-4" /> Imprimir / Guardar PDF
+                        <Download className="w-4 h-4" /> Imprimir / PDF
                     </button>
                 </div>
 
                 {/* Contract Paper */}
-                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none print:overflow-visible print:rounded-none">
+                <div className="max-w-4xl mx-auto bg-white shadow-2xl md:rounded-xl rounded-lg border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none print:overflow-visible print:rounded-none overflow-hidden">
                     {/* Header */}
-                    <div className="bg-[#1e3a8a] p-10 text-white flex justify-between items-center print:bg-[#1e3a8a] print:text-white">
-                        <div className="flex items-center gap-6">
+                    <div className="bg-[#1e3a8a] md:p-10 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 print:bg-[#1e3a8a] print:text-white print:flex-row">
+                        <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="relative group">
                                 <div className="bg-white/10 p-2 rounded border border-dashed border-white/30 hover:border-white transition cursor-pointer">
                                     {company?.logo_uri ? (
-                                        <img src={company.logo_uri} alt="Logo" className="max-h-24 w-auto object-contain" />
+                                        <img src={company.logo_uri} alt="Logo" className="max-h-20 md:max-h-24 w-auto object-contain" />
                                     ) : (
-                                        <Building2 className="w-16 h-16 text-white" />
+                                        <Building2 className="w-12 h-12 md:w-16 md:h-16 text-white" />
                                     )}
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-blue-400 font-medium tracking-widest text-xs mt-1 uppercase text-center">SOLUCIONES A TU MEDIDA</p>
-                            </div>
+                            <p className="text-blue-400 font-medium tracking-widest text-[10px] md:text-xs uppercase">SOLUCIONES A TU MEDIDA</p>
                         </div>
-                        <div className="text-right text-xs space-y-1 text-slate-400">
+                        <div className="text-center md:text-right text-[10px] md:text-xs space-y-1 text-slate-400">
                             <p className="font-bold text-white uppercase italic">Dirección</p>
                             <p>{company?.direccion}</p>
                             <p>{company?.ciudad}</p>
@@ -4965,15 +4922,15 @@ const App = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-10 text-gray-800 text-[13px] leading-relaxed text-justify">
+                    <div className="md:p-10 p-5 text-gray-800 text-[12px] md:text-[13px] leading-relaxed text-justify">
 
-                        <h2 className="text-center font-bold text-lg mb-6 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Ensamble de Computadoras</h2>
+                        <h2 className="text-center font-bold text-base md:text-lg mb-6 uppercase tracking-widest border-b pb-4">Contrato de Prestación de Servicios de Ensamble de Computadoras</h2>
 
                         <p className="mb-6">
                             CONTRATO DE PRESTACIÓN DE SERVICIOS DE ENSAMBLE, CONFIGURACIÓN Y OPTIMIZACIÓN DE EQUIPO DE CÓMPUTO que celebran por una parte <strong>{company?.nombre}</strong>, con domicilio en <strong>{company?.direccion}, {company?.ciudad}</strong>, a quien en lo sucesivo se le denominará “EL PRESTADOR”, y por la otra <span
                                 contentEditable
                                 suppressContentEditableWarning
-                                className="font-bold uppercase px-2 bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
+                                className="font-bold uppercase px-2 bg-slate-200/50 border-b border-dashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
                             >{clientName}</span>, a quien en lo sucesivo se le denominará “EL CLIENTE”, al tenor de las siguientes declaraciones y cláusulas:
                         </p>
 
@@ -4982,22 +4939,15 @@ const App = () => {
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">DECLARACIONES</h3>
                                 <div className="space-y-4">
                                     <p><strong>I. Declara EL PRESTADOR que:</strong></p>
-                                    <ul className="list-disc ml-8 space-y-1">
+                                    <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Se dedica al ensamble, configuración, diagnóstico y optimización de hardware de cómputo de alto rendimiento.</li>
-                                        <li>Cuenta con los conocimientos técnicos en arquitectura de hardware, herramientas especializadas y personal capacitado para la manipulación de componentes electrónicos sensibles.</li>
+                                        <li>Cuenta con los conocimientos técnicos en arquitectura de hardware y herramientas especializadas.</li>
                                     </ul>
 
                                     <p><strong>II. Declara EL CLIENTE que:</strong></p>
-                                    <ul className="list-disc ml-8 space-y-1">
+                                    <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Es una persona física o moral con capacidad legal para contratar.</li>
-                                        <li>Solicita el ensamble de equipo(s) de cómputo basado en componentes adquiridos o seleccionados previamente.</li>
-                                        <li>Es responsable de la legitimidad de las licencias de software que solicite instalar (Sistema Operativo, Drivers, Software de terceros).</li>
-                                    </ul>
-
-                                    <p><strong>III. Declaran ambas partes que:</strong></p>
-                                    <ul className="list-disc ml-8 space-y-1">
-                                        <li>Se reconocen mutuamente la personalidad con la que comparecen.</li>
-                                        <li>Es su voluntad celebrar el presente contrato sin dolo ni mala fe.</li>
+                                        <li>Solicita el ensamble de equipo(s) de cómputo basado en componentes adquiridos o seleccionados.</li>
                                     </ul>
                                 </div>
                             </section>
@@ -5006,64 +4956,41 @@ const App = () => {
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">CLÁUSULAS</h3>
 
                                 <div className="space-y-6">
-                                    <div>
-                                        <p><strong>PRIMERA. OBJETO DEL CONTRATO.</strong> EL PRESTADOR se obliga a proporcionar a EL CLIENTE el servicio de ensamble físico de componentes (CPU, GPU, RAM, etc.), gestión de cables, actualización de BIOS/Firmware y configuración inicial de software, conforme a la lista de componentes acordada.</p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>SEGUNDA. ALCANCE DEL SERVICIO.</strong> El servicio incluye: Montaje de hardware en gabinete; Gestión térmica (aplicación de pasta térmica y flujo de aire); Instalación de Sistema Operativo y Controladores; Pruebas de estrés para verificar estabilidad.
-                                            <br /><span className="italic text-blue-700 font-semibold underline uppercase">No incluye: Recuperación de datos de discos anteriores, licencias de software no pagadas, u Overclocking extremo sin responsabilidad.</span></p>
-                                    </div>
-
-                                    <div className="bg-blue-50 p-5 rounded-lg border border-blue-100 print:bg-blue-50 print:border-blue-100">
-                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-[#e2e8f0] px-1 border-b border-dashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
-                                        <ul className="list-disc ml-8 mt-2">
-                                            <li>Anticipo por servicio de ensamble: <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-[#e2e8f0] px-1 border-b border-dashed border-blue-500 outline-none">{advanceAmount}</span> al entregar/pedir componentes.</li>
-                                            <li>Saldo restante: Al concluir el ensamble y pruebas de rendimiento.</li>
+                                    <div className="bg-blue-50 md:p-5 p-4 rounded-lg border border-blue-100 print:bg-blue-50 print:border-blue-100">
+                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-slate-200/50 px-1 border-b border-dashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
+                                        <ul className="list-disc ml-6 md:ml-8 mt-2">
+                                            <li>Anticipo por servicio: <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-slate-200/50 px-1 border-b border-dashed border-blue-500 outline-none">{advanceAmount}</span>.</li>
+                                            <li>Saldo restante: Al concluir el ensamble y pruebas.</li>
                                         </ul>
-                                        <p className="mt-2 text-[11px] uppercase font-bold text-slate-600">El equipo no será entregado sin haber liquidado el total del servicio.</p>
                                     </div>
 
                                     <div>
-                                        <p><strong>CUARTA. TIEMPO DE ENTREGA.</strong> EL PRESTADOR entregará el equipo en un plazo estimado de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{days}</span> días hábiles, sujeto a la disponibilidad de todos los componentes.</p>
+                                        <p><strong>QUINTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{warrantyDays}</span> días sobre el ensamble.</p>
                                     </div>
-
-                                    <div>
-                                        <p><strong>QUINTA. GARANTÍA DE MANO DE OBRA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{warrantyDays}</span> días exclusivamente sobre el ensamble (conexiones mal realizadas, errores de montaje).
-                                            <br /><span className="text-[11px] italic">Nota: Las garantías de componentes individuales (Fallas de fábrica en procesador, GPU, etc.) deberán tramitarse directamente con el fabricante o distribuidor del hardware.</span></p>
-                                    </div>
-
-                                    <div>
-                                        <p><strong>SEXTA. EXCLUSIÓN DE RESPONSABILIDAD.</strong> EL PRESTADOR no es responsable por daños derivados de: Inestabilidad eléctrica en el domicilio del cliente, manipulación posterior por terceros, o instalación de software malicioso (virus/malware) posterior a la entrega.</p>
-                                    </div>
-
-
                                 </div>
                             </section>
 
                             <section className="mt-6 break-inside-avoid">
                                 <p className="mb-6">
-                                    Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-[#e2e8f0] border-b border-dashed border-blue-500 outline-none">{year}</span>.
+                                    Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{year}</span>.
                                 </p>
 
-                                <div className="grid grid-cols-2 gap-20 text-center mt-10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 text-center mt-10">
                                     <div>
-                                        <div className="h-20 border-b border-slate-900 mx-auto w-4/5 italic text-blue-700 underline uppercase"></div>
-                                        <p className="mt-4 font-bold uppercase text-xs italic text-blue-700 underline uppercase">EL PRESTADOR</p>
-                                        <p className="text-[11px] italic text-blue-700 underline uppercase">{company?.nombre} - Área Técnica</p>
-                                        <p className="text-[11px] mt-1 italic text-blue-700 underline uppercase" contentEditable suppressContentEditableWarning>{technicianName}</p>
+                                        <div className="h-16 md:h-20 border-b border-slate-900 mx-auto w-4/5"></div>
+                                        <p className="mt-4 font-bold uppercase text-xs">EL PRESTADOR</p>
+                                        <p className="text-[11px]">{company?.nombre} - Área Técnica</p>
+                                        <p className="text-[11px] mt-1 italic text-blue-700" contentEditable suppressContentEditableWarning>{technicianName}</p>
                                     </div>
                                     <div>
-                                        <div className="h-20 border-b border-slate-900 mx-auto w-4/5 italic text-blue-700 underline uppercase"></div>
-                                        <p className="mt-4 font-bold uppercase text-xs italic text-blue-700 underline uppercase">EL CLIENTE</p>
-                                        <p className="text-[11px] mt-1 italic text-blue-700 underline uppercase" contentEditable suppressContentEditableWarning>{clientSignName}</p>
+                                        <div className="h-16 md:h-20 border-b border-slate-900 mx-auto w-4/5"></div>
+                                        <p className="mt-4 font-bold uppercase text-xs">EL CLIENTE</p>
+                                        <p className="text-[11px] mt-1 italic text-blue-700" contentEditable suppressContentEditableWarning>{clientSignName}</p>
                                     </div>
                                 </div>
                             </section>
                         </div>
                     </div>
-
-
                 </div>
 
                 <style dangerouslySetInnerHTML={{
@@ -5203,7 +5130,7 @@ const App = () => {
     return (
         <ErrorBoundary>
             <style dangerouslySetInnerHTML={{ __html: `@media print { .no-print { display: none !important; } }` }} />
-            <div className={`min-h-screen flex ${getBackgroundClass()} ${currentTheme === 'dark' ? 'dark' : ''} print:bg-white`}>
+            <div className={`min-h-screen flex flex-col md:flex-row ${getBackgroundClass()} ${currentTheme === 'dark' ? 'dark' : ''} print:bg-white`}>
                 <Sidebar
                     activeTab={activeTab}
                     setActiveTab={handleNavigation} // Pass the wrapper instead of direct setter
@@ -5255,13 +5182,14 @@ const App = () => {
 
                 {/* Mobile Header */}
                 {mobileMode && (
-                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-sm ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-blue-600 text-white border-blue-500'} no-print`}>
+                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-md ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-blue-600 text-white border-blue-500'} no-print`}>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setSidebarOpen(true)}
                                 className={`p-2 -ml-2 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-blue-500 text-white'}`}
+                                aria-label="Abrir Menú"
                             >
-                                <span>Menu</span>
+                                <Menu className="w-6 h-6" />
                             </button>
                             <div className="flex items-center gap-2">
                                 <span className="font-bold text-lg tracking-tight">SmartQuote</span>
