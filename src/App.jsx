@@ -4121,6 +4121,9 @@ const App = () => {
             fetchQuotations(session.user.id);
             setEditingQuotationId(null);
 
+            // Redirect to list to prevent duplication if saved again
+            setActiveTab('cotizaciones-list');
+
             // Fetch next folio for new quotation
             if (!editingQuotationId) {
                 await fetchNextFolio(session.user.id);
