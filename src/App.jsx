@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, Calendar } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -63,8 +63,19 @@ class ErrorBoundary extends React.Component {
 
 // --- COMPONENTS ---
 
-const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onShare, darkMode }) => {
+const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [deletingId, setDeletingId] = useState(null);
+
+    const handleDeleteClick = (id) => {
+        if (window.confirm('¿Estás seguro de eliminar esta cotización?')) {
+            setDeletingId(id);
+            // Wait for animation to complete
+            setTimeout(() => {
+                onDelete(id);
+            }, 400);
+        }
+    };
 
     const filteredQuotations = quotations.filter(q => {
         const search = searchTerm.toLowerCase();
@@ -135,7 +146,10 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
                         </thead>
                         <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
                             {filteredQuotations.map((quotation) => (
-                                <tr key={quotation.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                <tr
+                                    key={quotation.id}
+                                    className={`transition-all duration-500 ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
+                                >
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-bold text-blue-600">#{quotation.folio}</span>
                                     </td>
@@ -166,7 +180,15 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onSh
                                             </button>
 
                                             <button
-                                                onClick={() => onDelete(quotation.id)}
+                                                onClick={() => onDuplicate(quotation)}
+                                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                title="Duplicar cotización"
+                                            >
+                                                <Copy className="w-5 h-5" />
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleDeleteClick(quotation.id)}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                 title="Eliminar cotización"
                                             >
@@ -932,7 +954,9 @@ const ClientForm = ({ data, onChange }) => (
     </div>
 );
 
-const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, darkMode }) => {
+const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, darkMode }) => {
+    const [draggedIndex, setDraggedIndex] = React.useState(null);
+
     // Helpers
     const calculateRowTotal = (qty, price, discount) => {
         const sub = qty * price;
@@ -949,6 +973,30 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, darkMode }) 
     const totalProfit = totalSale - totalCost;
     const profitMargin = totalSale > 0 ? ((totalProfit / totalSale) * 100).toFixed(1) : 0;
 
+    // Drag and Drop Handlers
+    const handleDragStart = (e, index) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        // HTML5 drag and drop requires setting some data
+        e.dataTransfer.setData('text/plain', index);
+
+        // Add a class for styling while dragging
+        e.currentTarget.classList.add('opacity-40');
+    };
+
+    const handleDragEnd = (e) => {
+        setDraggedIndex(null);
+        e.currentTarget.classList.remove('opacity-40');
+    };
+
+    const handleDragOver = (e, index) => {
+        e.preventDefault(); // Required to allow drop
+        if (draggedIndex === null || draggedIndex === index) return;
+
+        onMoveItem(draggedIndex, index);
+        setDraggedIndex(index);
+    };
+
     return (
         <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
             <div className="flex justify-between items-center mb-4">
@@ -963,17 +1011,31 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, darkMode }) 
                 <table className="w-full text-sm">
                     <thead>
                         <tr className={`${darkMode ? 'bg-slate-800/50 text-slate-300' : 'bg-gray-50/50 text-slate-600'}`}>
+                            <th className="p-3 text-center w-12"></th>
                             <th className="p-3 text-left rounded-l-lg w-16">Cant.</th>
                             <th className="p-3 text-left">Descripción / Producto</th>
-                            <th className="p-3 text-right pr-4 w-28 text-orange-500">Costo Unit.</th>
+                            <th className="p-3 text-right pr-4 w-28 text-orange-500">Precio Empresa</th>
                             <th className="p-3 text-right pr-4 w-32 text-blue-500">Precio Público</th>
+                            <th className="p-3 text-right pr-4 w-32 text-indigo-500">Subtotal</th>
                             <th className="p-3 text-center text-xs w-20">% Desc</th>
                             <th className="p-3 text-center rounded-r-lg w-10"></th>
                         </tr>
                     </thead>
                     <tbody className={`divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
-                        {items.map((item) => (
-                            <tr key={item.id} className={`transition-colors group ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'}`}>
+                        {items.map((item, index) => (
+                            <tr
+                                key={item.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, index)}
+                                onDragEnd={handleDragEnd}
+                                onDragOver={(e) => handleDragOver(e, index)}
+                                className={`transition-all group cursor-default ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'} ${draggedIndex === index ? 'opacity-20 bg-indigo-50' : ''}`}
+                            >
+                                <td className="p-2 text-center pointer-events-none">
+                                    <div className="flex justify-center cursor-grab active:cursor-grabbing pointer-events-auto">
+                                        <GripVertical className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                                    </div>
+                                </td>
                                 <td className="p-2">
                                     <input
                                         type="number"
@@ -1014,6 +1076,11 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, darkMode }) 
                                         />
                                     </div>
                                 </td>
+                                <td className="p-2 text-right">
+                                    <span className={`font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                        ${formatCurrency(item.qty * item.price)}
+                                    </span>
+                                </td>
                                 <td className="p-2">
                                     <input
                                         type="number"
@@ -1036,8 +1103,8 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, darkMode }) 
                     </tbody>
                     <tfoot>
                         <tr className={`${darkMode ? 'bg-slate-700/30' : 'bg-slate-50'}`}>
-                            <td colSpan="4" className="p-3 text-right font-bold text-sm text-slate-500 uppercase tracking-wide">Subtotal Venta Estimado:</td>
-                            <td colSpan="2" className="p-3 text-right font-bold text-blue-600 text-lg">
+                            <td colSpan="5" className="p-3 text-right font-bold text-sm text-slate-500 uppercase tracking-wide">Subtotal Venta Estimado:</td>
+                            <td colSpan="3" className="p-3 text-right font-bold text-blue-600 text-lg">
                                 ${formatCurrency(totalSale)}
                             </td>
                         </tr>
@@ -1141,7 +1208,7 @@ const TemplateClassic = ({ company, client, items, terms, folio, date, dueDate, 
                             <tr className="border-b border-gray-100">
                                 <th className="text-left py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-16">Cant.</th>
                                 <th className="text-left py-2 text-xs font-bold text-gray-400 uppercase tracking-widest">Descripción / Producto</th>
-                                <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Precio Unit.</th>
+                                <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Precio Público</th>
                                 <th className="text-right py-2 text-xs font-bold text-gray-400 uppercase tracking-widest w-32">Importe</th>
                             </tr>
                         </thead>
@@ -1245,7 +1312,7 @@ const TemplateModern = ({ company, client, items, terms, folio, date, dueDate, s
                         <tr>
                             <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider w-16">Cant</th>
                             <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider">Descripción</th>
-                            <th className="py-3 px-4 text-right text-xs font-bold uppercase tracking-wider w-32">Precio</th>
+                            <th className="py-3 px-4 text-right text-xs font-bold uppercase tracking-wider w-32">Precio Público</th>
                             <th className="py-3 px-4 text-right text-xs font-bold uppercase tracking-wider w-32">Total</th>
                         </tr>
                     </thead>
@@ -1337,7 +1404,7 @@ const TemplateFormal = ({ company, client, items, terms, folio, date, dueDate, s
                         <tr className="bg-gray-100 border-y border-gray-300">
                             <th className="py-2 px-3 text-left text-xs font-bold uppercase w-16 text-gray-700">Cant.</th>
                             <th className="py-2 px-3 text-left text-xs font-bold uppercase text-gray-700">Descripción</th>
-                            <th className="py-2 px-3 text-right text-xs font-bold uppercase w-32 text-gray-700">Precio</th>
+                            <th className="py-2 px-3 text-right text-xs font-bold uppercase w-32 text-gray-700">Precio Público</th>
                             <th className="py-2 px-3 text-right text-xs font-bold uppercase w-32 text-gray-700">Importe</th>
                         </tr>
                     </thead>
@@ -1454,7 +1521,7 @@ const TemplateCreative = ({ company, client, items, terms, folio, date, dueDate,
                                     )}
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-xs text-slate-400">Unitario</div>
+                                    <div className="text-xs text-slate-400">Precio Público</div>
                                     <div className="font-bold text-slate-700">${formatCurrency(item.price)}</div>
                                 </div>
                                 <div className="w-32 text-right pl-4 border-l border-slate-100 ml-4">
@@ -4136,8 +4203,6 @@ const App = () => {
     };
 
     const deleteQuotation = async (id) => {
-        if (!confirm('¿Estás seguro de eliminar esta cotización?')) return;
-
         try {
             const { error } = await supabase
                 .from('cotizaciones')
@@ -4146,11 +4211,71 @@ const App = () => {
 
             if (error) throw error;
 
-            alert('Cotización eliminada');
             fetchQuotations(session.user.id);
         } catch (error) {
             console.error('Error deleting quotation:', error);
             alert('Error al eliminar cotización: ' + error.message);
+        }
+    };
+
+    const duplicateQuotation = async (quotation) => {
+        if (!session?.user) return;
+
+        try {
+            // Get base folio (remove existing -N suffix if any)
+            const folioParts = quotation.folio.split('-');
+            let baseFolio;
+            if (folioParts.length > 3) {
+                baseFolio = folioParts.slice(0, 3).join('-');
+            } else {
+                baseFolio = quotation.folio;
+            }
+
+            // Find existing versions with this base to find next suffix
+            const { data, error } = await supabase
+                .from('cotizaciones')
+                .select('folio')
+                .eq('user_id', session.user.id)
+                .like('folio', `${baseFolio}%`);
+
+            if (error) throw error;
+
+            let nextSuffix = 1;
+            if (data && data.length > 0) {
+                const suffixes = data
+                    .map(q => {
+                        const parts = q.folio.split('-');
+                        return parts.length > 3 ? parseInt(parts[3]) : 0;
+                    })
+                    .filter(s => !isNaN(s));
+
+                if (suffixes.length > 0) {
+                    nextSuffix = Math.max(...suffixes) + 1;
+                }
+            }
+
+            const nextFolio = `${baseFolio}-${nextSuffix}`;
+
+            // Prepare duplicated data
+            const newQuotation = { ...quotation };
+            delete newQuotation.id;
+            delete newQuotation.created_at;
+
+            newQuotation.folio = nextFolio;
+            newQuotation.user_id = session.user.id;
+            newQuotation.updated_at = new Date();
+
+            const { error: insertError } = await supabase
+                .from('cotizaciones')
+                .insert([newQuotation]);
+
+            if (insertError) throw insertError;
+
+            alert(`Cotización duplicada como: ${nextFolio}`);
+            fetchQuotations(session.user.id);
+        } catch (error) {
+            console.error('Error duplicating quotation:', error);
+            alert('Error al duplicar cotización: ' + error.message);
         }
     };
 
@@ -4335,6 +4460,13 @@ const App = () => {
     const removeItem = (id) => setItems(items.filter(i => i.id !== id));
     const updateItem = (id, field, value) => {
         setItems(items.map(i => i.id === id ? { ...i, [field]: value } : i));
+    };
+
+    const moveItem = (fromIndex, toIndex) => {
+        const newItems = [...items];
+        const [movedItem] = newItems.splice(fromIndex, 1);
+        newItems.splice(toIndex, 0, movedItem);
+        setItems(newItems);
     };
 
     const generatePDF = async () => {
@@ -4993,6 +5125,7 @@ const App = () => {
                                 }}
                                 onView={viewQuotation}
                                 onEdit={loadQuotationForEdit}
+                                onDuplicate={duplicateQuotation}
                                 onDelete={deleteQuotation}
                                 darkMode={isDark}
                             />
@@ -5145,6 +5278,7 @@ const App = () => {
                                         onAddItem={addItem}
                                         onRemoveItem={removeItem}
                                         onUpdateItem={updateItem}
+                                        onMoveItem={moveItem}
                                         darkMode={isDark}
                                     />
 
