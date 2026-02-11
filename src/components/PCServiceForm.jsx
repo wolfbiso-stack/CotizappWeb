@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, User, Monitor, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, ShieldCheck, HardDrive } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { supabase } from '../../utils/supabase';
@@ -212,11 +213,11 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
     const labelClass = `block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className={`w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Header */}
-                <div className={`px-8 py-6 flex justify-between items-center border-b ${darkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-gray-50/50'}`}>
+                <div className={`px-8 py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20 text-white">
                             <Monitor className="w-6 h-6" />
@@ -438,8 +439,8 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                         <div className="space-y-3">
                             {parts.map((part) => (
-                                <div key={part.id} className={`grid grid-cols-1 md:grid-cols-12 gap-3 p-4 md:p-3 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-                                    <div className="md:col-span-1">
+                                <div key={part.id} className={`flex flex-col md:flex-row gap-3 p-4 md:p-3 rounded-2xl border items-center transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                    <div className="w-full md:w-20">
                                         <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1 md:text-center">Cant.</label>
                                         <input
                                             type="number"
@@ -449,7 +450,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             min="1"
                                         />
                                     </div>
-                                    <div className="md:col-span-2">
+                                    <div className="w-full md:w-32">
                                         <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">N° Serie</label>
                                         <input
                                             type="text"
@@ -459,7 +460,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             placeholder="Serie..."
                                         />
                                     </div>
-                                    <div className="md:col-span-4">
+                                    <div className="w-full md:flex-1">
                                         <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Producto / Refacción</label>
                                         <input
                                             type="text"
@@ -469,7 +470,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             placeholder="Descripción del artículo..."
                                         />
                                     </div>
-                                    <div className="md:col-span-2">
+                                    <div className="w-full md:w-32">
                                         <label className="block text-[10px] uppercase font-black text-rose-400 mb-1 ml-1">Costo Empresa</label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
@@ -481,8 +482,8 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-[10px] uppercase font-black text-blue-400 mb-1 ml-1">Precio Público</label>
+                                    <div className="w-full md:w-32">
+                                        <label className="block text-[10px] uppercase font-black text-blue-400 mb-1 ml-1">Costo Público</label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
                                             <input
@@ -493,14 +494,26 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="md:col-span-1 flex items-end justify-center pb-1">
+                                    <div className="w-full md:w-32">
+                                        <label className="block text-[10px] uppercase font-black text-green-500 mb-1 ml-1">Subtotal</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
+                                            <input
+                                                type="text"
+                                                value={((parseFloat(part.cantidad) || 0) * (parseFloat(part.costoPublico) || 0)).toFixed(2)}
+                                                readOnly
+                                                className={`${inputClass} pl-6 bg-slate-50 font-bold text-slate-600`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="w-full md:w-auto flex justify-end md:self-end md:mb-1">
                                         <button
                                             type="button"
                                             onClick={() => removePart(part.id)}
-                                            className="w-full md:w-auto p-2 text-rose-500 bg-rose-50 md:bg-transparent rounded-xl transition-colors flex items-center justify-center gap-2 md:block"
+                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Eliminar Item"
                                         >
                                             <Trash2 className="w-5 h-5" />
-                                            <span className="md:hidden font-bold text-xs uppercase">Eliminar</span>
                                         </button>
                                     </div>
                                 </div>
@@ -528,7 +541,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     <button
                                         type="button"
                                         onClick={() => removeFile(idx)}
-                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-sm hover:bg-red-600 transition-colors"
                                     >
                                         <X className="w-3 h-3" />
                                     </button>
@@ -543,7 +556,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     <button
                                         type="button"
                                         onClick={() => handleDeleteExisting(photo.id)}
-                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-sm hover:bg-red-600 transition-colors"
                                     >
                                         <Trash2 className="w-3 h-3" />
                                     </button>
@@ -561,7 +574,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 </form>
 
                 {/* Footer / Totals */}
-                <div className={`p-8 border-t ${darkMode ? 'border-slate-700 bg-slate-800/80' : 'bg-gray-50 border-slate-100'}`}>
+                <div className={`p-8 border-t sticky bottom-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'bg-gray-50/90 border-slate-100'} backdrop-blur-md`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div>
                             <label className={labelClass}>Mano de Obra</label>
@@ -634,7 +647,8 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

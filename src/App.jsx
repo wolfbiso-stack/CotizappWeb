@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -11,6 +11,7 @@ import QRServiceTicket from './components/QRServiceTicket';
 import ServiceReceipt from './components/ServiceReceipt';
 import PCServiceForm from './components/PCServiceForm';
 import PhoneServiceForm from './components/PhoneServiceForm';
+import CCTVServiceForm from './components/CCTVServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate } from './utils/format';
 
@@ -63,7 +64,55 @@ class ErrorBoundary extends React.Component {
 
 // --- COMPONENTS ---
 
-const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode }) => {
+const QuotationStatusToggle = ({ quotation, onStatusChange, darkMode }) => {
+    const [loading, setLoading] = useState(false);
+    const status = quotation.aceptada_rechazada || 'pendiente';
+
+    const handleStatusChange = async (newStatus) => {
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('cotizaciones')
+                .update({ aceptada_rechazada: newStatus })
+                .eq('id', quotation.id);
+
+            if (error) throw error;
+            onStatusChange();
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Error al actualizar el estado');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg w-fit">
+            <button
+                disabled={loading}
+                onClick={() => handleStatusChange(status === 'aceptada' ? 'pendiente' : 'aceptada')}
+                className={`p-1.5 rounded-md transition-all ${status === 'aceptada' 
+                    ? 'bg-green-500 text-white shadow-sm scale-110' 
+                    : 'text-slate-400 hover:text-green-500'}`}
+                title="Marcar como Aceptada"
+            >
+                <ThumbsUp className={`w-4 h-4 ${loading ? 'animate-pulse' : ''}`} />
+            </button>
+            <button
+                disabled={loading}
+                onClick={() => handleStatusChange(status === 'rechazada' ? 'pendiente' : 'rechazada')}
+                className={`p-1.5 rounded-md transition-all ${status === 'rechazada' 
+                    ? 'bg-red-500 text-white shadow-sm scale-110' 
+                    : 'text-slate-400 hover:text-red-500'}`}
+                title="Marcar como Rechazada"
+            >
+                <ThumbsDown className={`w-4 h-4 ${loading ? 'animate-pulse' : ''}`} />
+            </button>
+        </div>
+    );
+};
+
+const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode, onStatusChange }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
 
@@ -139,6 +188,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                             <tr>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
                                 <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
@@ -155,6 +205,13 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{quotation.nombre_cliente}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <QuotationStatusToggle 
+                                            quotation={quotation} 
+                                            onStatusChange={onStatusChange} 
+                                            darkMode={darkMode} 
+                                        />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{quotation.fecha}</span>
@@ -1928,6 +1985,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
                                     </div>
                                 </th>
                                 <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
                                 <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                             </tr>
                         </thead>
@@ -1945,6 +2003,14 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <StatusDropdown
+                                            service={service}
+                                            darkMode={darkMode}
+                                            onStatusChange={fetchServices}
+                                            tableName="servicios_cctv"
+                                        />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="flex items-center justify-end gap-2">
@@ -1990,7 +2056,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
     );
 };
 
-const CCTVServiceView = ({ service, onBack, darkMode }) => {
+const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
 
     const [photos, setPhotos] = useState([]);
@@ -2017,170 +2083,265 @@ const CCTVServiceView = ({ service, onBack, darkMode }) => {
         }
     };
 
-    const SectionCard = ({ title, icon: Icon, children, color = "blue" }) => (
-        <div className={`p-6 rounded-2xl shadow-lg border backdrop-blur-md transition-all hover:shadow-xl ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/40'}`}>
-            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                <div className={`p-2 rounded-lg ${darkMode ? `bg-${color}-500/20 text-${color}-400` : `bg-${color}-100 text-${color}-600`}`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-                {title}
-            </h3>
-            <div className="space-y-3">
-                {children}
-            </div>
-        </div>
-    );
-
-    const InfoRow = ({ label, value, isMonospaced = false }) => (
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-1 border-b border-dashed last:border-0 border-slate-200/50">
-            <span className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
-            <span className={`font-medium text-sm ${isMonospaced ? 'font-mono' : ''} ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>{value || '-'}</span>
-        </div>
-    );
-
     const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
 
     return (
-        <div className="w-full px-4 md:px-8 py-8 animate-in fade-in zoom-in duration-300">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h1 className={`text-3xl font-extrabold tracking-tight flex items-center gap-3 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                        Servicio <span className="text-blue-600">#{service.servicio_numero}</span>
-                    </h1>
-                    <p className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {service.tipo_servicio} • Realizado el {formatServiceDate(service.servicio_fecha)} • {service.servicio_hora || 'Hora no especificada'}
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.pagado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {service.pagado ? 'Pagado' : 'Pendiente Pago'}
-                    </div>
-                    <div className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${service.entregado ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {service.entregado ? 'Entregado' : 'En Proceso'}
-                    </div>
-                    <button
-                        onClick={onBack}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors shadow-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}
-                    >
-                        <ArrowLeft className="w-4 h-4" /> Regresar
-                    </button>
-                </div>
-            </div>
+        <div className="w-full min-h-screen p-6 md:p-10">
+            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden shadow-2xl border border-blue-100">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* 1. Cliente */}
-                <SectionCard title="Información del Cliente" icon={User} color="blue">
-                    <InfoRow label="Nombre" value={service.cliente_nombre} />
-                    <InfoRow label="Teléfono" value={service.cliente_telefono} />
-                    <InfoRow label="Correo" value={service.cliente_correo} />
-                    <InfoRow label="Dirección" value={service.cliente_direccion} />
-                </SectionCard>
-
-                {/* 2. Dispositivos */}
-                <SectionCard title="Detalles del Equipo" icon={Video} color="indigo">
-                    <InfoRow label="Marca Principal" value={service.marca_principal} />
-                    <InfoRow label="Tipo Grabador" value={service.tipo_grabador} />
-                    <InfoRow label="Cámaras" value={service.tipos_camaras?.join(', ')} />
-                    <InfoRow label="IP Grabador" value={service.ip_grabador} isMonospaced />
-                    <InfoRow label="Dominio / P2P" value={service.dominio_ddns || service.id_nube_p2p} isMonospaced />
-                </SectionCard>
-
-                {/* 3. Credenciales (Blur sensitive data logic could go here) */}
-                <SectionCard title="Acceso y Credenciales" icon={Settings} color="slate">
-                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-2">
-                        <p className="text-xs text-yellow-600 font-bold mb-1">⚠️ Información Confidencial</p>
-                    </div>
-                    <InfoRow label="Usuario" value={service.usuario} isMonospaced />
-                    <InfoRow label="Contraseña" value={service.contrasena} isMonospaced />
-                </SectionCard>
-
-                {/* 4. Financiero */}
-                <SectionCard title="Desglose Financiero" icon={ShoppingCart} color="green">
-                    <InfoRow label="Mano de Obra" value={formatMoney(service.mano_obra)} />
-                    <InfoRow label="Materiales" value={formatMoney(service.materiales)} />
-                    <div className="my-2 border-t border-slate-300/50"></div>
-                    <InfoRow label="Total" value={formatMoney(service.total)} />
-                    <InfoRow label="Anticipo" value={formatMoney(service.anticipo)} />
-                    <div className="p-2 rounded bg-blue-500/10 mt-2">
-                        <div className="flex justify-between items-center font-bold text-blue-600">
-                            <span>Saldo Pendiente</span>
-                            <span>{formatMoney(service.saldo)}</span>
-                        </div>
-                    </div>
-                </SectionCard>
-
-                {/* 5. Garantía */}
-                <SectionCard title="Garantía" icon={Check} color="teal">
-                    <InfoRow label="Estado" value={service.garantia_aplica ? 'Aplica Garantía' : 'Sin Garantía'} />
-                    {service.garantia_aplica && (
-                        <>
-                            <InfoRow label="Inicio" value={formatServiceDate(service.garantia_fecha_inicio)} />
-                            <InfoRow label="Vencimiento" value={formatServiceDate(service.garantia_fecha_vencimiento)} />
-                            <div className="mt-2 text-xs italic opacity-70">
-                                {service.garantia_detalles}
-                            </div>
-                        </>
-                    )}
-                </SectionCard>
-
-                {/* 6. Técnico */}
-                <SectionCard title="Técnico Responsable" icon={Users} color="orange">
-                    <InfoRow label="Nombre" value={service.tecnico_nombre} />
-                    <InfoRow label="Celular" value={service.tecnico_celular} />
-                    {/* Firma Tecnico */}
-                </SectionCard>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {service.firma_tecnico_path && (
-                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
-                        <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
-                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma del Técnico</p>
-                    </div>
-                )}
-
-                {service.firma_cliente_path && (
-                    <div className={`p-6 rounded-2xl border flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-slate-200'}`}>
-                        <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-20 object-contain mb-2 mix-blend-multiply dark:mix-blend-normal dark:invert" />
-                        <p className={`text-xs uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma de Conformidad</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Photo Gallery */}
-            <div className="mt-8">
-                <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                    <Image className="w-5 h-5 text-blue-500" /> Evidencia Fotográfica
-                </h3>
-                {loadingPhotos ? (
-                    <div className="flex justify-center p-8">
-                        <Loader className="animate-spin w-6 h-6 text-blue-600" />
-                    </div>
-                ) : photos.length === 0 ? (
-                    <div className={`p-8 rounded-xl border text-center ${darkMode ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-                        No hay fotografías registradas para este servicio.
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {photos.map((photo) => (
-                            <div key={photo.id} className={`group relative aspect-video rounded-xl overflow-hidden border shadow-sm transition-all hover:shadow-md ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
-                                <img
-                                    src={photo.uri}
-                                    alt={`Evidencia ${photo.id}`}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                    <button
-                                        onClick={() => window.open(photo.uri, '_blank')}
-                                        className="bg-white/90 text-slate-800 p-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all"
-                                        title="Ver imagen completa"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                    </button>
+                {/* Header Section */}
+                <div className="p-8 bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex items-center gap-5">
+                            <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-blue-600">
+                                <ArrowLeft className="w-6 h-6" />
+                            </button>
+                            <div className="flex items-center gap-4">
+                                {company?.logo_uri ? (
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                ) : (
+                                    <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
+                                )}
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    <div className="flex gap-3 mt-2">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                                            <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
+                        <div className="text-left md:text-right">
+                            <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-1">Servicio CCTV</span>
+                            <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">#{service.servicio_numero}</h1>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg">
+                                <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                                <span className="text-xs font-mono font-bold">{formatServiceDate(service.servicio_fecha)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left Column - 2 cols */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Cliente y Técnico */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Cliente */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Cliente</h3>
+                                </div>
+                                <p className="text-xl font-bold text-slate-800 mb-1">{service.cliente_nombre}</p>
+                                <p className="text-sm text-slate-500 mb-1">{service.cliente_telefono}</p>
+                                {service.cliente_correo && <p className="text-xs text-slate-500 mb-1">{service.cliente_correo}</p>}
+                                <p className="text-xs text-slate-400 truncate" title={service.cliente_direccion}>{service.cliente_direccion}</p>
+                            </div>
+
+                            {/* Técnico Responsable */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Users className="w-5 h-5 text-orange-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-600">Técnico Responsable</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                                        {service.tecnico_nombre ? service.tecnico_nombre.charAt(0) : 'I'}
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-bold text-slate-800">{service.tecnico_nombre || 'Sin asignar'}</p>
+                                        <p className="text-xs text-slate-500">{service.tecnico_celular || 'Asignado al servicio'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Equipamiento y Grabador */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Detalles del Grabador */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-white border border-purple-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Video className="w-5 h-5 text-purple-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600">Grabador (DVR/NVR)</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Marca / Tipo</p>
+                                        <p className="text-sm font-bold text-slate-700">{service.marca_principal} • {service.tipo_grabador}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">IP Local</p>
+                                        <p className="text-sm font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded w-fit">{service.ip_grabador || 'No especificada'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Dominio / ID Nube</p>
+                                        <p className="text-sm font-mono text-slate-600 truncate">{service.dominio_ddns || service.id_nube_p2p || 'No configurado'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cámaras */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Monitor className="w-5 h-5 text-indigo-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600">Cámaras Instaladas</h3>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {service.tipos_camaras?.map((cam, idx) => (
+                                        <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 uppercase">
+                                            {cam}
+                                        </span>
+                                    )) || <p className="text-sm text-slate-500 italic">No especificadas</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Credenciales - Información Sensible */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 text-white shadow-xl">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-blue-400" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400">Acceso y Credenciales</h3>
+                                </div>
+                                <AlertTriangle className="w-5 h-5 text-amber-400 animate-pulse" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Usuario</p>
+                                    <p className="text-lg font-mono font-bold text-blue-300">{service.usuario || 'admin'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Contraseña</p>
+                                    <p className="text-lg font-mono font-bold text-amber-300">{service.contrasena || '****'}</p>
+                                </div>
+                            </div>
+                            <p className="mt-4 text-[10px] text-slate-500 italic text-center">Información confidencial para el mantenimiento del sistema.</p>
+                        </div>
+
+                        {/* Garantía */}
+                        {service.garantia_aplica && (
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-white border border-teal-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Check className="w-5 h-5 text-teal-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-teal-600">Cobertura de Garantía</h3>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-3 rounded-xl bg-teal-500/5 border border-teal-500/10">
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Inicia</p>
+                                        <p className="text-sm font-bold text-slate-700">{formatServiceDate(service.garantia_fecha_inicio)}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Vence</p>
+                                        <p className="text-sm font-bold text-rose-600">{formatServiceDate(service.garantia_fecha_vencimiento)}</p>
+                                    </div>
+                                </div>
+                                {service.garantia_detalles && (
+                                    <div className="mt-4 p-3 bg-white/50 rounded-xl border border-teal-100">
+                                        <p className="text-xs text-slate-600 italic">"{service.garantia_detalles}"</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Resumen Financiero */}
+                    <div className="lg:col-span-1">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 sticky top-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <ShoppingCart className="w-5 h-5 text-blue-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Resumen Financiero</h3>
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Mano de Obra</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.mano_obra)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Materiales</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.materiales)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600 font-bold">Total Servicio</span>
+                                    <span className="font-bold text-slate-900">{formatMoney(service.total)}</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-4 mb-6">
+                                <p className="text-xs text-blue-400 uppercase tracking-wider mb-2 text-center font-bold">Saldo Pendiente</p>
+                                <p className={`text-4xl font-black text-center ${service.saldo > 0 ? 'text-rose-600' : 'text-green-600'}`}>
+                                    {formatMoney(service.saldo)}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 p-4 rounded-xl bg-white border border-slate-200">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
+                                    <span className="font-bold text-blue-600">-{formatMoney(service.anticipo)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${service.pagado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        {service.pagado ? 'Totalmente Pagado' : 'Pendiente de Pago'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Photo Gallery */}
+                <div className="p-8 md:p-10 border-t border-slate-100 bg-slate-50/30">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Image className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-lg font-black text-slate-800 tracking-tight uppercase">Evidencia Fotográfica</h3>
+                    </div>
+
+                    {loadingPhotos ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <Loader className="w-8 h-8 text-blue-600 animate-spin mb-4" />
+                            <p className="text-sm text-slate-500 font-medium">Cargando fotografías...</p>
+                        </div>
+                    ) : photos.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {photos.map((photo, index) => (
+                                <div key={photo.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-200 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500">
+                                    <img src={photo.uri} alt={`Foto ${index + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                        <button onClick={() => window.open(photo.uri, '_blank')} className="w-full py-2 bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-white/40 transition-colors">
+                                            Ver Imagen
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
+                            <p className="text-slate-400 font-medium italic">No hay fotografías registradas para este servicio</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Firmas */}
+                {(service.firma_tecnico_path || service.firma_cliente_path) && (
+                    <div className="px-8 md:px-10 pb-8 grid grid-cols-2 gap-6">
+                        {service.firma_tecnico_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-xs uppercase tracking-widest text-slate-400">Firma del Técnico</p>
+                            </div>
+                        )}
+                        {service.firma_cliente_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-xs uppercase tracking-widest text-slate-400">Firma de Conformidad</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -2209,14 +2370,20 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     const handleStatusUpdate = async (newStatus) => {
         setUpdating(true);
         try {
-            const updatePayload = { status: newStatus };
+            // Determinar campo de ID y de Estado según la tabla
+            let idField = 'id';
+            let idValue = service.id;
+            // Corregido: para CCTV el campo es 'status' según indicación del usuario, no 'estatus'
+            const statusField = tableName === 'servicios_cctv' ? 'status' : 'status';
 
-            // Sync paid/delivered status for PC and Phone services
-            if (tableName === 'servicios_pc' || tableName === 'servicios_celular') {
+            const updatePayload = { [statusField]: newStatus };
+
+            // Sincronizar estado de pago/entrega para todos los servicios (incluido CCTV)
+            if (tableName === 'servicios_pc' || tableName === 'servicios_celular' || tableName === 'servicios_cctv') {
                 if (newStatus === 'entregado') {
                     updatePayload.pagado = true;
                     updatePayload.entregado = true;
-                } else {
+                } else if (newStatus === 'recibido') {
                     updatePayload.pagado = false;
                     updatePayload.entregado = false;
                 }
@@ -2225,7 +2392,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
             const { error } = await supabase
                 .from(tableName)
                 .update(updatePayload)
-                .eq('id', service.id);
+                .eq(idField, idValue);
 
             if (error) throw error;
             onStatusChange();
@@ -2250,8 +2417,9 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
         return colors[colorName] || colors.gray;
     };
 
-    const currentStatus = STATUS_OPTIONS.find(s => s.value === service.status?.toLowerCase());
-    const displayLabel = currentStatus ? currentStatus.label : 'Seleccionar Estado';
+    const statusValue = (tableName === 'servicios_cctv' ? service.status : service.status) || 'pendiente';
+    const currentStatus = STATUS_OPTIONS.find(s => s.value === statusValue.toLowerCase());
+    const displayLabel = currentStatus ? currentStatus.label : (statusValue || 'Seleccionar Estado');
     const displayColor = currentStatus ? currentStatus.color : 'gray';
 
     return (
@@ -2927,45 +3095,398 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     );
 };
 
-const ServiciosView = ({ darkMode, onNavigate }) => {
-    const services = [
-        { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-        { id: 'pc', title: 'PC', icon: Monitor, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-        { id: 'celulares', title: 'Celulares', icon: Smartphone, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-        { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-        { id: 'redes', title: 'Redes', icon: Globe, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService }) => {
+    const [unifiedServices, setUnifiedServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [showNewServiceModal, setShowNewServiceModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
+
+    const serviceCategories = [
+        { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10', implemented: true, table: 'servicios_cctv' },
+        { id: 'pc', title: 'PC', icon: Monitor, color: 'text-indigo-500', bg: 'bg-indigo-500/10', implemented: true, table: 'servicios_pc' },
+        { id: 'celulares', title: 'Celulares', icon: Smartphone, color: 'text-rose-500', bg: 'bg-rose-500/10', implemented: true, table: 'servicios_celular' },
+        { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-orange-500', bg: 'bg-orange-500/10', implemented: false },
+        { id: 'redes', title: 'Redes', icon: Globe, color: 'text-cyan-500', bg: 'bg-cyan-500/10', implemented: false },
     ];
+
+    const fetchAllServices = async () => {
+        setRefreshing(true);
+        try {
+            // Fetch CCTV services
+            const { data: cctvData } = await supabase.from('servicios_cctv').select('*');
+            // Fetch PC services
+            const { data: pcData } = await supabase.from('servicios_pc').select('*');
+            // Fetch Phone services
+            const { data: phoneData } = await supabase.from('servicios_celular').select('*');
+
+            const unified = [
+                ...(cctvData || []).map(s => ({
+                    ...s,
+                    id: s.id,
+                    type: 'CCTV',
+                    folio: s.servicio_numero,
+                    cliente: s.cliente_nombre,
+                    fecha: s.servicio_fecha || s.created_at,
+                    total: s.total,
+                    original: s,
+                    tableName: 'servicios_cctv'
+                })),
+                ...(pcData || []).map(s => ({
+                    ...s,
+                    id: s.id,
+                    type: 'PC',
+                    folio: s.orden_numero,
+                    cliente: s.cliente_nombre,
+                    fecha: s.fecha,
+                    total: s.total,
+                    original: s,
+                    tableName: 'servicios_pc'
+                })),
+                ...(phoneData || []).map(s => ({
+                    ...s,
+                    id: s.id,
+                    type: 'Celular',
+                    folio: s.orden_numero,
+                    cliente: s.cliente_nombre,
+                    fecha: s.fecha,
+                    total: s.total,
+                    original: s,
+                    tableName: 'servicios_celular'
+                }))
+            ].sort((a, b) => {
+                const dateA = new Date(a.fecha || 0).getTime();
+                const dateB = new Date(b.fecha || 0).getTime();
+                return dateB - dateA;
+            });
+
+            setUnifiedServices(unified);
+        } catch (error) {
+            console.error('Error fetching unified services:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllServices();
+    }, []);
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedServices = React.useMemo(() => {
+        let sortableItems = [...unifiedServices];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                if (sortConfig.key === 'fecha') {
+                    const dateA = aVal ? new Date(aVal).getTime() : 0;
+                    const dateB = bVal ? new Date(bVal).getTime() : 0;
+                    
+                    // Handle invalid dates
+                    if (isNaN(dateA)) return 1;
+                    if (isNaN(dateB)) return -1;
+
+                    return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+                }
+
+                if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+                if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [unifiedServices, sortConfig]);
+
+    const filteredServices = sortedServices.filter(s =>
+        s.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.folio?.toString().includes(searchTerm) ||
+        s.type.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleDelete = async (service) => {
+        if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
+        try {
+            const idField = 'id';
+            const idValue = service.id;
+
+            const { error } = await supabase
+                .from(service.tableName)
+                .delete()
+                .eq(idField, idValue);
+
+            if (error) throw error;
+            fetchAllServices();
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Error al eliminar servicio');
+        }
+    };
+
+    const handleViewServiceUnified = (service) => {
+        if (service.type === 'CCTV') {
+            setSelectedService(service.original);
+            onNavigate('services-cctv-view');
+        } else if (service.type === 'PC') {
+            setSelectedService(service.original);
+            onNavigate('services-pc-view');
+        } else if (service.type === 'Celular') {
+            setSelectedService(service.original);
+            onNavigate('services-phone-view');
+        }
+    };
+
+    const handleEditServiceUnifiedLocal = (service) => {
+        if (service.type === 'CCTV') {
+            setEditingPhoneService(null);
+            setEditingPCService(null);
+            setEditingCCTVService(service.original);
+        } else if (service.type === 'PC') {
+            setEditingPhoneService(null);
+            setEditingCCTVService(null);
+            setEditingPCService(service.original);
+        } else if (service.type === 'Celular') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(service.original);
+        }
+    };
 
     return (
         <div className="w-full px-4 md:px-8 py-8">
-            <h1 className={`text-3xl font-extrabold tracking-tight mb-8 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                Gestión de <span className="text-blue-600">Servicios</span>
-            </h1>
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6`}>
-                {services.map((service) => (
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div className="flex items-center gap-4">
+                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Gestión de <span className="text-blue-600">Servicios</span>
+                    </h1>
                     <button
-                        key={service.id}
-                        className={`p-6 rounded-2xl shadow-lg border transition-all hover:-translate-y-1 hover:shadow-xl text-left ${darkMode ? 'bg-slate-800 border-slate-700 hover:bg-slate-750' : 'bg-white border-slate-100 hover:border-blue-200'}`}
-                        onClick={() => {
-                            if (service.id === 'cctv') {
-                                onNavigate('services-cctv-list');
-                            } else if (service.id === 'pc') {
-                                onNavigate('services-pc-list');
-                            } else if (service.id === 'celulares') {
-                                onNavigate('services-phone-list');
-                            } else {
-                                alert(`Navegar a ${service.title} (Pendiente)`);
-                            }
-                        }}
+                        onClick={fetchAllServices}
+                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        title="Actualizar lista"
                     >
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${service.bg} ${service.color}`}>
-                            <service.icon className="w-8 h-8" />
-                        </div>
-                        <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>{service.title}</h3>
-                        <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Administrar servicios de {service.title}...</p>
+                        <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
                     </button>
-                ))}
+                </div>
+
+                <button
+                    onClick={() => setShowNewServiceModal(true)}
+                    className="w-full md:w-auto btn bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 transform hover:-translate-y-1 px-8 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 text-lg"
+                >
+                    <Plus className="w-6 h-6 stroke-[3]" />
+                    NUEVO SERVICIO
+                </button>
             </div>
+
+            {/* Search Bar */}
+            <div className="mb-6">
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Buscar por cliente, folio o tipo..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`w-full pl-12 pr-4 py-4 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 focus:border-blue-500'} focus:outline-none focus:ring-4 focus:ring-blue-500/10 shadow-sm`}
+                    />
+                </div>
+            </div>
+
+            <div className={`rounded-[2rem] shadow-2xl border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                {loading && !refreshing ? (
+                    <div className="p-20 flex flex-col items-center justify-center gap-4">
+                        <Loader className="w-10 h-10 animate-spin text-blue-600" />
+                        <p className="text-slate-500 font-bold animate-pulse">Cargando servicios...</p>
+                    </div>
+                ) : filteredServices.length === 0 ? (
+                    <div className="p-20 text-center flex flex-col items-center gap-4">
+                        <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                            <Search className="w-10 h-10" />
+                        </div>
+                        <p className="text-slate-500 font-medium">No se encontraron servicios que coincidan con tu búsqueda.</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                                    <th onClick={() => requestSort('type')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                        <div className="flex items-center gap-1">
+                                            Tipo
+                                            {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Folio</th>
+                                    <th onClick={() => requestSort('cliente')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                        <div className="flex items-center gap-1">
+                                            Cliente
+                                            {sortConfig.key === 'cliente' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th onClick={() => requestSort('fecha')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                        <div className="flex items-center gap-1">
+                                            Fecha
+                                            {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th onClick={() => requestSort('total')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                        <div className="flex items-center gap-1">
+                                            Total
+                                            {sortConfig.key === 'total' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Estado</th>
+                                    <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
+                                {filteredServices.map((service) => (
+                                    <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' : service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800'}`}>
+                                                {service.type}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-blue-600">#{service.folio}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <StatusDropdown
+                                                service={service.original}
+                                                darkMode={darkMode}
+                                                onStatusChange={fetchAllServices}
+                                                tableName={service.tableName}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleViewServiceUnified(service)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver Servicio"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEditServiceUnifiedLocal(service)}
+                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar Servicio"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(service)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Servicio"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Modal de Nuevo Servicio */}
+            {showNewServiceModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className={`w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+                        <div className="p-8 md:p-12">
+                            <div className="flex justify-between items-center mb-12">
+                                <div>
+                                    <h2 className={`text-4xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Nuevo Servicio</h2>
+                                    <p className={`text-lg font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona la categoría del servicio a registrar</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowNewServiceModal(false)}
+                                    className={`p-4 rounded-full transition-all hover:rotate-90 ${darkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'}`}
+                                >
+                                    <X className="w-8 h-8" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {serviceCategories.map((category) => (
+                                    <button
+                                        key={category.id}
+                                        onClick={() => {
+                                            if (!category.implemented) return;
+                                            setShowNewServiceModal(false);
+                                            if (category.id === 'cctv') {
+                                                setEditingPhoneService(null);
+                                                setEditingPCService(null);
+                                                setEditingCCTVService('new');
+                                            }
+                                            else if (category.id === 'pc') {
+                                                setEditingPhoneService(null);
+                                                setEditingCCTVService(null);
+                                                setEditingPCService('new');
+                                            }
+                                            else if (category.id === 'celulares') {
+                                                setEditingPCService(null);
+                                                setEditingCCTVService(null);
+                                                setEditingPhoneService('new');
+                                            }
+                                        }}
+                                        className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
+                                            ? 'opacity-60 cursor-not-allowed border-dashed grayscale bg-slate-50 border-slate-200'
+                                            : darkMode
+                                                ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
+                                                : 'bg-white border-slate-100 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
+                                            }`}
+                                    >
+                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${category.bg} ${category.color}`}>
+                                            <category.icon className="w-9 h-9 stroke-[2.5]" />
+                                        </div>
+                                        <div>
+                                            <h3 className={`text-xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-900'}`}>{category.title}</h3>
+                                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                {category.implemented ? `Registrar servicio de ${category.title.toLowerCase()}` : 'Próximamente...'}
+                                            </p>
+                                        </div>
+                                        {!category.implemented && (
+                                            <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest border border-amber-200">
+                                                Pendiente
+                                            </div>
+                                        )}
+                                        {category.implemented && (
+                                            <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                                                <ArrowUpRight className="w-6 h-6 text-blue-500 stroke-[3]" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -3687,6 +4208,9 @@ const App = () => {
     // Mobile Mode State
     const [mobileMode, setMobileMode] = useState(window.innerWidth < 768);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    
+    // Content Scroll Ref
+    const contentRef = useRef(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -3771,6 +4295,13 @@ const App = () => {
         setActiveTabState(tab);
         localStorage.setItem('activeTab', tab);
     };
+
+    // Reset scroll to top on tab change
+    useEffect(() => {
+        if (contentRef.current) {
+            contentRef.current.scrollTo(0, 0);
+        }
+    }, [activeTab]);
 
     const handleNavigation = (newTab) => {
         if (hasUnsavedChanges()) {
@@ -3963,6 +4494,93 @@ const App = () => {
         } catch (error) {
             console.error('Error saving phone service:', error);
             alert('Error al guardar el servicio');
+        }
+    };
+
+    // CCTV SERVICE FORM STATE & HANDLERS
+    const [editingCCTVService, setEditingCCTVService] = useState(null);
+
+    const handleSaveCCTVService = async (serviceData) => {
+        try {
+            let data, error;
+            const { files, photosToDelete, ...payloadData } = serviceData;
+
+            if (editingCCTVService === 'new') {
+                const { data: lastOrder } = await supabase
+                    .from('servicios_cctv')
+                    .select('orden_numero')
+                    .order('orden_numero', { ascending: false })
+                    .limit(1);
+                
+                const nextOrderNum = lastOrder && lastOrder[0] ? (parseInt(lastOrder[0].orden_numero) + 1).toString().padStart(4, '0') : '0001';
+                
+                ({ data, error } = await supabase
+                    .from('servicios_cctv')
+                    .insert([{
+                        ...payloadData,
+                        orden_numero: nextOrderNum,
+                        servicio_numero: nextOrderNum, // Ensure servicio_numero is also set
+                        servicio_fecha: payloadData.fecha,
+                        materiales: payloadData.repuestos_costo,
+                        inventario_materiales: payloadData.repuestos_descripcion
+                    }])
+                    .select());
+            } else {
+                ({ data, error } = await supabase
+                    .from('servicios_cctv')
+                    .update({
+                        ...payloadData,
+                        servicio_fecha: payloadData.fecha,
+                        materiales: payloadData.repuestos_costo,
+                        inventario_materiales: payloadData.repuestos_descripcion
+                    })
+                    .eq('id', editingCCTVService.id)
+                    .select());
+            }
+
+            if (error) throw error;
+
+            if (data && data[0]) {
+                const serviceId = data[0].id;
+                
+                // Handle photos to delete
+                if (photosToDelete && photosToDelete.length > 0) {
+                    await supabase.from('servicio_fotos').delete().in('id', photosToDelete);
+                }
+
+                // Handle new files
+                if (files && files.length > 0) {
+                    for (const file of files) {
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const filePath = `servicios/${serviceId}/${fileName}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('reparaciones')
+                            .upload(filePath, file);
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('reparaciones')
+                            .getPublicUrl(filePath);
+
+                        await supabase.from('servicio_fotos').insert([{
+                            servicio_id: serviceId,
+                            uri: publicUrl,
+                            file_path: filePath,
+                            tipo: 'CCTV'
+                        }]);
+                    }
+                }
+            }
+
+            setEditingCCTVService(null);
+            fetchUnifiedServices();
+            alert('Servicio CCTV guardado correctamente');
+        } catch (error) {
+            console.error('Error saving CCTV service:', error);
+            alert('Error al guardar el servicio CCTV');
         }
     };
 
@@ -5199,7 +5817,7 @@ const App = () => {
                 )}
 
                 <main className={`flex-1 transition-all duration-300 md:p-8 p-3 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
-                    <div className={`w-full h-full md:rounded-[2.5rem] rounded-3xl shadow-2xl overflow-y-auto md:px-8 px-4 md:py-10 py-6 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'} print:bg-white print:p-0 print:rounded-none print:shadow-none print:h-auto print:overflow-visible`}>
+                    <div ref={contentRef} className={`w-full h-full md:rounded-[2.5rem] rounded-3xl shadow-2xl overflow-y-auto md:px-8 px-4 md:py-10 py-6 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'} print:bg-white print:p-0 print:rounded-none print:shadow-none print:h-auto print:overflow-visible`}>
 
                         {activeTab === 'cotizaciones-list' && (
                             <QuotationList
@@ -5219,6 +5837,7 @@ const App = () => {
                                 onDuplicate={duplicateQuotation}
                                 onDelete={deleteQuotation}
                                 darkMode={isDark}
+                                onStatusChange={() => fetchQuotations(session.user.id)}
                             />
                         )}
 
@@ -5406,9 +6025,26 @@ const App = () => {
                                 onTemplateChange={handleTemplateChange}
                             />
                         )}
-                        {activeTab === 'servicios' && <ServiciosView darkMode={isDark} onNavigate={setActiveTab} />}
+                        {activeTab === 'servicios' && (
+                            <ServiciosView
+                                darkMode={isDark}
+                                onNavigate={setActiveTab}
+                                setSelectedService={setSelectedService}
+                                setEditingCCTVService={setEditingCCTVService}
+                                setEditingPCService={setEditingPCService}
+                                setEditingPhoneService={setEditingPhoneService}
+                            />
+                        )}
                         {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
-                        {activeTab === 'services-cctv-view' && <CCTVServiceView service={selectedService} onBack={() => setActiveTab('services-cctv-list')} darkMode={isDark} />}
+                        {activeTab === 'services-cctv-view' && (
+                            <CCTVServiceView 
+                                service={selectedService} 
+                                onBack={() => setActiveTab('servicios')} 
+                                onEdit={(service) => setEditingCCTVService(service)}
+                                darkMode={isDark} 
+                                company={company}
+                            />
+                        )}
                         {activeTab === 'services-pc-list' && (
                             <PCList
                                 darkMode={isDark}
@@ -5421,7 +6057,7 @@ const App = () => {
                         {activeTab === 'services-pc-view' && (
                             <PCServiceView
                                 service={selectedService}
-                                onBack={() => setActiveTab('services-pc-list')}
+                                onBack={() => setActiveTab('servicios')}
                                 onEdit={(service) => setEditingPCService(service)}
                                 darkMode={isDark}
                                 company={company}
@@ -5442,7 +6078,7 @@ const App = () => {
                         {activeTab === 'services-phone-view' && (
                             <PhoneServiceView
                                 service={selectedService}
-                                onBack={() => setActiveTab('services-phone-list')}
+                                onBack={() => setActiveTab('servicios')}
                                 onEdit={(service) => setEditingPhoneService(service)}
                                 darkMode={isDark}
                                 company={company}
@@ -5455,6 +6091,16 @@ const App = () => {
                                 service={editingPCService === 'new' ? null : editingPCService}
                                 onSave={handleSavePCService}
                                 onCancel={() => setEditingPCService(null)}
+                                darkMode={isDark}
+                            />
+                        )}
+
+                        {/* CCTV Service Form Modal */}
+                        {editingCCTVService && (
+                            <CCTVServiceForm
+                                service={editingCCTVService === 'new' ? null : editingCCTVService}
+                                onSave={handleSaveCCTVService}
+                                onCancel={() => setEditingCCTVService(null)}
                                 darkMode={isDark}
                             />
                         )}
