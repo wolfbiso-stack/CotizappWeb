@@ -184,86 +184,154 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                     </button>
                 </div>
             ) : (
-                <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                    <table className="w-full">
-                        <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
-                            <tr>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
-                                <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                            {filteredQuotations.map((quotation) => (
-                                <tr
-                                    key={quotation.id}
-                                    className={`transition-all duration-500 ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
-                                >
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm font-bold text-blue-600">#{quotation.folio}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{quotation.nombre_cliente}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <QuotationStatusToggle 
-                                            quotation={quotation} 
-                                            onStatusChange={onStatusChange} 
-                                            darkMode={darkMode} 
-                                        />
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{quotation.fecha}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(quotation.total)}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => onView(quotation)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Ver cotización"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => onEdit(quotation)}
-                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                                title="Editar cotización"
-                                            >
-                                                <Edit2 className="w-5 h-5" />
-                                            </button>
-
-                                            <button
-                                                onClick={() => onDuplicate(quotation)}
-                                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                                title="Duplicar cotización"
-                                            >
-                                                <Copy className="w-5 h-5" />
-                                            </button>
-
-                                            <button
-                                                onClick={() => handleDeleteClick(quotation.id)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Eliminar cotización"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </td>
+                <>
+                    {/* Desktop Table View */}
+                    <div className={`hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                        <table className="w-full">
+                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <tr>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                                {filteredQuotations.map((quotation) => (
+                                    <tr
+                                        key={quotation.id}
+                                        className={`transition-all duration-500 ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-blue-600">#{quotation.folio}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{quotation.nombre_cliente}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <QuotationStatusToggle 
+                                                quotation={quotation} 
+                                                onStatusChange={onStatusChange} 
+                                                darkMode={darkMode} 
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{quotation.fecha}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(quotation.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => onView(quotation)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver cotización"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onEdit(quotation)}
+                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar cotización"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => onDuplicate(quotation)}
+                                                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                    title="Duplicar cotización"
+                                                >
+                                                    <Copy className="w-5 h-5" />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleDeleteClick(quotation.id)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar cotización"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden space-y-4">
+                        {filteredQuotations.map((quotation) => (
+                            <div 
+                                key={quotation.id}
+                                className={`p-5 rounded-2xl border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'} transition-all duration-300`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md mb-2">
+                                            #{quotation.folio}
+                                        </span>
+                                        <h3 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            {quotation.nombre_cliente}
+                                        </h3>
+                                        <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {quotation.fecha}
+                                        </p>
+                                    </div>
+                                    <QuotationStatusToggle 
+                                        quotation={quotation} 
+                                        onStatusChange={onStatusChange} 
+                                        darkMode={darkMode} 
+                                    />
+                                </div>
+                                
+                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(quotation.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => onView(quotation)}
+                                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit(quotation)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDuplicate(quotation)}
+                                            className="p-2.5 bg-green-50 text-green-600 rounded-xl"
+                                        >
+                                            <Copy className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(quotation.id)}
+                                            className="p-2.5 bg-red-50 text-red-600 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
         </div>
     );
 };
+
 
 const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selectedTemplate, onTemplateChange }) => {
     const [activeSubTab, setActiveSubTab] = useState('company');
@@ -291,21 +359,20 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
     ];
 
     return (
-        <div className={`flex h-full animate-in slide-in-from-right-4 duration-300 ${darkMode ? 'bg-transparent' : 'bg-transparent'}`}>
+        <div className={`flex flex-col md:flex-row h-full animate-in slide-in-from-right-4 duration-300 ${darkMode ? 'bg-transparent' : 'bg-transparent'}`}>
             {/* Sub-sidebar */}
-            {/* Sub-sidebar */}
-            <div className={`w-64 border-r h-full flex flex-col shrink-0 ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
-                <div className={`p-6 border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
-                    <h2 className={`text-xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>Configuración</h2>
+            <div className={`w-full md:w-64 md:border-r border-b md:border-b-0 md:h-full flex flex-row md:flex-col shrink-0 overflow-x-auto ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                <div className={`p-4 md:p-6 border-b-0 md:border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                    <h2 className={`text-xl font-bold whitespace-nowrap ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>Configuración</h2>
                 </div>
-                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                <nav className="flex-1 md:overflow-y-auto p-4 flex md:flex-col gap-2 md:gap-1">
                     {menuItems.map(item => (
                         <button
                             key={item.id}
                             onClick={() => setActiveSubTab(item.id)}
-                            className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeSubTab === item.id
-                                ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                                : `hover:bg-opacity-50 border-l-4 border-transparent ${darkMode ? 'text-slate-300 hover:bg-slate-800 hover:text-slate-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`
+                            className={`w-auto md:w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeSubTab === item.id
+                                ? 'bg-blue-50 text-blue-700 md:border-l-4 border-b-4 md:border-b-0 border-blue-600'
+                                : `hover:bg-opacity-50 md:border-l-4 border-b-4 md:border-b-0 border-transparent ${darkMode ? 'text-slate-300 hover:bg-slate-800 hover:text-slate-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`
                                 }`}
                         >
                             {item.label}
@@ -315,7 +382,7 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto p-8 md:p-12">
+            <div className="flex-1 overflow-y-auto p-4 md:p-12">
                 {activeSubTab === 'company' && (
                     <div className="max-w-3xl">
                         <div className="mb-8">
@@ -421,6 +488,8 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
                             </div>
                         </div>
                     </div>
+
+
                 )}
 
                 {activeSubTab === 'templates' && (
@@ -490,6 +559,8 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
 };
 
 const ClientDetails = ({ client, onBack }) => {
+    if (!client) return null;
+
     return (
         <div className="w-full px-4 md:px-8 py-8 animate-in slide-in-from-right-4 duration-300">
             <div className="flex items-center gap-4 mb-8">
@@ -507,7 +578,7 @@ const ClientDetails = ({ client, onBack }) => {
             <div className={`rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-4xl mx-auto ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
                 <div className="bg-slate-50 p-8 border-b border-slate-100 flex items-center gap-6">
                     <div className="w-24 h-24 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold text-4xl shadow-lg shadow-blue-500/30">
-                        {client.nombre.charAt(0).toUpperCase()}
+                        {client.nombre?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
                         <h2 className="text-3xl font-bold text-slate-800">{client.nombre}</h2>
@@ -547,7 +618,7 @@ const ClientDetails = ({ client, onBack }) => {
                 </div>
 
                 <div className="p-6 bg-slate-50/50 border-t border-slate-100 text-right text-xs text-slate-400">
-                    Cliente creado el: {new Date(client.created_at).toLocaleDateString()}
+                    Cliente creado el: {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'N/A'}
                 </div>
             </div>
         </div>
@@ -1970,88 +2041,152 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
                         No hay servicios de CCTV registrados.
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
-                            <tr>
-                                <th onClick={() => requestSort('servicio_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
-                                    <div className="flex items-center gap-1">
-                                        No. Servicio
-                                        {sortConfig.key === 'servicio_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                    </div>
-                                </th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                <th onClick={() => requestSort('servicio_fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
-                                    <div className="flex items-center gap-1">
-                                        Fecha
-                                        {sortConfig.key === 'servicio_fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                    </div>
-                                </th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
-                                <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
-                                <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                            {sortedServices.map((service) => (
-                                <tr key={service.servicio_numero} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm font-bold text-blue-600">#{service.servicio_numero}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.servicio_fecha)}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <StatusDropdown
-                                            service={service}
-                                            darkMode={darkMode}
-                                            onStatusChange={fetchServices}
-                                            tableName="servicios_cctv"
-                                        />
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {service.pagado && service.entregado ? (
-                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
-                                                    Pagado y Entregado
-                                                </span>
-                                            ) : (
-                                                <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
-                                                    Pendiente de Entregar/Pagar
-                                                </span>
-                                            )}
-                                            <button
-                                                onClick={() => onViewService(service)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Ver Servicio"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => onNavigate('services-cctv-edit')}
-                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                                title="Editar Servicio"
-                                            >
-                                                <Edit2 className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(service.servicio_numero)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Eliminar Servicio"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+                    <>
+                    {/* Desktop View */}
+                    <div className="hidden md:block">
+                        <table className="w-full">
+                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <tr>
+                                    <th onClick={() => requestSort('servicio_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            No. Servicio
+                                            {sortConfig.key === 'servicio_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                         </div>
-                                    </td>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th onClick={() => requestSort('servicio_fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            Fecha
+                                            {sortConfig.key === 'servicio_fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                                {sortedServices.map((service) => (
+                                    <tr key={service.servicio_numero} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-blue-600">#{service.servicio_numero}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.servicio_fecha)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <StatusDropdown
+                                                service={service}
+                                                darkMode={darkMode}
+                                                onStatusChange={fetchServices}
+                                                tableName="servicios_cctv"
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {service.pagado && service.entregado ? (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
+                                                        Pagado y Entregado
+                                                    </span>
+                                                ) : (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
+                                                        Pendiente de Entregar/Pagar
+                                                    </span>
+                                                )}
+                                                <button
+                                                    onClick={() => onViewService(service)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver Servicio"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onNavigate('services-cctv-edit')}
+                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar Servicio"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(service.servicio_numero)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Servicio"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden flex flex-col gap-4 p-4">
+                        {sortedServices.map((service) => (
+                            <div 
+                                key={`mobile-cctv-${service.servicio_numero}`}
+                                className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-2">
+                                            #{service.servicio_numero}
+                                        </span>
+                                        <h3 className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                                            {service.cliente_nombre}
+                                        </h3>
+                                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {formatServiceDate(service.servicio_fecha)}
+                                        </p>
+                                    </div>
+                                    <StatusDropdown
+                                        service={service}
+                                        darkMode={darkMode}
+                                        onStatusChange={fetchServices}
+                                        tableName="servicios_cctv"
+                                    />
+                                </div>
+                                
+                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(service.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => onViewService(service)}
+                                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onNavigate('services-cctv-edit')}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.servicio_numero)}
+                                            className="p-2.5 bg-red-50 text-red-600 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
             </div>
         </div>
@@ -2668,7 +2803,8 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
                         No hay servicios de PC registrados.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-64">
+                    <>
+                    <div className="hidden md:block overflow-x-auto pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -2769,6 +2905,79 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        {sortedServices.map((service) => (
+                            <div 
+                                key={`mobile-pc-${service.id}`}
+                                className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-2">
+                                            #{service.orden_numero}
+                                        </span>
+                                        <h3 className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                                            {service.cliente_nombre}
+                                        </h3>
+                                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {formatServiceDate(service.fecha)}
+                                        </p>
+                                    </div>
+                                    <StatusDropdown
+                                        service={service}
+                                        darkMode={darkMode}
+                                        onStatusChange={fetchServices}
+                                    />
+                                </div>
+                                
+                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(service.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleShowQR(service)}
+                                            className="p-2.5 bg-purple-50 text-purple-600 rounded-xl"
+                                        >
+                                            <QrCode className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleShowReceipt(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <ScrollText className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onViewService(service)}
+                                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.id)}
+                                            className="p-2.5 bg-red-50 text-red-600 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
+
+
                 )}
             </div>
 
@@ -3392,6 +3601,38 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         }
     };
 
+    const handleServiceSelect = (category) => {
+        if (!category.implemented) return;
+        setShowNewServiceModal(false);
+        if (category.id === 'cctv') {
+            setEditingPhoneService(null);
+            setEditingPCService(null);
+            setEditingPrinterService(null);
+            setEditingCCTVService('new');
+        } else if (category.id === 'pc') {
+            setEditingPhoneService(null);
+            setEditingCCTVService(null);
+            setEditingPrinterService(null);
+            setEditingPCService('new');
+        } else if (category.id === 'celulares') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPrinterService(null);
+            setEditingPhoneService('new');
+        } else if (category.id === 'impresoras') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(null);
+            setEditingPrinterService('new');
+        } else if (category.id === 'redes') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(null);
+            setEditingPrinterService(null);
+            setEditingNetworkService('new');
+        }
+    };
+
     return (
         <div className="w-full px-4 md:px-8 py-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -3431,7 +3672,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                 </div>
             </div>
 
-            <div className={`rounded-[2rem] shadow-2xl border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`md:rounded-[2rem] md:shadow-2xl md:border md:overflow-hidden ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {loading && !refreshing ? (
                     <div className="p-20 flex flex-col items-center justify-center gap-4">
                         <Loader className="w-10 h-10 animate-spin text-blue-600" />
@@ -3445,7 +3686,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                         <p className="text-slate-500 font-medium">No se encontraron servicios que coincidan con tu búsqueda.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <>
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
@@ -3542,6 +3784,85 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        {filteredServices.map((service) => (
+                            <div 
+                                key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
+                                className={`rounded-2xl p-6 border shadow-sm ${
+                                    darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
+                                }`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit ${
+                                            service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' : 
+                                            service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' : 
+                                            service.type === 'Impresora' ? 'bg-purple-100 text-purple-800' :
+                                            service.type === 'Redes' ? 'bg-cyan-100 text-cyan-800' :
+                                            'bg-rose-100 text-rose-800'
+                                        }`}>
+                                            {service.type}
+                                        </span>
+                                        <span className="text-lg font-bold text-blue-600">#{service.folio}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleViewServiceUnified(service)}
+                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Ver Servicio"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleEditServiceUnifiedLocal(service)}
+                                            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                            title="Editar Servicio"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service)}
+                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Eliminar Servicio"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Cliente</p>
+                                        <p className={`font-medium text-lg ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>{service.cliente}</p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Fecha</p>
+                                            <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</p>
+                                        </div>
+                                        <div>
+                                            <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                            <p className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Estado</p>
+                                        <StatusDropdown
+                                            service={service.original}
+                                            darkMode={darkMode}
+                                            onStatusChange={fetchAllServices}
+                                            tableName={service.tableName}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
             </div>
 
@@ -3549,11 +3870,11 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
             {showNewServiceModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
                     <div className={`w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
-                        <div className="p-8 md:p-12">
-                            <div className="flex justify-between items-center mb-12">
+                        <div className="p-6 md:p-12">
+                            <div className="flex justify-between items-start md:items-center mb-8 md:mb-12 gap-4">
                                 <div>
-                                    <h2 className={`text-4xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Nuevo Servicio</h2>
-                                    <p className={`text-lg font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona la categoría del servicio a registrar</p>
+                                    <h2 className={`text-2xl md:text-4xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Nuevo Servicio</h2>
+                                    <p className={`text-sm md:text-lg font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona la categoría del servicio a registrar</p>
                                 </div>
                                 <button
                                     onClick={() => setShowNewServiceModal(false)}
@@ -3567,41 +3888,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                 {serviceCategories.map((category) => (
                                     <button
                                         key={category.id}
-                                        onClick={() => {
-                                            if (!category.implemented) return;
-                                            setShowNewServiceModal(false);
-                                            if (category.id === 'cctv') {
-                                                setEditingPhoneService(null);
-                                                setEditingPCService(null);
-                                                setEditingPrinterService(null);
-                                                setEditingCCTVService('new');
-                                            }
-                                            else if (category.id === 'pc') {
-                                                setEditingPhoneService(null);
-                                                setEditingCCTVService(null);
-                                                setEditingPrinterService(null);
-                                                setEditingPCService('new');
-                                            }
-                                            else if (category.id === 'celulares') {
-                                                setEditingPCService(null);
-                                                setEditingCCTVService(null);
-                                                setEditingPrinterService(null);
-                                                setEditingPhoneService('new');
-                                            }
-                                            else if (category.id === 'impresoras') {
-                                                setEditingPCService(null);
-                                                setEditingCCTVService(null);
-                                                setEditingPhoneService(null);
-                                                setEditingPrinterService('new');
-                                            }
-                                            else if (category.id === 'redes') {
-                                                setEditingPCService(null);
-                                                setEditingCCTVService(null);
-                                                setEditingPhoneService(null);
-                                                setEditingPrinterService(null);
-                                                setEditingNetworkService('new');
-                                            }
-                                        }}
+                                        onClick={() => handleServiceSelect(category)}
                                         className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
                                             ? 'opacity-60 cursor-not-allowed border-dashed grayscale bg-slate-50 border-slate-200'
                                             : darkMode
@@ -3775,7 +4062,8 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit })
                         No hay servicios de celulares registrados.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-64">
+                    <>
+                    <div className="hidden md:block overflow-x-auto pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -3876,6 +4164,78 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit })
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        {sortedServices.map((service) => (
+                            <div 
+                                key={`mobile-phone-${service.id}`}
+                                className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 mb-2">
+                                            #{service.orden_numero}
+                                        </span>
+                                        <h3 className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                                            {service.cliente_nombre}
+                                        </h3>
+                                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {formatServiceDate(service.fecha)}
+                                        </p>
+                                    </div>
+                                    <StatusDropdown
+                                        service={service}
+                                        darkMode={darkMode}
+                                        onStatusChange={fetchServices}
+                                        tableName="servicios_celular"
+                                    />
+                                </div>
+                                
+                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(service.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleShowQR(service)}
+                                            className="p-2.5 bg-purple-50 text-purple-600 rounded-xl"
+                                        >
+                                            <QrCode className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleShowReceipt(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <ScrollText className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onViewService(service)}
+                                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.id)}
+                                            className="p-2.5 bg-red-50 text-red-600 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
             </div>
 
@@ -4165,7 +4525,12 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
 // --- SIDEBAR COMPONENT ---
 
-const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName }) => {
+const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName }) => {
+    const setActiveTab = (tab) => {
+        setTabOriginal(tab);
+        if (mobileMode && onClose) onClose();
+    };
+
     const isGlass = currentTheme === 'glass';
     const isDark = currentTheme === 'dark';
 
@@ -4471,7 +4836,8 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
                         No hay servicios de Impresoras registrados.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-64">
+                    <>
+                    <div className="hidden md:block overflow-x-auto pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -4571,6 +4937,78 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        {sortedServices.map((service) => (
+                            <div 
+                                key={`mobile-printer-${service.id}`}
+                                className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 mb-2">
+                                            #{service.orden_numero}
+                                        </span>
+                                        <h3 className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                                            {service.cliente_nombre}
+                                        </h3>
+                                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {formatServiceDate(service.fecha)}
+                                        </p>
+                                    </div>
+                                    <StatusDropdown
+                                        service={service}
+                                        darkMode={darkMode}
+                                        onStatusChange={fetchServices}
+                                        tableName="servicios_impresora"
+                                    />
+                                </div>
+                                
+                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(service.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleShowQR(service)}
+                                            className="p-2.5 bg-purple-50 text-purple-600 rounded-xl"
+                                        >
+                                            <QrCode className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleShowReceipt(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <ScrollText className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onViewService(service)}
+                                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.id)}
+                                            className="p-2.5 bg-red-50 text-red-600 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
             </div>
 
@@ -5369,7 +5807,8 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
                         No hay servicios de Redes registrados.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-64">
+                    <>
+                    <div className="hidden md:block overflow-x-auto pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -5447,6 +5886,66 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Cards View */}
+                    <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        {sortedServices.map((service) => (
+                            <div 
+                                key={`mobile-network-${service.id}`}
+                                className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800 mb-2">
+                                            #{service.orden_numero}
+                                        </span>
+                                        <h3 className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                                            {service.cliente_nombre}
+                                        </h3>
+                                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {formatServiceDate(service.fecha)}
+                                        </p>
+                                    </div>
+                                    <StatusDropdown
+                                        service={service}
+                                        darkMode={darkMode}
+                                        onStatusChange={fetchServices}
+                                        tableName="servicios_redes"
+                                    />
+                                </div>
+                                
+                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(service.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => onViewService(service)}
+                                            className="p-2.5 bg-cyan-50 text-cyan-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit(service)}
+                                            className="p-2.5 bg-slate-50 text-slate-400 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.id)}
+                                            className="p-2.5 bg-red-50 text-red-400 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
             </div>
         </div>
