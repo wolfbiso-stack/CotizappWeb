@@ -10,6 +10,7 @@ import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
 import ServiceReceipt from './components/ServiceReceipt';
 import PCServiceForm from './components/PCServiceForm';
+import PrinterServiceForm from './components/PrinterServiceForm';
 import PhoneServiceForm from './components/PhoneServiceForm';
 import CCTVServiceForm from './components/CCTVServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
@@ -2379,7 +2380,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
             const updatePayload = { [statusField]: newStatus };
 
             // Sincronizar estado de pago/entrega para todos los servicios (incluido CCTV)
-            if (tableName === 'servicios_pc' || tableName === 'servicios_celular' || tableName === 'servicios_cctv') {
+            if (tableName === 'servicios_pc' || tableName === 'servicios_celular' || tableName === 'servicios_cctv' || tableName === 'servicios_impresora') {
                 if (newStatus === 'entregado') {
                     updatePayload.pagado = true;
                     updatePayload.entregado = true;
@@ -2387,6 +2388,14 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                     updatePayload.pagado = false;
                     updatePayload.entregado = false;
                 }
+            }
+
+            // Handle Printer Service Special Case (No status column)
+            // User confirmed column "status" DOES exist now.
+            if (tableName === 'servicios_impresora') {
+                 // No need to delete status or use workaround anymore.
+                 // Just ensure status is part of payload.
+                 updatePayload.status = newStatus;
             }
 
             const { error } = await supabase
@@ -2417,7 +2426,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
         return colors[colorName] || colors.gray;
     };
 
-    const statusValue = (tableName === 'servicios_cctv' ? service.status : service.status) || 'pendiente';
+    const statusValue = (tableName === 'servicios_cctv' ? service.status : (tableName === 'servicios_impresora' ? service.status : service.status)) || 'pendiente';
     const currentStatus = STATUS_OPTIONS.find(s => s.value === statusValue.toLowerCase());
     const displayLabel = currentStatus ? currentStatus.label : (statusValue || 'Seleccionar Estado');
     const displayColor = currentStatus ? currentStatus.color : 'gray';
@@ -3096,7 +3105,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService }) => {
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService }) => {
     const [unifiedServices, setUnifiedServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3108,9 +3117,35 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10', implemented: true, table: 'servicios_cctv' },
         { id: 'pc', title: 'PC', icon: Monitor, color: 'text-indigo-500', bg: 'bg-indigo-500/10', implemented: true, table: 'servicios_pc' },
         { id: 'celulares', title: 'Celulares', icon: Smartphone, color: 'text-rose-500', bg: 'bg-rose-500/10', implemented: true, table: 'servicios_celular' },
-        { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-orange-500', bg: 'bg-orange-500/10', implemented: false },
+        { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-purple-500', bg: 'bg-purple-500/10', implemented: true, table: 'servicios_impresora' },
         { id: 'redes', title: 'Redes', icon: Globe, color: 'text-cyan-500', bg: 'bg-cyan-500/10', implemented: false },
     ];
+
+    const parseDate = (d) => {
+        if (!d) return 0;
+        
+        // Handle YYYY-MM-DD (ISO format) - Common in DB
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+            const date = new Date(d + 'T00:00:00');
+            if (!isNaN(date.getTime())) return date.getTime();
+        }
+
+        // Handle DD/MM/YYYY (Latin format) - Common in legacy/user input
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)) {
+            const parts = d.split('/');
+            // parts[0] = day, parts[1] = month, parts[2] = year
+            // Create YYYY-MM-DD
+            return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T00:00:00`).getTime();
+        }
+
+        // Fallback for other formats (timestamps, full ISO strings)
+        // Be careful: new Date('03/01/2026') might be parsed as March 1st (US) in some envs, 
+        // but if it failed regex above, it might be something else.
+        const date = new Date(d);
+        if (!isNaN(date.getTime())) return date.getTime();
+        
+        return 0;
+    };
 
     const fetchAllServices = async () => {
         setRefreshing(true);
@@ -3121,6 +3156,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
             const { data: pcData } = await supabase.from('servicios_pc').select('*');
             // Fetch Phone services
             const { data: phoneData } = await supabase.from('servicios_celular').select('*');
+            // Fetch Printer services
+            const { data: printerData } = await supabase.from('servicios_impresora').select('*');
 
             const unified = [
                 ...(cctvData || []).map(s => ({
@@ -3155,10 +3192,21 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     total: s.total,
                     original: s,
                     tableName: 'servicios_celular'
+                })),
+                ...(printerData || []).map(s => ({
+                    ...s,
+                    id: s.id,
+                    type: 'Impresora',
+                    folio: s.orden_numero,
+                    cliente: s.cliente_nombre,
+                    fecha: s.fecha,
+                    total: s.total,
+                    original: s,
+                    tableName: 'servicios_impresora'
                 }))
             ].sort((a, b) => {
-                const dateA = new Date(a.fecha || 0).getTime();
-                const dateB = new Date(b.fecha || 0).getTime();
+                const dateA = parseDate(a.fecha);
+                const dateB = parseDate(b.fecha);
                 return dateB - dateA;
             });
 
@@ -3191,12 +3239,12 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                 let bVal = b[sortConfig.key];
 
                 if (sortConfig.key === 'fecha') {
-                    const dateA = aVal ? new Date(aVal).getTime() : 0;
-                    const dateB = bVal ? new Date(bVal).getTime() : 0;
+                    const dateA = parseDate(aVal);
+                    const dateB = parseDate(bVal);
                     
-                    // Handle invalid dates
-                    if (isNaN(dateA)) return 1;
-                    if (isNaN(dateB)) return -1;
+                    // Handle invalid dates (0)
+                    if (dateA === 0) return 1; // Invalid/Empty dates go to bottom
+                    if (dateB === 0) return -1;
 
                     return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
                 }
@@ -3247,6 +3295,9 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         } else if (service.type === 'Celular') {
             setSelectedService(service.original);
             onNavigate('services-phone-view');
+        } else if (service.type === 'Impresora') {
+            setSelectedService(service.original);
+            onNavigate('services-printer-view');
         }
     };
 
@@ -3254,15 +3305,23 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         if (service.type === 'CCTV') {
             setEditingPhoneService(null);
             setEditingPCService(null);
+            setEditingPrinterService(null);
             setEditingCCTVService(service.original);
         } else if (service.type === 'PC') {
             setEditingPhoneService(null);
             setEditingCCTVService(null);
+            setEditingPrinterService(null);
             setEditingPCService(service.original);
         } else if (service.type === 'Celular') {
             setEditingPCService(null);
             setEditingCCTVService(null);
+            setEditingPrinterService(null);
             setEditingPhoneService(service.original);
+        } else if (service.type === 'Impresora') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(null);
+            setEditingPrinterService(service.original);
         }
     };
 
@@ -3356,7 +3415,12 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                 {filteredServices.map((service) => (
                                     <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' : service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800'}`}>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' : 
+                                                service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' : 
+                                                service.type === 'Impresora' ? 'bg-purple-100 text-purple-800' :
+                                                'bg-rose-100 text-rose-800'
+                                            }`}>
                                                 {service.type}
                                             </span>
                                         </td>
@@ -3441,17 +3505,26 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                             if (category.id === 'cctv') {
                                                 setEditingPhoneService(null);
                                                 setEditingPCService(null);
+                                                setEditingPrinterService(null);
                                                 setEditingCCTVService('new');
                                             }
                                             else if (category.id === 'pc') {
                                                 setEditingPhoneService(null);
                                                 setEditingCCTVService(null);
+                                                setEditingPrinterService(null);
                                                 setEditingPCService('new');
                                             }
                                             else if (category.id === 'celulares') {
                                                 setEditingPCService(null);
                                                 setEditingCCTVService(null);
+                                                setEditingPrinterService(null);
                                                 setEditingPhoneService('new');
+                                            }
+                                            else if (category.id === 'impresoras') {
+                                                setEditingPCService(null);
+                                                setEditingCCTVService(null);
+                                                setEditingPhoneService(null);
+                                                setEditingPrinterService('new');
                                             }
                                         }}
                                         className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
@@ -4189,6 +4262,628 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, userEmail, currentTheme, s
 
 // --- MAIN APP ---
 
+const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
+    const fetchServices = async () => {
+        setRefreshing(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicios_impresora')
+                .select('*')
+                .order('fecha', { ascending: false });
+
+            if (error) throw error;
+            setServices(data || []);
+        } catch (error) {
+            console.error('Error loading Printer services:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedServices = React.useMemo(() => {
+        let sortableItems = [...services];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                if (sortConfig.key.includes('fecha')) {
+                    const parseDate = (d) => {
+                        if (!d) return 0;
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                            const date = new Date(d + 'T00:00:00');
+                            if (!isNaN(date.getTime())) return date.getTime();
+                        }
+                        const date = new Date(d);
+                        if (!isNaN(date.getTime())) return date.getTime();
+                        const parts = d.split('/');
+                        if (parts.length === 3) {
+                            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`).getTime();
+                        }
+                        return 0;
+                    };
+                    aVal = parseDate(aVal);
+                    bVal = parseDate(bVal);
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [services, sortConfig]);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
+        try {
+            const { error } = await supabase
+                .from('servicios_impresora')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            setServices(services.filter(s => s.id !== id));
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Error al eliminar servicio');
+        }
+    };
+
+    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin w-8 h-8 text-purple-600" /></div>;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-4">
+                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicios <span className="text-purple-600">Impresoras</span>
+                    </h1>
+                    <button
+                        onClick={fetchServices}
+                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        title="Actualizar lista"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-purple-600' : ''}`} />
+                    </button>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={onCreateNew}
+                        className="btn bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Nuevo Servicio
+                    </button>
+                </div>
+            </div>
+
+            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                {services.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500">
+                        No hay servicios de Impresoras registrados.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto pb-64">
+                        <table className="w-full">
+                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <tr>
+                                    <th onClick={() => requestSort('orden_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            No. Servicio
+                                            {sortConfig.key === 'orden_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th onClick={() => requestSort('fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            Fecha
+                                            {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                                {sortedServices.map((service) => (
+                                    <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-purple-50/30'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-purple-600">#{service.orden_numero}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                             <StatusDropdown
+                                                service={service} 
+                                                tableName="servicios_impresora"
+                                                darkMode={darkMode}
+                                                onStatusChange={fetchServices}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleShowQR(service)}
+                                                    className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                    title="Ver QR de Seguimiento"
+                                                >
+                                                    <QrCode className="w-5 h-5" />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleShowReceipt(service)}
+                                                    className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Imprimir Ticket"
+                                                >
+                                                    <ScrollText className="w-5 h-5" />
+                                                </button>
+
+                                                {service.pagado && service.entregado ? (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
+                                                        Pagado y Entregado
+                                                    </span>
+                                                ) : (
+                                                    <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-500/10 backdrop-blur-md border border-red-500/20 rounded-md mr-2">
+                                                        Pendiente de Entregar/Pagar
+                                                    </span>
+                                                )}
+                                                <button
+                                                    onClick={() => onViewService(service)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver Servicio"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onEdit(service)}
+                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar Servicio"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(service.id)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Servicio"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+        </div >
+    );
+};
+
+const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
+    if (!service) return null;
+
+    const [photos, setPhotos] = useState([]);
+    const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    useEffect(() => {
+        if (service?.id) fetchPhotos();
+    }, [service]);
+
+    const fetchPhotos = async () => {
+        setLoadingPhotos(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('servicio_fotos')
+                .select('*')
+                .eq('servicio_id', service.id)
+                .eq('user_id', user.id)
+                .eq('tipo_servicio', 'servicio_impresora');
+
+            if (error) throw error;
+
+            const mappedPhotos = (data || []).map(photo => ({
+                ...photo,
+                uri: photo.foto_url || photo.url || photo.uri || ''
+            }));
+
+            setPhotos(mappedPhotos);
+        } catch (error) {
+            console.error('Error fetching photos:', error);
+        } finally {
+            setLoadingPhotos(false);
+        }
+    };
+
+    const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
+
+    return (
+        <div className="w-full min-h-screen p-6 md:p-10">
+            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden shadow-2xl border border-purple-100">
+
+                {/* Header Section */}
+                <div className="p-8 bg-gradient-to-r from-purple-50 to-white border-b border-purple-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex items-center gap-5">
+                            <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-purple-600">
+                                <ArrowLeft className="w-6 h-6" />
+                            </button>
+                            <div className="flex items-center gap-4">
+                                {company?.logo_uri ? (
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                ) : (
+                                    <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-purple-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
+                                )}
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    <div className="flex gap-3 mt-2">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-lg shadow-purple-600/20">
+                                            <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="text-left md:text-right">
+                            <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-purple-400 mb-1">Reparación de Impresora</span>
+                            <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">#{service.orden_numero}</h1>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg">
+                                <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                                <span className="text-xs font-mono font-bold">{formatServiceDate(service.fecha)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left Column - 2 cols */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Cliente y Técnico */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Cliente */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Cliente</h3>
+                                </div>
+                                <p className="text-xl font-bold text-slate-800 mb-1">{service.cliente_nombre}</p>
+                                <p className="text-sm text-slate-500">{service.cliente_telefono}</p>
+                            </div>
+
+                            {/* Técnico Responsable */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Users className="w-5 h-5 text-orange-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-600">Técnico Responsable</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                                        {service.tecnico_nombre ? service.tecnico_nombre.charAt(0) : 'I'}
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-bold text-slate-800">{service.tecnico_nombre || 'Sin asignar'}</p>
+                                        <p className="text-xs text-slate-500">Asignado al servicio</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Dispositivo */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-white border border-purple-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Printer className="w-5 h-5 text-purple-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600">Dispositivo</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Equipo</p>
+                                    <p className="text-base font-semibold text-slate-800">{service.equipo_tipo} • {service.equipo_modelo}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Número de Serie</p>
+                                    <p className="text-base font-mono text-slate-600">{service.equipo_serie}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Contador</p>
+                                    <p className="text-base font-mono text-slate-600">{service.equipo_contador}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Consumibles</p>
+                                    <p className="text-base font-mono text-slate-600">{service.estado_consumibles}</p>
+                                </div>
+                            </div>
+                            {service.accesorios && (
+                                <div className="mt-4 pt-4 border-t border-purple-100">
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Accesorios</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(() => {
+                                            try {
+                                                let acc = service.accesorios;
+                                                if (typeof acc === 'string' && acc.startsWith('[')) acc = JSON.parse(acc);
+                                                if (Array.isArray(acc)) {
+                                                    return acc.map((item, i) => (
+                                                        <span key={i} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">
+                                                            {item}
+                                                        </span>
+                                                    ));
+                                                }
+                                                return <span className="text-sm text-slate-700">{service.accesorios}</span>;
+                                            } catch {
+                                                return <span className="text-sm text-slate-700">{service.accesorios}</span>;
+                                            }
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Informe Técnico */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-50 to-white border border-cyan-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Settings className="w-5 h-5 text-cyan-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Informe Técnico</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Problema Reportado */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Problema Reportado</p>
+                                    <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                                        {(service.problema_reportado || '').split('\n').map((line, i) => (
+                                            line.trim() && (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-red-800">{line}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                        {!service.problema_reportado && <p className="text-sm text-red-600 italic">No especificado</p>}
+                                    </div>
+                                </div>
+
+                                {/* Diagnóstico */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Diagnóstico Realizado</p>
+                                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                        {(service.diagnostico || '').split('\n').map((line, i) => (
+                                            line.trim() && (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-blue-800">{line}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                        {!service.diagnostico && <p className="text-sm text-blue-600 italic">Diagnóstico pendiente...</p>}
+                                    </div>
+                                </div>
+
+                                {/* Trabajo Realizado */}
+                                {service.trabajo_realizado && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Trabajo Realizado</p>
+                                        <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                                            {(() => {
+                                                try {
+                                                    let items = service.trabajo_realizado;
+                                                    if (typeof items === 'string' && items.startsWith('[')) items = JSON.parse(items);
+                                                    if (Array.isArray(items)) {
+                                                        return items.map((item, i) => (
+                                                            <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                                <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                                <span className="text-sm text-green-800">{item}</span>
+                                                            </div>
+                                                        ));
+                                                    }
+                                                    return (typeof items === 'string' ? items.split(',') : []).map((item, i) => (
+                                                         <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                            <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                            <span className="text-sm text-green-800">{item}</span>
+                                                        </div>
+                                                    ));
+                                                } catch {
+                                                    return <p className="text-sm text-green-800">{service.trabajo_realizado}</p>;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Repuestos */}
+                                {(service.repuestos_descripcion && service.repuestos_descripcion !== '[]') && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Repuestos & Materiales</p>
+                                        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                            {(() => {
+                                                try {
+                                                    // Try to parse as JSON for new format
+                                                    if (service.repuestos_descripcion.startsWith('[')) {
+                                                        const parts = JSON.parse(service.repuestos_descripcion);
+                                                        return (
+                                                            <div className="w-full">
+                                                                <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
+                                                                    <div className="w-12 text-center">Cant</div>
+                                                                    <div className="flex-1">Articulo</div>
+                                                                    <div className="w-20 text-right">Precio</div>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    {parts.map((part, i) => (
+                                                                        <div key={i} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
+                                                                            <div className="w-12 text-center text-slate-500">{part.cantidad || 1}</div>
+                                                                            <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
+                                                                            <div className="w-20 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico)}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    // Fallback for simple string
+                                                    return <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>;
+                                                } catch (e) {
+                                                    // Fallback for string or invalid JSON
+                                                    return <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Observaciones */}
+                                {service.observaciones && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Observaciones</p>
+                                        <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                                            <p className="text-sm text-amber-800 italic">"{service.observaciones}"</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Resumen Financiero */}
+                    <div className="lg:col-span-1">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-white border border-purple-100 sticky top-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <ShoppingCart className="w-5 h-5 text-purple-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600">Resumen Financiero</h3>
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Mano de Obra</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.mano_obra)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Repuestos</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.costo_repuestos)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Subtotal</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.subtotal)}</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-4 mb-6">
+                                <p className="text-xs text-purple-400 uppercase tracking-wider mb-2 text-center font-bold">Total a Pagar</p>
+                                <p className="text-4xl font-black text-center text-purple-600">
+                                    {formatMoney(service.total)}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 p-4 rounded-xl bg-white border border-slate-200">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
+                                    <span className="font-bold text-purple-600">-{formatMoney(service.anticipo)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                    <span className="text-slate-800 font-bold uppercase text-xs">Restante</span>
+                                    <span className="font-bold text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Firmas */}
+                {(service.firma_tecnico_path || service.firma_cliente_path) && (
+                    <div className="px-8 md:px-10 pb-8 grid grid-cols-2 gap-6">
+                        {service.firma_tecnico_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-xs uppercase tracking-widest text-slate-400">Firma del Técnico</p>
+                            </div>
+                        )}
+                        {service.firma_cliente_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-xs uppercase tracking-widest text-slate-400">Firma de Conformidad</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const App = () => {
     // 1. Check for critical configuration errors first
     if (!supabase) {
@@ -4407,7 +5102,7 @@ const App = () => {
                     ...payload,
                     user_id: session.user.id,
                     orden_numero: newOrden,
-                    status: 'recibido'
+                    // status: 'recibido' // Column not present in DB
                 };
 
                 const result = await supabase
@@ -4581,6 +5276,152 @@ const App = () => {
         } catch (error) {
             console.error('Error saving CCTV service:', error);
             alert('Error al guardar el servicio CCTV');
+        }
+    };
+
+    // PRINTER SERVICE FORM STATE & HANDLERS
+    const [editingPrinterService, setEditingPrinterService] = useState(null);
+
+    const fetchNextPrinterServiceFolio = async (userId) => {
+        try {
+            const currentYear = new Date().getFullYear();
+            const folioPrefix = `I-${currentYear}-`; // I for Impresora
+
+            const { data, error } = await supabase
+                .from('servicios_impresora')
+                .select('orden_numero')
+                .eq('user_id', userId)
+                .like('orden_numero', `${folioPrefix}%`)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const lastFolio = data[0].orden_numero;
+                const parts = lastFolio.split('-');
+                const lastNumber = parseInt(parts[2]) || 99;
+                return `${folioPrefix}${lastNumber + 1}`;
+            }
+            return `${folioPrefix}100`;
+        } catch (error) {
+            console.error('Error fetching next Printer folio:', error);
+            const currentYear = new Date().getFullYear();
+            return `I-${currentYear}-100`;
+        }
+    };
+
+    const handleSavePrinterService = async (serviceData) => {
+        try {
+            let data, error;
+            const { files, photosToDelete, ...payloadData } = serviceData;
+            let payload = { ...payloadData };
+
+            if (editingPrinterService === 'new') {
+                const newOrden = await fetchNextPrinterServiceFolio(session.user.id);
+
+                const newService = {
+                    ...payload,
+                    user_id: session.user.id,
+                    orden_numero: newOrden,
+                    status: 'recibido'
+                };
+
+                const result = await supabase
+                    .from('servicios_impresora')
+                    .insert(newService)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            } else {
+                const { id, created_at, ...updateData } = payload;
+                const result = await supabase
+                    .from('servicios_impresora')
+                    .update(updateData)
+                    .eq('id', editingPrinterService.id)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            }
+
+            if (error) throw error;
+
+            // --- PHOTO DELETION LOGIC ---
+            if (photosToDelete && photosToDelete.length > 0) {
+                const { error: deleteError } = await supabase
+                    .from('servicio_fotos')
+                    .delete()
+                    .in('id', photosToDelete);
+
+                if (deleteError) console.error('Error deleting photos:', deleteError);
+            }
+
+            // --- PHOTO UPLOAD LOGIC ---
+            if (files && files.length > 0 && data) {
+                const uploadPromises = files.map(async (file) => {
+                    try {
+                        const hash = await computeFileHash(file);
+
+                        const { data: existingPhoto } = await supabase
+                            .from('servicio_fotos')
+                            .select('id')
+                            .eq('servicio_id', data.id)
+                            .eq('hash', hash)
+                            .eq('tipo_servicio', 'servicio_impresora')
+                            .maybeSingle();
+
+                        if (existingPhoto) return { success: true, skipped: true };
+
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const filePath = `${session.user.id}/printers/${data.id}/${fileName}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('servicio-files-v2')
+                            .upload(filePath, file);
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('servicio-files-v2')
+                            .getPublicUrl(filePath);
+
+                        const { error: dbError } = await supabase
+                            .from('servicio_fotos')
+                            .insert({
+                                servicio_id: data.id,
+                                user_id: session.user.id,
+                                uri: publicUrl,
+                                tipo_servicio: 'servicio_impresora',
+                                hash: hash
+                            });
+
+                        if (dbError) throw dbError;
+
+                        return { success: true, url: publicUrl };
+                    } catch (uploadErr) {
+                        console.error('Error uploading file:', uploadErr);
+                        return { success: false, error: uploadErr };
+                    }
+                });
+
+                await Promise.all(uploadPromises);
+            }
+
+            alert('Servicio de Impresora guardado correctamente');
+            setEditingPrinterService(null);
+            
+             if (activeTab === 'services-printer-view' && selectedService?.id === data.id) {
+                setSelectedService(data);
+            }
+
+        } catch (error) {
+            console.error('Error saving Printer service:', error);
+            alert('Error al guardar el servicio: ' + error.message);
         }
     };
 
@@ -6033,6 +6874,7 @@ const App = () => {
                                 setEditingCCTVService={setEditingCCTVService}
                                 setEditingPCService={setEditingPCService}
                                 setEditingPhoneService={setEditingPhoneService}
+                                setEditingPrinterService={setEditingPrinterService}
                             />
                         )}
                         {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
@@ -6111,6 +6953,38 @@ const App = () => {
                                 service={editingPhoneService === 'new' ? null : editingPhoneService}
                                 onSave={handleSavePhoneService}
                                 onCancel={() => setEditingPhoneService(null)}
+                                darkMode={isDark}
+                            />
+                        )}
+
+                        {activeTab === 'services-printer-list' && (
+                            <PrinterList
+                                darkMode={isDark}
+                                onNavigate={setActiveTab}
+                                onViewService={(service) => {
+                                    setSelectedService(service);
+                                    setActiveTab('services-printer-view');
+                                }}
+                                onCreateNew={() => setEditingPrinterService('new')}
+                                onEdit={(service) => setEditingPrinterService(service)}
+                            />
+                        )}
+                        {activeTab === 'services-printer-view' && (
+                            <PrinterServiceView
+                                service={selectedService}
+                                onBack={() => setActiveTab('servicios')}
+                                onEdit={(service) => setEditingPrinterService(service)}
+                                darkMode={isDark}
+                                company={company}
+                            />
+                        )}
+                        
+                        {/* Printer Service Form Modal */}
+                        {editingPrinterService && (
+                            <PrinterServiceForm
+                                service={editingPrinterService === 'new' ? null : editingPrinterService}
+                                onSave={handleSavePrinterService}
+                                onCancel={() => setEditingPrinterService(null)}
                                 darkMode={isDark}
                             />
                         )}
