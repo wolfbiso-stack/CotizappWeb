@@ -450,18 +450,8 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             min="1"
                                         />
                                     </div>
-                                    <div className="w-full md:w-32">
-                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">N° Serie</label>
-                                        <input
-                                            type="text"
-                                            value={part.numeroSerie}
-                                            onChange={(e) => updatePart(part.id, 'numeroSerie', e.target.value)}
-                                            className={inputClass}
-                                            placeholder="Serie..."
-                                        />
-                                    </div>
                                     <div className="w-full md:flex-1">
-                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Producto / Refacción</label>
+                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Producto / Material</label>
                                         <input
                                             type="text"
                                             value={part.producto}

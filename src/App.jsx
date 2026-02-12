@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -11,6 +11,7 @@ import QRServiceTicket from './components/QRServiceTicket';
 import ServiceReceipt from './components/ServiceReceipt';
 import PCServiceForm from './components/PCServiceForm';
 import PrinterServiceForm from './components/PrinterServiceForm';
+import NetworkServiceForm from './components/NetworkServiceForm';
 import PhoneServiceForm from './components/PhoneServiceForm';
 import CCTVServiceForm from './components/CCTVServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
@@ -2249,6 +2250,48 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 )}
                             </div>
                         )}
+
+                        {/* Materiales Utilizados */}
+                        {(service.inventario_materiales && service.inventario_materiales !== '[]') && (
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <ShoppingCart className="w-5 h-5 text-slate-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">Materiales Utilizados</h3>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
+                                        <div className="w-12 text-center">Cant</div>
+                                        <div className="flex-1">Articulo</div>
+                                        <div className="w-24 text-right">Precio U.</div>
+                                        <div className="w-24 text-right">Total</div>
+                                    </div>
+                                    {(() => {
+                                        try {
+                                            let parts = [];
+                                            if (typeof service.inventario_materiales === 'string') {
+                                                parts = JSON.parse(service.inventario_materiales);
+                                            } else {
+                                                parts = service.inventario_materiales;
+                                            }
+                                            
+                                            if (Array.isArray(parts)) {
+                                                return parts.map((part, i) => (
+                                                    <div key={i} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
+                                                        <div className="w-12 text-center text-slate-500">{part.cantidad || 1}</div>
+                                                        <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
+                                                        <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico || 0)}</div>
+                                                        <div className="w-24 text-right text-slate-800 font-mono font-bold">${formatCurrency((part.cantidad || 1) * (part.costoPublico || part.precio_publico || 0))}</div>
+                                                    </div>
+                                                ));
+                                            }
+                                            return <p className="text-sm text-slate-700">{service.inventario_materiales}</p>;
+                                        } catch (e) {
+                                            return <p className="text-sm text-slate-700">{service.inventario_materiales}</p>;
+                                        }
+                                    })()}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column - Resumen Financiero */}
@@ -2956,21 +2999,23 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                             {(() => {
                                                 try {
                                                     // Try to parse as JSON for new format
-                                                    if (service.repuestos_descripcion.startsWith('[')) {
+                                                    if (service.repuestos_descripcion && service.repuestos_descripcion.startsWith('[')) {
                                                         const parts = JSON.parse(service.repuestos_descripcion);
                                                         return (
                                                             <div className="w-full">
                                                                 <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
                                                                     <div className="w-12 text-center">Cant</div>
                                                                     <div className="flex-1">Articulo</div>
-                                                                    <div className="w-20 text-right">Precio</div>
+                                                                    <div className="w-24 text-right">Precio U.</div>
+                                                                    <div className="w-24 text-right">Total</div>
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     {parts.map((part, i) => (
                                                                         <div key={i} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
                                                                             <div className="w-12 text-center text-slate-500">{part.cantidad || 1}</div>
                                                                             <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
-                                                                            <div className="w-20 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico)}</div>
+                                                                            <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico || 0)}</div>
+                                                                            <div className="w-24 text-right text-slate-800 font-mono font-bold">${formatCurrency((part.cantidad || 1) * (part.costoPublico || part.precio_publico || 0))}</div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -3105,7 +3150,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService }) => {
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService }) => {
     const [unifiedServices, setUnifiedServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3118,7 +3163,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         { id: 'pc', title: 'PC', icon: Monitor, color: 'text-indigo-500', bg: 'bg-indigo-500/10', implemented: true, table: 'servicios_pc' },
         { id: 'celulares', title: 'Celulares', icon: Smartphone, color: 'text-rose-500', bg: 'bg-rose-500/10', implemented: true, table: 'servicios_celular' },
         { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-purple-500', bg: 'bg-purple-500/10', implemented: true, table: 'servicios_impresora' },
-        { id: 'redes', title: 'Redes', icon: Globe, color: 'text-cyan-500', bg: 'bg-cyan-500/10', implemented: false },
+        { id: 'redes', title: 'Redes', icon: Wifi, color: 'text-cyan-500', bg: 'bg-cyan-500/10', implemented: true, table: 'servicios_redes' },
     ];
 
     const parseDate = (d) => {
@@ -3158,6 +3203,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
             const { data: phoneData } = await supabase.from('servicios_celular').select('*');
             // Fetch Printer services
             const { data: printerData } = await supabase.from('servicios_impresora').select('*');
+            // Fetch Network services
+            const { data: networkData } = await supabase.from('servicios_redes').select('*');
 
             const unified = [
                 ...(cctvData || []).map(s => ({
@@ -3203,6 +3250,17 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     total: s.total,
                     original: s,
                     tableName: 'servicios_impresora'
+                })),
+                ...(networkData || []).map(s => ({
+                    ...s,
+                    id: s.id,
+                    type: 'Redes',
+                    folio: s.orden_numero,
+                    cliente: s.cliente_nombre,
+                    fecha: s.fecha,
+                    total: s.total,
+                    original: s,
+                    tableName: 'servicios_redes'
                 }))
             ].sort((a, b) => {
                 const dateA = parseDate(a.fecha);
@@ -3298,6 +3356,9 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         } else if (service.type === 'Impresora') {
             setSelectedService(service.original);
             onNavigate('services-printer-view');
+        } else if (service.type === 'Redes') {
+            setSelectedService(service.original);
+            onNavigate('services-network-view');
         }
     };
 
@@ -3322,6 +3383,12 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
             setEditingCCTVService(null);
             setEditingPhoneService(null);
             setEditingPrinterService(service.original);
+        } else if (service.type === 'Redes') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(null);
+            setEditingPrinterService(null);
+            setEditingNetworkService(service.original);
         }
     };
 
@@ -3419,6 +3486,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                 service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' : 
                                                 service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' : 
                                                 service.type === 'Impresora' ? 'bg-purple-100 text-purple-800' :
+                                                service.type === 'Redes' ? 'bg-cyan-100 text-cyan-800' :
                                                 'bg-rose-100 text-rose-800'
                                             }`}>
                                                 {service.type}
@@ -3525,6 +3593,13 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                 setEditingCCTVService(null);
                                                 setEditingPhoneService(null);
                                                 setEditingPrinterService('new');
+                                            }
+                                            else if (category.id === 'redes') {
+                                                setEditingPCService(null);
+                                                setEditingCCTVService(null);
+                                                setEditingPhoneService(null);
+                                                setEditingPrinterService(null);
+                                                setEditingNetworkService('new');
                                             }
                                         }}
                                         className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
@@ -4884,6 +4959,500 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     );
 };
 
+const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
+    if (!service) return null;
+
+    const [photos, setPhotos] = useState([]);
+    const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    useEffect(() => {
+        if (service?.id) fetchPhotos();
+    }, [service]);
+
+    const fetchPhotos = async () => {
+        setLoadingPhotos(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('servicio_fotos')
+                .select('*')
+                .eq('servicio_id', service.id)
+                .eq('user_id', user.id)
+                .eq('tipo_servicio', 'servicio_redes');
+
+            if (error) throw error;
+
+            const mappedPhotos = (data || []).map(photo => ({
+                ...photo,
+                uri: photo.foto_url || photo.url || photo.uri || ''
+            }));
+
+            setPhotos(mappedPhotos);
+        } catch (error) {
+            console.error('Error fetching photos:', error);
+        } finally {
+            setLoadingPhotos(false);
+        }
+    };
+
+    const formatMoney = (amount) => `$${formatCurrency(amount || 0)}`;
+
+    return (
+        <div className="w-full min-h-screen p-6 md:p-10">
+            <div className="max-w-7xl mx-auto bg-white rounded-3xl overflow-hidden shadow-2xl border border-cyan-100">
+
+                {/* Header Section */}
+                <div className="p-8 bg-gradient-to-r from-cyan-50 to-white border-b border-cyan-100">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex items-center gap-5">
+                            <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-cyan-600">
+                                <ArrowLeft className="w-6 h-6" />
+                            </button>
+                            <div className="flex items-center gap-4">
+                                {company?.logo_uri ? (
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                ) : (
+                                    <div className="w-20 h-20 bg-cyan-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-cyan-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
+                                )}
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    <div className="flex gap-3 mt-2">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-cyan-600 text-white rounded-xl text-xs font-bold hover:bg-cyan-700 transition-all flex items-center gap-2 shadow-lg shadow-cyan-600/20">
+                                            <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="text-left md:text-right">
+                            <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 mb-1">Servicio de Redes</span>
+                            <h1 className="text-4xl font-black tracking-tighter text-slate-900 mb-2">#{service.orden_numero}</h1>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg">
+                                <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                                <span className="text-xs font-mono font-bold">{formatServiceDate(service.fecha)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left Column - 2 cols */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Cliente y Técnico */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Cliente */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Cliente</h3>
+                                </div>
+                                <p className="text-xl font-bold text-slate-800 mb-1">{service.cliente_nombre}</p>
+                                <p className="text-sm text-slate-500">{service.cliente_telefono}</p>
+                            </div>
+
+                            {/* Técnico Responsable */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Users className="w-5 h-5 text-orange-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-600">Técnico Responsable</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                                        {service.tecnico_nombre ? service.tecnico_nombre.charAt(0) : 'I'}
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-bold text-slate-800">{service.tecnico_nombre || 'Sin asignar'}</p>
+                                        <p className="text-xs text-slate-500">Asignado al servicio</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Detalles de Red */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-50 to-white border border-cyan-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Wifi className="w-5 h-5 text-cyan-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Detalles de Red</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Tipo de Servicio</p>
+                                    <p className="text-base font-semibold text-slate-800">{service.tipo_servicio}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">SSID / WiFi</p>
+                                    <p className="text-base font-mono text-slate-600">{service.wifi_ssid}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Password WiFi</p>
+                                    <p className="text-base font-mono text-slate-600">{service.wifi_password}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Gateway IP</p>
+                                    <p className="text-base font-mono text-slate-600">{service.wifi_gateway_ip}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-cyan-100">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Bajada</p>
+                                    <p className="text-base font-mono font-bold text-green-600">{service.velocidad_bajada} Mbps</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Subida</p>
+                                    <p className="text-base font-mono font-bold text-blue-600">{service.velocidad_subida} Mbps</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Ping</p>
+                                    <p className="text-base font-mono font-bold text-orange-600">{service.velocidad_ping} ms</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Informe Técnico */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Settings className="w-5 h-5 text-indigo-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600">Informe Técnico</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Trabajo Realizado */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Trabajo Realizado</p>
+                                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                        {(service.trabajo_realizado || '').split('\n').map((line, i) => (
+                                            line.trim() && (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-blue-800">{line}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                        {!service.trabajo_realizado && <p className="text-sm text-blue-600 italic">No especificado</p>}
+                                    </div>
+                                </div>
+
+                                {/* Materiales / Repuestos */}
+                                {(service.materiales_descripcion && service.materiales_descripcion !== '[]') && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Materiales Utilizados</p>
+                                        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                            {(() => {
+                                                try {
+                                                    // Try to parse as JSON
+                                                    if (service.materiales_descripcion && service.materiales_descripcion.startsWith('[')) {
+                                                        const parts = JSON.parse(service.materiales_descripcion);
+                                                        return (
+                                                            <div className="w-full">
+                                                                <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
+                                                                    <div className="w-12 text-center">Cant</div>
+                                                                    <div className="flex-1">Articulo</div>
+                                                                    <div className="w-24 text-right">Precio U.</div>
+                                                                    <div className="w-24 text-right">Total</div>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    {parts.map((part, i) => (
+                                                                        <div key={i} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
+                                                                            <div className="w-12 text-center text-slate-500">{part.cantidad || 1}</div>
+                                                                            <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
+                                                                            <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico || 0)}</div>
+                                                                            <div className="w-24 text-right text-slate-800 font-mono font-bold">${formatCurrency((part.cantidad || 1) * (part.costoPublico || part.precio_publico || 0))}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    // Fallback for simple string
+                                                    return <p className="text-sm text-slate-700">{service.materiales_descripcion}</p>;
+                                                } catch (e) {
+                                                    return <p className="text-sm text-slate-700">{service.materiales_descripcion}</p>;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Observaciones */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Observaciones</p>
+                                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                        <p className="text-sm text-slate-700 whitespace-pre-line">{service.observaciones || 'Sin observaciones'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Evidencia Fotográfica */}
+                        {photos.length > 0 && (
+                             <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Image className="w-5 h-5 text-slate-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">Evidencia Fotográfica</h3>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {photos.map((photo, index) => (
+                                        <div key={index} className="aspect-square rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer">
+                                            <img src={photo.uri} alt="Evidencia" className="w-full h-full object-cover" onClick={() => window.open(photo.uri, '_blank')} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Financials */}
+                    <div className="lg:col-span-1">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-50 to-white border border-cyan-100 sticky top-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <ShoppingCart className="w-5 h-5 text-cyan-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Resumen Financiero</h3>
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Mano de Obra</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.mano_obra)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Materiales</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.costo_materiales)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Subtotal</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.subtotal)}</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-4 mb-6">
+                                <p className="text-xs text-cyan-400 uppercase tracking-wider mb-2 text-center font-bold">Total a Pagar</p>
+                                <p className="text-4xl font-black text-center text-cyan-600">
+                                    {formatMoney(service.total)}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 p-4 rounded-xl bg-white border border-slate-200">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
+                                    <span className="font-bold text-cyan-600">-{formatMoney(service.anticipo)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                    <span className="text-slate-800 font-bold uppercase text-xs">Restante</span>
+                                    <span className="font-bold text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
+    const fetchServices = async () => {
+        setRefreshing(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicios_redes')
+                .select('*')
+                .order('fecha', { ascending: false });
+
+            if (error) throw error;
+            setServices(data || []);
+        } catch (error) {
+            console.error('Error loading Network services:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedServices = React.useMemo(() => {
+        let sortableItems = [...services];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                if (sortConfig.key === 'fecha') {
+                    const parseDate = (d) => {
+                        if (!d) return 0;
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d + 'T00:00:00').getTime();
+                        const date = new Date(d);
+                        if (!isNaN(date.getTime())) return date.getTime();
+                        return 0;
+                    };
+                    aVal = parseDate(aVal);
+                    bVal = parseDate(bVal);
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [services, sortConfig]);
+
+    const handleDelete = async (id) => {
+        if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
+        try {
+            const { error } = await supabase
+                .from('servicios_redes')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            setServices(services.filter(s => s.id !== id));
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Error al eliminar servicio');
+        }
+    };
+
+    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin w-8 h-8 text-cyan-600" /></div>;
+
+    return (
+        <div className="w-full px-4 md:px-8 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-4">
+                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Servicios <span className="text-cyan-600">Redes</span>
+                    </h1>
+                    <button
+                        onClick={fetchServices}
+                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        title="Actualizar lista"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-cyan-600' : ''}`} />
+                    </button>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={onCreateNew}
+                        className="btn bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Nuevo Servicio
+                    </button>
+                </div>
+            </div>
+
+            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                {services.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500">
+                        No hay servicios de Redes registrados.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto pb-64">
+                        <table className="w-full">
+                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <tr>
+                                    <th onClick={() => requestSort('orden_numero')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            No. Servicio
+                                            {sortConfig.key === 'orden_numero' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th onClick={() => requestSort('fecha')} className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-slate-500/10 transition-colors ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>
+                                        <div className="flex items-center gap-1">
+                                            Fecha
+                                            {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
+                                {sortedServices.map((service) => (
+                                    <tr key={service.id} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-cyan-50/30'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm font-bold text-cyan-600">#{service.orden_numero}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex flex-col">
+                                                <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente_nombre}</span>
+                                                <span className="text-xs text-slate-500">{service.cliente_telefono}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <StatusDropdown
+                                                service={service}
+                                                darkMode={darkMode}
+                                                onStatusChange={fetchServices}
+                                                tableName="servicios_redes"
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => onViewService(service)}
+                                                    className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+                                                    title="Ver Detalle"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onEdit(service)}
+                                                    className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    title="Editar"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(service.id)}
+                                                    className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const App = () => {
     // 1. Check for critical configuration errors first
     if (!supabase) {
@@ -5281,6 +5850,7 @@ const App = () => {
 
     // PRINTER SERVICE FORM STATE & HANDLERS
     const [editingPrinterService, setEditingPrinterService] = useState(null);
+    const [editingNetworkService, setEditingNetworkService] = useState(null);
 
     const fetchNextPrinterServiceFolio = async (userId) => {
         try {
@@ -5422,6 +5992,144 @@ const App = () => {
         } catch (error) {
             console.error('Error saving Printer service:', error);
             alert('Error al guardar el servicio: ' + error.message);
+        }
+    };
+
+    const fetchNextNetworkServiceFolio = async (userId) => {
+        const folioPrefix = `R-${new Date().getFullYear()}-`;
+        try {
+            const { data, error } = await supabase
+                .from('servicios_redes')
+                .select('orden_numero')
+                .eq('user_id', userId)
+                .ilike('orden_numero', `${folioPrefix}%`)
+                .order('id', { ascending: false })
+                .limit(1);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const lastFolio = data[0].orden_numero;
+                const parts = lastFolio.split('-');
+                const lastNumber = parseInt(parts[2]) || 99;
+                return `${folioPrefix}${lastNumber + 1}`;
+            }
+            return `${folioPrefix}100`;
+        } catch (error) {
+            console.error('Error fetching next Network folio:', error);
+            const currentYear = new Date().getFullYear();
+            return `R-${currentYear}-100`;
+        }
+    };
+
+    const handleSaveNetworkService = async (serviceData) => {
+        try {
+            let data, error;
+            const { files, photosToDelete, ...payloadData } = serviceData;
+            let payload = { ...payloadData };
+
+            if (editingNetworkService === 'new') {
+                const newOrden = await fetchNextNetworkServiceFolio(session.user.id);
+
+                const newService = {
+                    ...payload,
+                    user_id: session.user.id,
+                    orden_numero: newOrden,
+                    status: 'recibido'
+                };
+
+                const result = await supabase
+                    .from('servicios_redes')
+                    .insert(newService)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            } else {
+                const { id, created_at, ...updateData } = payload;
+                const result = await supabase
+                    .from('servicios_redes')
+                    .update(updateData)
+                    .eq('id', editingNetworkService.id)
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            }
+
+            if (error) throw error;
+
+            // --- PHOTO DELETION LOGIC ---
+            if (photosToDelete && photosToDelete.length > 0) {
+                const { error: deleteError } = await supabase
+                    .from('servicio_fotos')
+                    .delete()
+                    .in('id', photosToDelete);
+
+                if (deleteError) console.error('Error deleting photos:', deleteError);
+            }
+
+            // --- PHOTO UPLOAD LOGIC ---
+            if (files && files.length > 0 && data) {
+                const uploadPromises = files.map(async (file) => {
+                    try {
+                        const hash = await computeFileHash(file);
+
+                        const { data: existingPhoto } = await supabase
+                            .from('servicio_fotos')
+                            .select('id')
+                            .eq('servicio_id', data.id)
+                            .eq('hash', hash)
+                            .eq('tipo_servicio', 'servicio_redes')
+                            .maybeSingle();
+
+                        if (existingPhoto) return { success: true, skipped: true };
+
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const filePath = `${session.user.id}/networks/${data.id}/${fileName}`;
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('servicio-files-v2')
+                            .upload(filePath, file);
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('servicio-files-v2')
+                            .getPublicUrl(filePath);
+
+                        const { error: dbError } = await supabase
+                            .from('servicio_fotos')
+                            .insert({
+                                servicio_id: data.id,
+                                user_id: session.user.id,
+                                uri: publicUrl,
+                                tipo_servicio: 'servicio_redes',
+                                hash: hash
+                            });
+
+                        if (dbError) throw dbError;
+                    } catch (e) {
+                        console.error('Error uploading file:', e);
+                    }
+                });
+
+                await Promise.all(uploadPromises);
+            }
+
+            alert('Servicio de Redes guardado correctamente');
+            setEditingNetworkService(null);
+            if (activeTab === 'services-network-view' && selectedService?.id === data.id) {
+                setSelectedService(data);
+            }
+            
+            fetchAllServices(); // Refresh list
+        } catch (error) {
+            console.error('Error saving network service:', error);
+            alert('Error al guardar servicio: ' + error.message);
         }
     };
 
@@ -6875,6 +7583,7 @@ const App = () => {
                                 setEditingPCService={setEditingPCService}
                                 setEditingPhoneService={setEditingPhoneService}
                                 setEditingPrinterService={setEditingPrinterService}
+                                setEditingNetworkService={setEditingNetworkService}
                             />
                         )}
                         {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
@@ -6957,6 +7666,18 @@ const App = () => {
                             />
                         )}
 
+                        {activeTab === 'services-network-list' && (
+                            <NetworkList
+                                darkMode={isDark}
+                                onNavigate={setActiveTab}
+                                onViewService={(service) => {
+                                    setSelectedService(service);
+                                    setActiveTab('services-network-view');
+                                }}
+                                onCreateNew={() => setEditingNetworkService('new')}
+                                onEdit={(service) => setEditingNetworkService(service)}
+                            />
+                        )}
                         {activeTab === 'services-printer-list' && (
                             <PrinterList
                                 darkMode={isDark}
@@ -6978,6 +7699,15 @@ const App = () => {
                                 company={company}
                             />
                         )}
+                        {activeTab === 'services-network-view' && (
+                            <NetworkServiceView
+                                service={selectedService}
+                                onBack={() => setActiveTab('servicios')}
+                                onEdit={(service) => setEditingNetworkService(service)}
+                                darkMode={isDark}
+                                company={company}
+                            />
+                        )}
                         
                         {/* Printer Service Form Modal */}
                         {editingPrinterService && (
@@ -6985,6 +7715,16 @@ const App = () => {
                                 service={editingPrinterService === 'new' ? null : editingPrinterService}
                                 onSave={handleSavePrinterService}
                                 onCancel={() => setEditingPrinterService(null)}
+                                darkMode={isDark}
+                            />
+                        )}
+
+                        {/* Network Service Form Modal */}
+                        {editingNetworkService && (
+                            <NetworkServiceForm
+                                service={editingNetworkService === 'new' ? null : editingNetworkService}
+                                onSave={handleSaveNetworkService}
+                                onCancel={() => setEditingNetworkService(null)}
                                 darkMode={isDark}
                             />
                         )}

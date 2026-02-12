@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, User, Printer, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, ShieldCheck, HardDrive, Zap, Box } from 'lucide-react';
+import { X, Save, User, Wifi, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, Activity, ArrowDown, ArrowUp, Router } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { supabase } from '../../utils/supabase';
 
-const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
+const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     // Initial State derived from service prop or defaults
     const [formData, setFormData] = useState({
         orden_numero: '',
@@ -14,36 +14,35 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         cliente_nombre: '',
         cliente_telefono: '',
 
-        // Equipo
-        equipo_tipo: 'Multifuncional',
-        equipo_modelo: '',
-        equipo_serie: '',
-        equipo_contador: 0,
+        // Red / Equipo
+        tipo_servicio: 'Instalación',
+        wifi_ssid: '',
+        wifi_password: '',
+        wifi_portal_password: '',
+        wifi_gateway_ip: '',
         
-        // Detalles específicos de impresoras
-        accesorios: '', // Will be converted to/from JSONB array
-        estado_consumibles: '',
+        // Velocidades
+        velocidad_bajada: '',
+        velocidad_subida: '',
+        velocidad_ping: '',
 
         // Técnico
         tecnico_nombre: '',
 
         // Detalles
-        problema_reportado: '',
-        diagnostico: '', // Note: PC uses diagnostico_tecnico, Printer uses diagnostico
-        trabajo_realizado: '', // JSONB in DB, handled as text here
+        trabajo_realizado: '', // text
         observaciones: '',
-        repuestos_descripcion: '', // Stores JSON string of parts
+        materiales_descripcion: '', // Stores JSON string of parts/materials
 
         // Financiero
         mano_obra: 0,
-        costo_repuestos: 0, // Note: PC uses repuestos_costo, Printer uses costo_repuestos
+        costo_materiales: 0,
         anticipo: 0,
         incluir_iva: false,
         iva: 0,
         subtotal: 0,
         total: 0,
-        costo_total: 0, // Redundant with total? DB has costo_total and total. Usually total is final.
-
+        
         // Status
         pagado: false,
         entregado: false
@@ -61,8 +60,8 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         if (service) {
             let loadedParts = [];
             try {
-                if (service.repuestos_descripcion && service.repuestos_descripcion.trim().startsWith('[')) {
-                    loadedParts = JSON.parse(service.repuestos_descripcion);
+                if (service.materiales_descripcion && service.materiales_descripcion.trim().startsWith('[')) {
+                    loadedParts = JSON.parse(service.materiales_descripcion);
                     // Standardize keys
                     loadedParts = loadedParts.map(p => ({
                         id: p.id || Date.now() + Math.random(),
@@ -72,13 +71,13 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         costoEmpresa: p.costoEmpresa || p.costo_empresa || 0,
                         numeroSerie: p.numeroSerie || ''
                     }));
-                } else if (service.repuestos_descripcion && service.repuestos_descripcion.trim() !== '') {
+                } else if (service.materiales_descripcion && service.materiales_descripcion.trim() !== '') {
                     loadedParts = [{
                         id: Date.now(),
                         cantidad: 1,
-                        producto: service.repuestos_descripcion,
+                        producto: service.materiales_descripcion,
                         costoEmpresa: 0,
-                        costoPublico: service.costo_repuestos || 0,
+                        costoPublico: service.costo_materiales || 0,
                         numeroSerie: ''
                     }];
                 }
@@ -87,49 +86,13 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             }
             setParts(loadedParts);
 
-            // Handle accesorios (JSONB)
-            let loadedAccesorios = '';
-            if (service.accesorios) {
-                if (Array.isArray(service.accesorios)) {
-                    loadedAccesorios = service.accesorios.join(', ');
-                } else if (typeof service.accesorios === 'string') {
-                    // Try parsing if it's a JSON string
-                    try {
-                        const parsed = JSON.parse(service.accesorios);
-                        if (Array.isArray(parsed)) loadedAccesorios = parsed.join(', ');
-                        else loadedAccesorios = service.accesorios;
-                    } catch {
-                        loadedAccesorios = service.accesorios;
-                    }
-                }
-            }
-
-            // Handle trabajo_realizado (JSONB)
-            let loadedTrabajo = '';
-            if (service.trabajo_realizado) {
-                 if (Array.isArray(service.trabajo_realizado)) {
-                    loadedTrabajo = service.trabajo_realizado.join(', ');
-                } else if (typeof service.trabajo_realizado === 'string') {
-                     try {
-                        const parsed = JSON.parse(service.trabajo_realizado);
-                        if (Array.isArray(parsed)) loadedTrabajo = parsed.join(', ');
-                        else loadedTrabajo = service.trabajo_realizado;
-                    } catch {
-                        loadedTrabajo = service.trabajo_realizado;
-                    }
-                }
-            }
-
             setFormData({
                 ...formData,
                 ...service,
-                accesorios: loadedAccesorios,
-                trabajo_realizado: loadedTrabajo,
                 fecha: service.fecha ? service.fecha.split('T')[0] : new Date().toLocaleDateString('en-CA'),
                 mano_obra: service.mano_obra || 0,
-                costo_repuestos: service.costo_repuestos || 0,
+                costo_materiales: service.costo_materiales || 0,
                 anticipo: service.anticipo || 0,
-                costo_total: service.costo_total || 0,
                 total: service.total || 0
             });
 
@@ -138,29 +101,13 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     const { data } = await supabase
                         .from('servicio_fotos')
                         .select('*')
-                        .eq('servicio_id', service.id); // Assuming same table for photos, filtered by service type via query or just ID if IDs are unique across tables (UUIDs usually are)
-                        // Wait, IDs are integers in PC table, maybe integers here too. 
-                        // If they share the same table 'servicio_fotos', we need to make sure IDs don't collide or 'servicio_fotos' has a 'tipo_servicio' column.
-                        // The search result said: "servicio_fotos: ... Relacionada por servicio_id".
-                        // If both tables use Integer IDs, we might have collisions if we don't filter by type.
-                        // However, 'handleSavePCService' inserts with `tipo_servicio: 'servicio_pc'`.
-                        // So I should filter by `tipo_servicio` too or assume UUIDs.
-                        // The user input says `id` is `integer`. So collision is possible.
-                        // I need to check `servicio_fotos` table structure or how `handleSavePCService` uses it.
-                        // It uses `.eq('servicio_id', service.id)`.
-                        // And inserts `tipo_servicio: 'servicio_pc'`.
-                        // So I should filter by `tipo_servicio` as well.
+                        .eq('servicio_id', service.id)
+                        .eq('tipo_servicio', 'servicio_redes');
+                    
                     if (data) {
-                        const filteredData = data.filter(p => p.tipo_servicio === 'servicio_impresora');
-                        setExistingPhotos(filteredData);
+                        setExistingPhotos(data);
                     }
                 };
-                
-                // Let's rely on the fetch in the View component to see how it's done. 
-                // In PCServiceView: .eq('servicio_id', service.id).eq('user_id', user.id).
-                // It doesn't filter by type. This suggests maybe IDs are unique or they don't care about collisions (bad) or they use UUIDs (User said integer).
-                // Wait, if IDs are integers, 1 in PC and 1 in Printer will collide in 'servicio_fotos' if not filtered by type.
-                // I will add `.eq('tipo_servicio', 'servicio_impresora')` to be safe.
                 fetchPhotos();
             }
         }
@@ -175,11 +122,10 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             
             return { 
                 ...prev, 
-                costo_repuestos: totalParts,
+                costo_materiales: totalParts,
                 subtotal: subtotal,
                 iva: ivaValue,
-                total: total,
-                costo_total: total
+                total: total
             };
         });
     }, [parts, formData.mano_obra, formData.incluir_iva]);
@@ -245,47 +191,29 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const totalMO = parseFloat(formData.mano_obra) || 0;
-        const totalRC = parseFloat(formData.costo_repuestos) || 0;
+        const totalRC = parseFloat(formData.costo_materiales) || 0;
         const subtotal = totalMO + totalRC;
         const ivaValue = formData.incluir_iva ? subtotal * 0.16 : 0;
         const total = subtotal + ivaValue;
 
-        // Convert accessories string to array for JSONB
-        const accesoriosArray = formData.accesorios 
-            ? formData.accesorios.split(',').map(s => s.trim()).filter(s => s) 
-            : [];
-            
-        // Convert trabajo_realizado string to array for JSONB if desired, or keep as string if DB allows. 
-        // User said `trabajo_realizado` is `jsonb`. PC Service uses string in form but array in DB?
-        // PC form uses: `trabajo_realizado: Array.isArray(...) ? ...join : ...`
-        // So PC DB has it as text or jsonb?
-        // User input: `trabajo_realizado | jsonb`.
-        // So I should save it as an array of strings to be safe/structured.
-        const trabajoArray = formData.trabajo_realizado
-            ? formData.trabajo_realizado.split(',').map(s => s.trim()).filter(s => s)
-            : [];
-
         const dataToSave = {
             ...formData,
-            repuestos_descripcion: JSON.stringify(parts),
-            accesorios: JSON.stringify(accesoriosArray), // Sending as JSON string, Supabase handles JSONB
-            trabajo_realizado: JSON.stringify(trabajoArray),
+            materiales_descripcion: JSON.stringify(parts),
             subtotal: subtotal,
             iva: ivaValue,
             total: total,
-            costo_total: total, // Syncing both
             files: files,
             photosToDelete: photosToDelete
         };
         onSave(dataToSave);
     };
 
-    const subtotal = (parseFloat(formData.mano_obra) || 0) + (parseFloat(formData.costo_repuestos) || 0);
+    const subtotal = (parseFloat(formData.mano_obra) || 0) + (parseFloat(formData.costo_materiales) || 0);
     const ivaValue = formData.incluir_iva ? subtotal * 0.16 : 0;
     const currentTotal = subtotal + ivaValue;
     const restante = currentTotal - (parseFloat(formData.anticipo) || 0);
 
-    const inputClass = `w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${darkMode
+    const inputClass = `w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all ${darkMode
         ? 'bg-slate-700/50 border-slate-600 text-slate-100 placeholder-slate-400'
         : 'bg-white/50 border-slate-200 text-slate-800 placeholder-slate-400'
         }`;
@@ -298,15 +226,15 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 {/* Header */}
                 <div className={`px-8 py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-500/20 text-white">
-                            <Printer className="w-6 h-6" />
+                        <div className="p-3 bg-cyan-600 rounded-2xl shadow-lg shadow-cyan-500/20 text-white">
+                            <Wifi className="w-6 h-6" />
                         </div>
                         <div>
                             <h2 className={`text-2xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                                {service ? 'Editar Servicio' : 'Nuevo Servicio'} <span className="text-purple-600">Impresora</span>
+                                {service ? 'Editar Servicio' : 'Nuevo Servicio'} <span className="text-cyan-600">Redes</span>
                             </h2>
                             <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                {service ? `Orden: #${service.orden_numero}` : 'Complete los datos del equipo'}
+                                {service ? `Orden: #${service.orden_numero}` : 'Detalles de la instalación o servicio'}
                             </p>
                         </div>
                     </div>
@@ -349,7 +277,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label className={labelClass}>Fecha de Ingreso</label>
+                            <label className={labelClass}>Fecha</label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
                                 <input
@@ -370,133 +298,137 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 value={formData.tecnico_nombre}
                                 onChange={handleChange}
                                 className={inputClass}
-                                placeholder="Nombre del técnico experto"
+                                placeholder="Nombre del técnico"
                             />
                         </div>
                     </div>
 
-                    {/* Device Specs Section */}
-                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-purple-50/30 border-purple-100'}`}>
-                        <div className="flex items-center gap-2 mb-6 text-purple-600">
-                            <Printer className="w-5 h-5" />
-                            <h3 className="font-bold uppercase text-xs tracking-widest">Especificaciones del Equipo</h3>
+                    {/* Network Specs Section */}
+                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-cyan-50/30 border-cyan-100'}`}>
+                        <div className="flex items-center gap-2 mb-6 text-cyan-600">
+                            <Router className="w-5 h-5" />
+                            <h3 className="font-bold uppercase text-xs tracking-widest">Configuración de Red</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div>
-                                <label className={labelClass}>Tipo de Equipo</label>
+                             <div>
+                                <label className={labelClass}>Tipo de Servicio</label>
                                 <select
-                                    name="equipo_tipo"
-                                    value={formData.equipo_tipo}
+                                    name="tipo_servicio"
+                                    value={formData.tipo_servicio}
                                     onChange={handleChange}
                                     className={inputClass}
                                 >
-                                    <option value="Multifuncional">Multifuncional</option>
-                                    <option value="Laser">Láser</option>
-                                    <option value="Inyección">Inyección de Tinta</option>
-                                    <option value="Matricial">Matricial</option>
-                                    <option value="Plotter">Plotter</option>
-                                    <option value="Termica">Térmica / Tickets</option>
-                                    <option value="3D">Impresora 3D</option>
-                                    <option value="Scanner">Escáner</option>
+                                    <option value="Instalación">Instalación</option>
+                                    <option value="Mantenimiento">Mantenimiento</option>
+                                    <option value="Configuración">Configuración</option>
+                                    <option value="Diagnóstico">Diagnóstico</option>
+                                    <option value="Cableado Estructurado">Cableado Estructurado</option>
                                     <option value="Otro">Otro</option>
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClass}>Modelo / Marca</label>
+                                <label className={labelClass}>SSID (Nombre WiFi)</label>
                                 <input
                                     type="text"
-                                    name="equipo_modelo"
-                                    value={formData.equipo_modelo}
+                                    name="wifi_ssid"
+                                    value={formData.wifi_ssid}
                                     onChange={handleChange}
                                     className={inputClass}
-                                    placeholder="Ej: Epson L3110"
-                                    required
+                                    placeholder="Nombre de la red"
+                                />
+                            </div>
+                             <div>
+                                <label className={labelClass}>Contraseña WiFi</label>
+                                <input
+                                    type="text"
+                                    name="wifi_password"
+                                    value={formData.wifi_password}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                    placeholder="Clave de red"
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Número de Serie</label>
+                                <label className={labelClass}>Portal Password</label>
                                 <input
                                     type="text"
-                                    name="equipo_serie"
-                                    value={formData.equipo_serie}
+                                    name="wifi_portal_password"
+                                    value={formData.wifi_portal_password}
                                     onChange={handleChange}
                                     className={inputClass}
-                                    placeholder="S/N"
+                                    placeholder="Acceso al router"
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Contador de Impresiones</label>
+                                <label className={labelClass}>Gateway IP</label>
                                 <input
-                                    type="number"
-                                    name="equipo_contador"
-                                    value={formData.equipo_contador}
-                                    onChange={handleNumberChange}
+                                    type="text"
+                                    name="wifi_gateway_ip"
+                                    value={formData.wifi_gateway_ip}
+                                    onChange={handleChange}
                                     className={inputClass}
-                                    placeholder="0"
+                                    placeholder="Ej: 192.168.1.1"
                                 />
-                            </div>
-                            <div className="col-span-2">
-                                <label className={labelClass}>Accesorios Recibidos</label>
-                                <div className="relative">
-                                    <Box className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        name="accesorios"
-                                        value={formData.accesorios}
-                                        onChange={handleChange}
-                                        className={`${inputClass} pl-10`}
-                                        placeholder="Cables, bandejas, tóner extra (separar por comas)"
-                                    />
-                                </div>
                             </div>
                         </div>
-                        <div className="mt-4">
-                             <label className={labelClass}>Estado de Consumibles</label>
-                             <div className="relative">
-                                <Zap className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    name="estado_consumibles"
-                                    value={formData.estado_consumibles}
-                                    onChange={handleChange}
-                                    className={`${inputClass} pl-10`}
-                                    placeholder="Niveles de tinta/tóner, estado de fusor, etc."
-                                />
+
+                        <div className="mt-6 pt-6 border-t border-dashed border-cyan-200/50">
+                             <div className="flex items-center gap-2 mb-4 text-cyan-600">
+                                <Activity className="w-5 h-5" />
+                                <h3 className="font-bold uppercase text-xs tracking-widest">Pruebas de Velocidad</h3>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className={labelClass}>Bajada (Download)</label>
+                                    <div className="relative">
+                                        <ArrowDown className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            name="velocidad_bajada"
+                                            value={formData.velocidad_bajada}
+                                            onChange={handleChange}
+                                            className={`${inputClass} pl-9`}
+                                            placeholder="Mbps"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Subida (Upload)</label>
+                                    <div className="relative">
+                                        <ArrowUp className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            name="velocidad_subida"
+                                            value={formData.velocidad_subida}
+                                            onChange={handleChange}
+                                            className={`${inputClass} pl-9`}
+                                            placeholder="Mbps"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Ping / Latencia</label>
+                                    <div className="relative">
+                                        <Activity className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            name="velocidad_ping"
+                                            value={formData.velocidad_ping}
+                                            onChange={handleChange}
+                                            className={`${inputClass} pl-9`}
+                                            placeholder="ms"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Report Section */}
                     <div className="space-y-6">
-                        <div>
-                            <div className="flex items-center gap-2 mb-4 text-amber-500">
-                                <Settings className="w-5 h-5" />
-                                <h3 className="font-bold uppercase text-xs tracking-widest">Problema Reportado</h3>
-                            </div>
-                            <textarea
-                                name="problema_reportado"
-                                value={formData.problema_reportado}
-                                onChange={handleChange}
-                                className={`${inputClass} h-24 resize-none`}
-                                placeholder="Falla comentada por el cliente..."
-                            ></textarea>
-                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div>
                                 <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                                    <Settings className="w-5 h-5" />
-                                    <h3 className="font-bold uppercase text-xs tracking-widest">Diagnóstico Técnico</h3>
-                                </div>
-                                <textarea
-                                    name="diagnostico"
-                                    value={formData.diagnostico}
-                                    onChange={handleChange}
-                                    className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Lo que se encontró al revisar..."
-                                ></textarea>
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2 mb-4 text-emerald-500">
                                     <Settings className="w-5 h-5" />
                                     <h3 className="font-bold uppercase text-xs tracking-widest">Trabajo Realizado</h3>
                                 </div>
@@ -505,35 +437,35 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     value={formData.trabajo_realizado}
                                     onChange={handleChange}
                                     className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Acciones correctivas aplicadas (separar por comas)..."
+                                    placeholder="Descripción del trabajo..."
+                                ></textarea>
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 mb-4 text-slate-500">
+                                    <Settings className="w-5 h-5" />
+                                    <h3 className="font-bold uppercase text-xs tracking-widest">Observaciones</h3>
+                                </div>
+                                <textarea
+                                    name="observaciones"
+                                    value={formData.observaciones}
+                                    onChange={handleChange}
+                                    className={`${inputClass} h-32 resize-none`}
+                                    placeholder="Notas adicionales..."
                                 ></textarea>
                             </div>
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2 mb-4 text-slate-500">
-                                <Settings className="w-5 h-5" />
-                                <h3 className="font-bold uppercase text-xs tracking-widest">Observaciones Internas</h3>
-                            </div>
-                            <textarea
-                                name="observaciones"
-                                value={formData.observaciones}
-                                onChange={handleChange}
-                                className={`${inputClass} h-20 resize-none`}
-                                placeholder="Notas internas que no ve el cliente..."
-                            ></textarea>
-                        </div>
                     </div>
 
-                    {/* Parts List Section */}
+                    {/* Materials List Section */}
                     <div className={`p-8 rounded-3xl border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700' : 'bg-gray-50/50 border-slate-100'}`}>
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-xl ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                                <div className={`p-2 rounded-xl ${darkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
                                     <ShoppingCart className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>Repuestos y Materiales</h3>
-                                    <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Desglose de refacciones utilizadas</p>
+                                    <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>Materiales Utilizados</h3>
+                                    <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Desglose de materiales y equipos</p>
                                 </div>
                             </div>
                             <button
@@ -545,7 +477,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             </button>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {parts.map((part) => (
                                 <div key={part.id} className={`flex flex-col md:flex-row gap-3 p-4 md:p-3 rounded-2xl border items-center transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
                                     <div className="w-full md:w-20">
@@ -565,7 +497,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             value={part.producto}
                                             onChange={(e) => updatePart(part.id, 'producto', e.target.value)}
                                             className={inputClass}
-                                            placeholder="Descripción del artículo..."
+                                            placeholder="Cámara, Cable, Balun..."
                                         />
                                     </div>
                                     <div className="w-full md:w-32">
@@ -618,7 +550,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             ))}
                             {parts.length === 0 && (
                                 <div className="text-center py-10 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
-                                    No hay repuestos agregados aún.
+                                    No hay materiales agregados aún.
                                 </div>
                             )}
                         </div>
@@ -626,7 +558,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                     {/* Photos Section */}
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-purple-500">
+                        <div className="flex items-center gap-2 text-cyan-500">
                             <Image className="w-5 h-5" />
                             <h3 className="font-bold uppercase text-xs tracking-widest">Evidencia Fotográfica</h3>
                         </div>
@@ -643,7 +575,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     >
                                         <X className="w-3 h-3" />
                                     </button>
-                                    <div className="absolute bottom-0 left-0 right-0 bg-purple-600/80 text-[8px] text-white text-center py-0.5">NUEVA</div>
+                                    <div className="absolute bottom-0 left-0 right-0 bg-cyan-600/80 text-[8px] text-white text-center py-0.5">NUEVA</div>
                                 </div>
                             ))}
 
@@ -662,9 +594,9 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             ))}
 
                             {/* Upload Button */}
-                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-purple-400 group">
-                                <Image className="w-8 h-8 text-slate-300 group-hover:text-purple-400 mb-2" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-purple-500">Subir Foto</span>
+                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-cyan-400 group">
+                                <Image className="w-8 h-8 text-slate-300 group-hover:text-cyan-400 mb-2" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-cyan-500">Subir Foto</span>
                                 <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
                             </label>
                         </div>
@@ -734,7 +666,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     <button
                                         type="button"
                                         onClick={handleSubmit}
-                                        className="btn bg-purple-600 text-white hover:bg-purple-700 shadow-xl shadow-purple-500/20 transform hover:-translate-y-0.5 px-8 py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3"
+                                        className="btn bg-cyan-600 text-white hover:bg-cyan-700 shadow-xl shadow-cyan-500/20 transform hover:-translate-y-0.5 px-8 py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3"
                                     >
                                         <Save className="w-5 h-5" />
                                         GUARDAR
@@ -750,4 +682,4 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     );
 };
 
-export default PrinterServiceForm;
+export default NetworkServiceForm;
