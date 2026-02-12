@@ -815,7 +815,7 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
                     </button>
                 </div>
             ) : (
-                <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <div className={`rounded-xl shadow-lg border min-h-[500px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     {/* List Header */}
                     <div className={`grid grid-cols-12 gap-4 p-4 border-b text-xs font-bold uppercase tracking-widest hidden md:grid ${darkMode ? 'bg-slate-600/50 border-slate-500 text-slate-200' : 'bg-gray-50/50 border-slate-100 text-slate-500'}`}>
                         <div
@@ -1921,7 +1921,7 @@ const ChangelogView = ({ darkMode }) => {
 };
 
 
-const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
+const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -1929,14 +1929,16 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
 
     useEffect(() => {
         fetchServices();
-    }, []);
+    }, [user]);
 
     const fetchServices = async () => {
+        if (!user) return;
         setRefreshing(true);
         try {
             const { data, error } = await supabase
                 .from('servicios_cctv')
                 .select('*')
+                .eq('user_id', user.id)
                 .order('servicio_fecha', { ascending: false });
 
             if (error) throw error;
@@ -2035,7 +2037,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService }) => {
                 </button>
             </div>
 
-            <div className={`rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`rounded-xl shadow-lg border min-h-[500px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de CCTV registrados.
@@ -2665,7 +2667,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     );
 };
 
-const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -2677,14 +2679,16 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
 
     useEffect(() => {
         fetchServices();
-    }, []);
+    }, [user]);
 
     const fetchServices = async () => {
+        if (!user) return;
         setRefreshing(true);
         try {
             const { data, error } = await supabase
                 .from('servicios_pc')
                 .select('*')
+                .eq('user_id', user.id)
                 .order('fecha', { ascending: false });
 
             if (error) throw error;
@@ -2804,7 +2808,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) =>
                     </div>
                 ) : (
                     <>
-                    <div className="hidden md:block overflow-x-auto pb-64">
+                    <div className="hidden md:block pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -3359,7 +3363,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService }) => {
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, user }) => {
     const [unifiedServices, setUnifiedServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3402,18 +3406,19 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     };
 
     const fetchAllServices = async () => {
+        if (!user) return;
         setRefreshing(true);
         try {
             // Fetch CCTV services
-            const { data: cctvData } = await supabase.from('servicios_cctv').select('*');
+            const { data: cctvData } = await supabase.from('servicios_cctv').select('*').eq('user_id', user.id);
             // Fetch PC services
-            const { data: pcData } = await supabase.from('servicios_pc').select('*');
+            const { data: pcData } = await supabase.from('servicios_pc').select('*').eq('user_id', user.id);
             // Fetch Phone services
-            const { data: phoneData } = await supabase.from('servicios_celular').select('*');
+            const { data: phoneData } = await supabase.from('servicios_celular').select('*').eq('user_id', user.id);
             // Fetch Printer services
-            const { data: printerData } = await supabase.from('servicios_impresora').select('*');
+            const { data: printerData } = await supabase.from('servicios_impresora').select('*').eq('user_id', user.id);
             // Fetch Network services
-            const { data: networkData } = await supabase.from('servicios_redes').select('*');
+            const { data: networkData } = await supabase.from('servicios_redes').select('*').eq('user_id', user.id);
 
             const unified = [
                 ...(cctvData || []).map(s => ({
@@ -3672,7 +3677,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                 </div>
             </div>
 
-            <div className={`md:rounded-[2rem] md:shadow-2xl md:border md:overflow-hidden ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
+            <div className={`md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {loading && !refreshing ? (
                     <div className="p-20 flex flex-col items-center justify-center gap-4">
                         <Loader className="w-10 h-10 animate-spin text-blue-600" />
@@ -3687,7 +3692,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     </div>
                 ) : (
                     <>
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="hidden md:block">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
@@ -3926,7 +3931,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     );
 };
 
-const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3938,14 +3943,16 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit })
 
     useEffect(() => {
         fetchServices();
-    }, []);
+    }, [user]);
 
     const fetchServices = async () => {
+        if (!user) return;
         setRefreshing(true);
         try {
             const { data, error } = await supabase
                 .from('servicios_celular')
                 .select('*')
+                .eq('user_id', user.id)
                 .order('fecha', { ascending: false });
 
             if (error) throw error;
@@ -4063,7 +4070,7 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit })
                     </div>
                 ) : (
                     <>
-                    <div className="hidden md:block overflow-x-auto pb-64">
+                    <div className="hidden md:block pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -4702,7 +4709,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
 // --- MAIN APP ---
 
-const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -4714,14 +4721,16 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
 
     useEffect(() => {
         fetchServices();
-    }, []);
+    }, [user]);
 
     const fetchServices = async () => {
+        if (!user) return;
         setRefreshing(true);
         try {
             const { data, error } = await supabase
                 .from('servicios_impresora')
                 .select('*')
+                .eq('user_id', user.id)
                 .order('fecha', { ascending: false });
 
             if (error) throw error;
@@ -4837,7 +4846,7 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
                     </div>
                 ) : (
                     <>
-                    <div className="hidden md:block overflow-x-auto pb-64">
+                    <div className="hidden md:block pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -5694,7 +5703,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     );
 };
 
-const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit }) => {
+const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -5702,14 +5711,16 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
 
     useEffect(() => {
         fetchServices();
-    }, []);
+    }, [user]);
 
     const fetchServices = async () => {
+        if (!user) return;
         setRefreshing(true);
         try {
             const { data, error } = await supabase
                 .from('servicios_redes')
                 .select('*')
+                .eq('user_id', user.id)
                 .order('fecha', { ascending: false });
 
             if (error) throw error;
@@ -5808,7 +5819,7 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit 
                     </div>
                 ) : (
                     <>
-                    <div className="hidden md:block overflow-x-auto pb-64">
+                    <div className="hidden md:block pb-64">
                         <table className="w-full">
                             <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
@@ -8083,9 +8094,10 @@ const App = () => {
                                 setEditingPhoneService={setEditingPhoneService}
                                 setEditingPrinterService={setEditingPrinterService}
                                 setEditingNetworkService={setEditingNetworkService}
+                                user={session?.user}
                             />
                         )}
-                        {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} />}
+                        {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} user={session?.user} />}
                         {activeTab === 'services-cctv-view' && (
                             <CCTVServiceView 
                                 service={selectedService} 
@@ -8102,6 +8114,7 @@ const App = () => {
                                 onViewService={handleViewPCService}
                                 onCreateNew={() => setEditingPCService('new')}
                                 onEdit={(service) => setEditingPCService(service)}
+                                user={session?.user}
                             />
                         )}
                         {activeTab === 'services-pc-view' && (
@@ -8123,6 +8136,7 @@ const App = () => {
                                 }}
                                 onCreateNew={() => setEditingPhoneService('new')}
                                 onEdit={(service) => setEditingPhoneService(service)}
+                                user={session?.user}
                             />
                         )}
                         {activeTab === 'services-phone-view' && (
@@ -8175,6 +8189,7 @@ const App = () => {
                                 }}
                                 onCreateNew={() => setEditingNetworkService('new')}
                                 onEdit={(service) => setEditingNetworkService(service)}
+                                user={session?.user}
                             />
                         )}
                         {activeTab === 'services-printer-list' && (
@@ -8187,6 +8202,7 @@ const App = () => {
                                 }}
                                 onCreateNew={() => setEditingPrinterService('new')}
                                 onEdit={(service) => setEditingPrinterService(service)}
+                                user={session?.user}
                             />
                         )}
                         {activeTab === 'services-printer-view' && (
