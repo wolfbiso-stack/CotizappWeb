@@ -133,6 +133,12 @@ const PublicRepairTracking = () => {
                 <div className="bg-white/80 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 text-center">
                     <Loader className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
                     <p className="text-slate-600 font-medium animate-pulse">Cargando información del servicio...</p>
+                    {/* Debugging info visible during loading */}
+                    <div className="mt-4 p-2 bg-slate-100 rounded text-[10px] text-slate-500 font-mono text-left max-w-xs overflow-auto max-h-32">
+                        <p>Token: {token || 'null'}</p>
+                        <p>Hash: {window.location.hash}</p>
+                        <p>Path: {window.location.pathname}</p>
+                    </div>
                 </div>
             </div>
         );
@@ -147,6 +153,17 @@ const PublicRepairTracking = () => {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800 mb-2">Servicio No Encontrado</h1>
                     <p className="text-slate-600 mb-8 leading-relaxed">{error || 'No pudimos encontrar la información de este servicio. Verifica que el enlace sea correcto.'}</p>
+                    
+                    {/* Debugging Section for User */}
+                    <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-lg text-left">
+                        <p className="text-xs font-bold text-red-800 mb-1">Información de Depuración:</p>
+                        <div className="text-[10px] font-mono text-slate-600 space-y-1 break-all">
+                            <p><span className="font-bold">Token Intentado:</span> {token || 'No detectado'}</p>
+                            <p><span className="font-bold">URL Hash:</span> {window.location.hash}</p>
+                            <p><span className="font-bold">URL Path:</span> {window.location.pathname}</p>
+                        </div>
+                    </div>
+
                     <button
                         onClick={() => window.location.href = '/'}
                         className="w-full px-6 py-3.5 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
