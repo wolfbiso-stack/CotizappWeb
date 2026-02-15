@@ -77,40 +77,54 @@ const PublicRepairTracking = () => {
         try {
             setLoading(true);
 
-            // Check all service tables
-            const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares', 'servicios_cctv', 'servicios_redes'];
-            let foundService = null;
-            
-            for (const table of tables) {
-                const { data, error } = await supabase
-                    .from(table)
-                    .select('*, user_id')
-                    .eq('token', token)
-                    .single();
+            // Use RPC to bypass RLS and search all tables efficiently
+            // This function is defined in Supabase migrations and has SECURITY DEFINER to allow public access
+            const { data, error: rpcError } = await supabase
+                .rpc('get_service_by_token', { token_input: token });
+
+            let serviceData = null;
+
+            if (rpcError) {
+                console.error('RPC Error:', rpcError);
+                // Fallback to direct query if RPC fails (e.g. not deployed yet)
+                const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares'];
                 
-                if (data && !error) {
-                    foundService = data;
-                    break;
+                for (const table of tables) {
+                    const { data: tableData, error: tableError } = await supabase
+                        .from(table)
+                        .select('*, user_id')
+                        .eq('token', token)
+                        .single();
+                    
+                    if (tableData && !tableError) {
+                        serviceData = tableData;
+                        break;
+                    }
                 }
+                
+                if (!serviceData) throw new Error('Servicio no encontrado (Fallback)');
+            } else if (!data) {
+                throw new Error('Servicio no encontrado');
+            } else {
+                serviceData = data;
             }
 
-            if (!foundService) throw new Error('Servicio no encontrado');
-
-            setService(foundService);
-
-            try {
-                if (foundService.user_id) {
+            setService(serviceData);
+            
+            // Fetch company info using the found service data
+            if (serviceData && serviceData.user_id) {
+                try {
                     const { data: companyDataArray } = await supabase
                         .from('configuracion_empresa')
                         .select('*')
-                        .eq('user_id', foundService.user_id);
+                        .eq('user_id', serviceData.user_id);
 
                     if (companyDataArray && companyDataArray.length > 0) {
                         setCompany(companyDataArray[0]);
                     }
+                } catch (err) {
+                    console.log('No company data available');
                 }
-            } catch (err) {
-                console.log('No company data available');
             }
         } catch (err) {
             console.error('Error fetching service:', err);
