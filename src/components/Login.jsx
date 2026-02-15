@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Zap, Mail, Lock, Loader2, LogIn, Sun, Moon } from 'lucide-react';
+import { Zap, Mail, Lock, Loader2, LogIn, Sun, Moon, UserPlus, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 
 const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
     const [loading, setLoading] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleGoogleLogin = async () => {
         try {
@@ -29,12 +33,45 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
         }
     };
 
-    const handleEmailLogin = async (e) => {
+    const handleAuth = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Visual simulation or placeholder for future email logic
-        alert("Por favor usa el botón de Google para entrar.");
-        setLoading(false);
+
+        try {
+            if (isRegistering) {
+                // Registration Logic
+                if (password !== confirmPassword) {
+                    throw new Error("Las contraseñas no coinciden.");
+                }
+
+                if (password.length < 6) {
+                    throw new Error("La contraseña debe tener al menos 6 caracteres.");
+                }
+
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                });
+
+                if (error) throw error;
+
+                alert("Registro exitoso. Por favor revisa tu correo para confirmar tu cuenta (si es necesario) o inicia sesión.");
+                setIsRegistering(false); // Switch to login view
+            } else {
+                // Login Logic
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+                if (error) throw error;
+                // Success is handled by onAuthStateChange in App.jsx
+            }
+        } catch (error) {
+            alert(error.message || "Error de autenticación");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getThemeStyles = () => {
@@ -55,7 +92,8 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                     dividerBg: 'bg-slate-800/0', // Transparent because of container blur, or handle carefully
                     dividerText: 'text-slate-500',
                     googleBtn: 'bg-slate-700 border-slate-600 text-white hover:bg-slate-600',
-                    primaryBtn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                    primaryBtn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20',
+                    linkText: 'text-blue-400 hover:text-blue-300'
                 };
             case 'glass':
                 return {
@@ -73,7 +111,8 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                     dividerBg: 'bg-transparent',
                     dividerText: 'text-slate-600',
                     googleBtn: 'bg-white/60 border-white/50 text-slate-800 hover:bg-white/80',
-                    primaryBtn: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-purple-500/30'
+                    primaryBtn: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-purple-500/30',
+                    linkText: 'text-purple-700 hover:text-purple-900'
                 };
             case 'blue':
             default:
@@ -92,7 +131,8 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                     dividerBg: 'bg-white',
                     dividerText: 'text-slate-500',
                     googleBtn: 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50',
-                    primaryBtn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30'
+                    primaryBtn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30',
+                    linkText: 'text-blue-600 hover:text-blue-800'
                 };
         }
     };
@@ -142,8 +182,12 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                             }}
                         />
                     </div>
-                    <h2 className={`text-2xl font-bold mb-1 transition-colors ${styles.textTitle}`}>CotizaApp Web</h2>
-                    <p className={`text-sm tracking-widest uppercase transition-colors ${styles.textSubtitle}`}>Soluciones a tu medida</p>
+                    <h2 className={`text-2xl font-bold mb-1 transition-colors ${styles.textTitle}`}>
+                        {isRegistering ? 'Crear Cuenta' : 'CotizaApp Web'}
+                    </h2>
+                    <p className={`text-sm tracking-widest uppercase transition-colors ${styles.textSubtitle}`}>
+                        {isRegistering ? 'Únete hoy mismo' : 'Soluciones a tu medida'}
+                    </p>
                 </div>
 
                 {/* Form */}
@@ -163,18 +207,19 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                         </div>
                         <div className="relative flex justify-center text-sm">
                             <span className={`px-4 rounded-full transition-colors ${styles.dividerText} ${currentTheme === 'glass' ? 'backdrop-blur-sm bg-white/30' : (currentTheme === 'dark' ? 'bg-slate-800' : 'bg-white')}`}>
-                                O ingresa con tu correo
+                                {isRegistering ? 'O regístrate con tu correo' : 'O ingresa con tu correo'}
                             </span>
                         </div>
                     </div>
 
-                    <form onSubmit={handleEmailLogin} className="space-y-6">
+                    <form onSubmit={handleAuth} className="space-y-6">
                         <div className="space-y-2">
                             <label className={`text-xs font-bold uppercase tracking-wider transition-colors ${styles.labelColor}`}>Correo Electrónico</label>
                             <div className="relative group">
                                 <Mail className={`absolute left-3 top-3.5 w-5 h-5 transition-colors ${styles.iconColor} group-focus-within:text-blue-500`} />
                                 <input
                                     type="email"
+                                    required
                                     className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all outline-none font-medium focus:ring-4 focus:ring-blue-500/10 ${styles.inputBg} ${styles.inputBorder} ${styles.inputText}`}
                                     placeholder="hola@ejemplo.com"
                                     value={email}
@@ -190,14 +235,49 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                             <div className="relative group">
                                 <Lock className={`absolute left-3 top-3.5 w-5 h-5 transition-colors ${styles.iconColor} group-focus-within:text-blue-500`} />
                                 <input
-                                    type="password"
-                                    className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all outline-none font-medium focus:ring-4 focus:ring-blue-500/10 ${styles.inputBg} ${styles.inputBorder} ${styles.inputText}`}
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    className={`w-full pl-10 pr-12 py-3 rounded-xl border transition-all outline-none font-medium focus:ring-4 focus:ring-blue-500/10 ${styles.inputBg} ${styles.inputBorder} ${styles.inputText}`}
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className={`absolute right-3 top-3.5 p-0.5 rounded-md hover:bg-slate-200/20 transition-colors ${styles.iconColor}`}
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
+
+                        {/* Confirm Password (Registration Only) */}
+                        {isRegistering && (
+                            <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                <div className="flex justify-between items-center">
+                                    <label className={`text-xs font-bold uppercase tracking-wider transition-colors ${styles.labelColor}`}>Confirmar Contraseña</label>
+                                </div>
+                                <div className="relative group">
+                                    <Lock className={`absolute left-3 top-3.5 w-5 h-5 transition-colors ${styles.iconColor} group-focus-within:text-blue-500`} />
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        required
+                                        className={`w-full pl-10 pr-12 py-3 rounded-xl border transition-all outline-none font-medium focus:ring-4 focus:ring-blue-500/10 ${styles.inputBg} ${styles.inputBorder} ${styles.inputText}`}
+                                        placeholder="••••••••"
+                                        value={confirmPassword}
+                                        onChange={e => setConfirmPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className={`absolute right-3 top-3.5 p-0.5 rounded-md hover:bg-slate-200/20 transition-colors ${styles.iconColor}`}
+                                    >
+                                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <button
                             type="submit"
@@ -207,16 +287,33 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
                             {loading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Cargando...
+                                    {isRegistering ? 'Creando cuenta...' : 'Verificando...'}
                                 </>
                             ) : (
                                 <>
-                                    <LogIn className="w-5 h-5" />
-                                    Iniciar Sesión
+                                    {isRegistering ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                                    {isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión'}
                                 </>
                             )}
                         </button>
                     </form>
+
+                    {/* Toggle Login/Register */}
+                    <div className="mt-6 text-center">
+                        <p className={`text-sm ${styles.labelColor}`}>
+                            {isRegistering ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'}
+                            <button
+                                onClick={() => {
+                                    setIsRegistering(!isRegistering);
+                                    setPassword('');
+                                    setConfirmPassword('');
+                                }}
+                                className={`font-bold ml-2 hover:underline transition-colors ${styles.linkText}`}
+                            >
+                                {isRegistering ? 'Inicia sesión aquí' : 'Regístrate aquí'}
+                            </button>
+                        </p>
+                    </div>
                 </div>
             </div>
 

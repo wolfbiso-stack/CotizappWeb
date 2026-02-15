@@ -50,13 +50,14 @@ const PublicRepairTracking = () => {
 
             try {
                 if (serviceData.user_id) {
-                    const { data: companyData } = await supabase
+                    const { data: companyDataArray } = await supabase
                         .from('configuracion_empresa')
                         .select('*')
-                        .eq('user_id', serviceData.user_id)
-                        .single();
+                        .eq('user_id', serviceData.user_id);
 
-                    if (companyData) setCompany(companyData);
+                    if (companyDataArray && companyDataArray.length > 0) {
+                        setCompany(companyDataArray[0]);
+                    }
                 }
             } catch (err) {
                 console.log('No company data available');

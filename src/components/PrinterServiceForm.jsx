@@ -19,7 +19,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         equipo_modelo: '',
         equipo_serie: '',
         equipo_contador: 0,
-        
+
         // Detalles específicos de impresoras
         accesorios: '', // Will be converted to/from JSONB array
         estado_consumibles: '',
@@ -107,10 +107,10 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             // Handle trabajo_realizado (JSONB)
             let loadedTrabajo = '';
             if (service.trabajo_realizado) {
-                 if (Array.isArray(service.trabajo_realizado)) {
+                if (Array.isArray(service.trabajo_realizado)) {
                     loadedTrabajo = service.trabajo_realizado.join(', ');
                 } else if (typeof service.trabajo_realizado === 'string') {
-                     try {
+                    try {
                         const parsed = JSON.parse(service.trabajo_realizado);
                         if (Array.isArray(parsed)) loadedTrabajo = parsed.join(', ');
                         else loadedTrabajo = service.trabajo_realizado;
@@ -138,24 +138,14 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     const { data } = await supabase
                         .from('servicio_fotos')
                         .select('*')
-                        .eq('servicio_id', service.id); // Assuming same table for photos, filtered by service type via query or just ID if IDs are unique across tables (UUIDs usually are)
-                        // Wait, IDs are integers in PC table, maybe integers here too. 
-                        // If they share the same table 'servicio_fotos', we need to make sure IDs don't collide or 'servicio_fotos' has a 'tipo_servicio' column.
-                        // The search result said: "servicio_fotos: ... Relacionada por servicio_id".
-                        // If both tables use Integer IDs, we might have collisions if we don't filter by type.
-                        // However, 'handleSavePCService' inserts with `tipo_servicio: 'servicio_pc'`.
-                        // So I should filter by `tipo_servicio` too or assume UUIDs.
-                        // The user input says `id` is `integer`. So collision is possible.
-                        // I need to check `servicio_fotos` table structure or how `handleSavePCService` uses it.
-                        // It uses `.eq('servicio_id', service.id)`.
-                        // And inserts `tipo_servicio: 'servicio_pc'`.
-                        // So I should filter by `tipo_servicio` as well.
+                        .eq('servicio_id', service.id)
+                        .eq('tipo_servicio', 'servicios_impresoras');
+
                     if (data) {
-                        const filteredData = data.filter(p => p.tipo_servicio === 'servicio_impresora');
-                        setExistingPhotos(filteredData);
+                        setExistingPhotos(data);
                     }
                 };
-                
+
                 // Let's rely on the fetch in the View component to see how it's done. 
                 // In PCServiceView: .eq('servicio_id', service.id).eq('user_id', user.id).
                 // It doesn't filter by type. This suggests maybe IDs are unique or they don't care about collisions (bad) or they use UUIDs (User said integer).
@@ -172,9 +162,9 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             const subtotal = (parseFloat(prev.mano_obra) || 0) + totalParts;
             const ivaValue = prev.incluir_iva ? subtotal * 0.16 : 0;
             const total = subtotal + ivaValue;
-            
-            return { 
-                ...prev, 
+
+            return {
+                ...prev,
                 costo_repuestos: totalParts,
                 subtotal: subtotal,
                 iva: ivaValue,
@@ -251,10 +241,10 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         const total = subtotal + ivaValue;
 
         // Convert accessories string to array for JSONB
-        const accesoriosArray = formData.accesorios 
-            ? formData.accesorios.split(',').map(s => s.trim()).filter(s => s) 
+        const accesoriosArray = formData.accesorios
+            ? formData.accesorios.split(',').map(s => s.trim()).filter(s => s)
             : [];
-            
+
         // Convert trabajo_realizado string to array for JSONB if desired, or keep as string if DB allows. 
         // User said `trabajo_realizado` is `jsonb`. PC Service uses string in form but array in DB?
         // PC form uses: `trabajo_realizado: Array.isArray(...) ? ...join : ...`
@@ -451,8 +441,8 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             </div>
                         </div>
                         <div className="mt-4">
-                             <label className={labelClass}>Estado de Consumibles</label>
-                             <div className="relative">
+                            <label className={labelClass}>Estado de Consumibles</label>
+                            <div className="relative">
                                 <Zap className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
                                 <input
                                     type="text"

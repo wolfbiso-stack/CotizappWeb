@@ -20,7 +20,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         wifi_password: '',
         wifi_portal_password: '',
         wifi_gateway_ip: '',
-        
+
         // Velocidades
         velocidad_bajada: '',
         velocidad_subida: '',
@@ -42,7 +42,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         iva: 0,
         subtotal: 0,
         total: 0,
-        
+
         // Status
         pagado: false,
         entregado: false
@@ -102,8 +102,8 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         .from('servicio_fotos')
                         .select('*')
                         .eq('servicio_id', service.id)
-                        .eq('tipo_servicio', 'servicio_redes');
-                    
+                        .eq('tipo_servicio', 'servicios_redes');
+
                     if (data) {
                         setExistingPhotos(data);
                     }
@@ -119,9 +119,9 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             const subtotal = (parseFloat(prev.mano_obra) || 0) + totalParts;
             const ivaValue = prev.incluir_iva ? subtotal * 0.16 : 0;
             const total = subtotal + ivaValue;
-            
-            return { 
-                ...prev, 
+
+            return {
+                ...prev,
                 costo_materiales: totalParts,
                 subtotal: subtotal,
                 iva: ivaValue,
@@ -310,7 +310,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             <h3 className="font-bold uppercase text-xs tracking-widest">Configuración de Red</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                             <div>
+                            <div>
                                 <label className={labelClass}>Tipo de Servicio</label>
                                 <select
                                     name="tipo_servicio"
@@ -337,7 +337,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     placeholder="Nombre de la red"
                                 />
                             </div>
-                             <div>
+                            <div>
                                 <label className={labelClass}>Contraseña WiFi</label>
                                 <input
                                     type="text"
@@ -373,7 +373,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         </div>
 
                         <div className="mt-6 pt-6 border-t border-dashed border-cyan-200/50">
-                             <div className="flex items-center gap-2 mb-4 text-cyan-600">
+                            <div className="flex items-center gap-2 mb-4 text-cyan-600">
                                 <Activity className="w-5 h-5" />
                                 <h3 className="font-bold uppercase text-xs tracking-widest">Pruebas de Velocidad</h3>
                             </div>
