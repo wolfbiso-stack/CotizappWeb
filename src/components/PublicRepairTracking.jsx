@@ -7,28 +7,52 @@ const PublicRepairTracking = () => {
     // Modified for Hash Routing compatibility
     const getToken = () => {
         let token = null;
-        const hash = window.location.hash;
         
-        // Handle Hash Router: #/track/TOKEN
+        // Priority 1: Check Hash (e.g., #/track/TOKEN)
+        // Some mobile browsers might encode the hash or handle it differently
+        const hash = decodeURIComponent(window.location.hash);
+        
         if (hash.includes('/track/')) {
-            token = hash.split('/track/')[1];
+            // Split by '/track/' and take the last part
+            const parts = hash.split('/track/');
+            if (parts.length > 1) {
+                token = parts[1];
+            }
         } 
-        // Handle Browser Router: /track/TOKEN
-        else {
-            const path = window.location.pathname;
+        
+        // Priority 2: Check Pathname (e.g., /track/TOKEN)
+        if (!token) {
+            const path = decodeURIComponent(window.location.pathname);
             if (path.includes('/track/')) {
-                token = path.split('/track/')[1];
+                const parts = path.split('/track/');
+                if (parts.length > 1) {
+                    token = parts[1];
+                }
             }
         }
 
-        // Clean token from query params, extra hashes, or trailing slashes
+
+        // Clean token from query params, extra hashes, trailing slashes, and common social media tracking params
         if (token) {
-            token = token.split('?')[0]; // Remove query params
-            token = token.split('#')[0]; // Remove secondary hashes
+            // Remove query parameters starting with ?
+            token = token.split('?')[0]; 
+            
+            // Remove hash fragments starting with # (if any remain)
+            token = token.split('#')[0]; 
+            
+            // Remove trailing slash
             if (token.endsWith('/')) {
-                token = token.slice(0, -1); // Remove trailing slash
+                token = token.slice(0, -1); 
+            }
+
+            // Remove common tracking parameters (fbclid, etc.) if they somehow got into the path
+            if (token.includes('&')) {
+                token = token.split('&')[0];
             }
         }
+        
+        // Debugging log (visible in console)
+        console.log('Extracted Token:', token);
         
         return token;
     };
