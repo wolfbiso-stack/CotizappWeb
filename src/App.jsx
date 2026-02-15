@@ -50,6 +50,32 @@ const deleteServicePhotos = async (serviceId) => {
     }
 };
 
+const deleteSpecificPhotos = async (photoIds) => {
+    if (!photoIds || photoIds.length === 0) return;
+    try {
+        const { data: photos, error: fetchError } = await supabase
+            .from('servicio_fotos')
+            .select('uri')
+            .in('id', photoIds);
+
+        if (fetchError) throw fetchError;
+
+        if (photos && photos.length > 0) {
+            const paths = photos.map(photo => {
+                const parts = photo.uri.split('servicio-files-v2/');
+                return parts.length > 1 ? parts[1].split('?')[0] : null;
+            }).filter(Boolean);
+
+            if (paths.length > 0) {
+                await supabase.storage.from('servicio-files-v2').remove(paths);
+            }
+            await supabase.from('servicio_fotos').delete().in('id', photoIds);
+        }
+    } catch (error) {
+        console.error('Error in deleteSpecificPhotos:', error);
+    }
+};
+
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -6352,10 +6378,7 @@ const App = () => {
 
             // --- PHOTO DELETION LOGIC ---
             if (photosToDelete && photosToDelete.length > 0) {
-                await supabase
-                    .from('servicio_fotos')
-                    .delete()
-                    .in('id', photosToDelete);
+                await deleteSpecificPhotos(photosToDelete);
             }
 
             // --- PHOTO UPLOAD LOGIC with Deduplication ---
@@ -6535,7 +6558,7 @@ const App = () => {
 
                 // Handle photos to delete
                 if (photosToDelete && photosToDelete.length > 0) {
-                    await supabase.from('servicio_fotos').delete().in('id', photosToDelete);
+                    await deleteSpecificPhotos(photosToDelete);
                 }
 
                 // Handle new files
@@ -6687,12 +6710,7 @@ const App = () => {
 
             // --- PHOTO DELETION LOGIC ---
             if (photosToDelete && photosToDelete.length > 0) {
-                const { error: deleteError } = await supabase
-                    .from('servicio_fotos')
-                    .delete()
-                    .in('id', photosToDelete);
-
-                if (deleteError) console.error('Error deleting photos:', deleteError);
+                await deleteSpecificPhotos(photosToDelete);
             }
 
             // --- PHOTO UPLOAD LOGIC ---
@@ -6856,12 +6874,7 @@ const App = () => {
 
             // --- PHOTO DELETION LOGIC ---
             if (photosToDelete && photosToDelete.length > 0) {
-                const { error: deleteError } = await supabase
-                    .from('servicio_fotos')
-                    .delete()
-                    .in('id', photosToDelete);
-
-                if (deleteError) console.error('Error deleting photos:', deleteError);
+                await deleteSpecificPhotos(photosToDelete);
             }
 
             // --- PHOTO UPLOAD LOGIC ---
@@ -7029,17 +7042,7 @@ const App = () => {
 
             // --- PHOTO DELETION LOGIC ---
             if (photosToDelete && photosToDelete.length > 0) {
-                console.log(`Deleting ${photosToDelete.length} photos...`);
-                const { error: deleteError } = await supabase
-                    .from('servicio_fotos')
-                    .delete()
-                    .in('id', photosToDelete);
-
-                if (deleteError) {
-                    console.error('Error deleting photos:', deleteError);
-                    // We don't throw here to allow saves even if deletion fails, but warn user?
-                    // alert('Error al eliminar algunas fotos');
-                }
+                await deleteSpecificPhotos(photosToDelete);
             }
 
             // --- PHOTO UPLOAD LOGIC ---
