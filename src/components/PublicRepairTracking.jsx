@@ -6,15 +6,31 @@ import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench,
 const PublicRepairTracking = () => {
     // Modified for Hash Routing compatibility
     const getToken = () => {
+        let token = null;
         const hash = window.location.hash;
+        
+        // Handle Hash Router: #/track/TOKEN
         if (hash.includes('/track/')) {
-            return hash.split('/track/')[1];
+            token = hash.split('/track/')[1];
+        } 
+        // Handle Browser Router: /track/TOKEN
+        else {
+            const path = window.location.pathname;
+            if (path.includes('/track/')) {
+                token = path.split('/track/')[1];
+            }
         }
-        const path = window.location.pathname;
-        if (path.includes('/track/')) {
-            return path.split('/track/')[1];
+
+        // Clean token from query params, extra hashes, or trailing slashes
+        if (token) {
+            token = token.split('?')[0]; // Remove query params
+            token = token.split('#')[0]; // Remove secondary hashes
+            if (token.endsWith('/')) {
+                token = token.slice(0, -1); // Remove trailing slash
+            }
         }
-        return null;
+        
+        return token;
     };
 
     const token = getToken();
@@ -38,7 +54,7 @@ const PublicRepairTracking = () => {
             setLoading(true);
 
             // Check all service tables
-            const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares'];
+            const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares', 'servicios_cctv', 'servicios_redes'];
             let foundService = null;
             
             for (const table of tables) {
