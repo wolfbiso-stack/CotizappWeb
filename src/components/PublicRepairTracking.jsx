@@ -37,23 +37,33 @@ const PublicRepairTracking = () => {
         try {
             setLoading(true);
 
-            const { data: serviceData, error: serviceError } = await supabase
-                .from('servicios_pc')
-                .select('*, user_id')
-                .eq('public_token', token)
-                .single();
+            // Check all service tables
+            const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares'];
+            let foundService = null;
+            
+            for (const table of tables) {
+                const { data, error } = await supabase
+                    .from(table)
+                    .select('*, user_id')
+                    .eq('token', token)
+                    .single();
+                
+                if (data && !error) {
+                    foundService = data;
+                    break;
+                }
+            }
 
-            if (serviceError) throw serviceError;
-            if (!serviceData) throw new Error('Servicio no encontrado');
+            if (!foundService) throw new Error('Servicio no encontrado');
 
-            setService(serviceData);
+            setService(foundService);
 
             try {
-                if (serviceData.user_id) {
+                if (foundService.user_id) {
                     const { data: companyDataArray } = await supabase
                         .from('configuracion_empresa')
                         .select('*')
-                        .eq('user_id', serviceData.user_id);
+                        .eq('user_id', foundService.user_id);
 
                     if (companyDataArray && companyDataArray.length > 0) {
                         setCompany(companyDataArray[0]);

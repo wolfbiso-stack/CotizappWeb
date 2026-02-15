@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, Printer, Download, QrCode as QrCodeIcon, Share2 } from 'lucide-react';
-import { getStatusLabel } from '../utils/statusMapper';
+import { X, Download, MapPin, Phone, Mail, QrCode as QrCodeIcon } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -23,7 +22,7 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
             if (!user) return;
 
             const { data, error } = await supabase
-                .from('configuracion_empresa') // Corrected table name from 'empresas' based on App.jsx usage
+                .from('configuracion_empresa')
                 .select('*')
                 .eq('user_id', user.id)
                 .single();
@@ -39,13 +38,30 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
     // Get base path from document base or default to /CotizappWeb/
     const basePath = document.querySelector('base')?.getAttribute('href') || '/CotizappWeb/';
     // Use Hash Routing for GitHub Pages compatibility
-    const publicUrl = `${window.location.origin}${basePath}#/track/${service.public_token}`;
+    const publicUrl = `${window.location.origin}${basePath}#/track/${service.token}`;
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('es-MX', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount || 0);
+    const parseDate = (dateString) => {
+        if (!dateString) return new Date();
+        
+        // If it's already a Date object
+        if (dateString instanceof Date) return dateString;
+
+        // Try standard ISO format YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return new Date(`${dateString}T00:00:00`);
+        }
+
+        // Try DD/MM/YYYY format
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
+            const [day, month, year] = dateString.split('/');
+            return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`);
+        }
+
+        // Try to parse as is
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) return date;
+
+        return new Date(); // Fallback to current date
     };
 
     const handleDownloadPDF = async () => {
@@ -54,25 +70,50 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
 
         try {
             const element = ticketRef.current;
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff', // Force white background
-                logging: false,
+            
+            // Clone the element to capture full height without scroll restrictions
+            const clone = element.cloneNode(true);
+            
+            // Apply styles to ensure the clone renders fully and matches the original look
+            Object.assign(clone.style, {
+                position: 'fixed',
+                top: '-10000px',
+                left: '-10000px',
+                width: '380px', // Force the fixed width of the ticket
+                height: 'auto',
+                minHeight: '600px',
+                overflow: 'visible', // Allow content to expand
+                maxHeight: 'none',
+                zIndex: '-1000'
             });
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = pdfWidth;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            document.body.appendChild(clone);
 
-            // Center vertically if it's smaller than the page
-            const yPosition = imgHeight < pdfHeight ? (pdfHeight - imgHeight) / 2 : 0;
+            const canvas = await html2canvas(clone, {
+                scale: 2, // Reduced from 3 to 2 for better file size optimization while maintaining good quality
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                windowWidth: 380, 
+            });
 
-            pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
-            pdf.save(`Ticket-Servicio-${service.orden_numero}.pdf`);
+            document.body.removeChild(clone);
+
+            // Use JPEG with 0.95 quality instead of PNG
+            // PNG is lossless but produces huge files for this kind of content at high resolutions.
+            // JPEG at 0.95 is visually identical but significantly smaller.
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            
+            const pdfWidth = 100; 
+            const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
+
+            const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
+            // Use 'FAST' compression for JPEG
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+            pdf.save(`Ticket-${service.orden_numero}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error al generar el PDF');
@@ -83,35 +124,29 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            {/* Main Modal Container */}
-            <div className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl transition-all ${darkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
+            {/* Modal Container */}
+            <div className={`relative w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl transition-all ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
 
-                {/* 1. Header Toolbar (Actions) */}
+                {/* Toolbar */}
                 <div className={`p-4 border-b flex justify-between items-center z-10 ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
                     <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                        <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
                             <QrCodeIcon className="w-5 h-5" />
                         </div>
-                        Ticket de Seguimiento
+                        Ticket QR
                     </h3>
 
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleDownloadPDF}
                             disabled={isGenerating}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shadow-sm ${isGenerating
+                            className={`p-2 rounded-xl transition-all ${isGenerating
                                 ? 'bg-slate-100 text-slate-400 cursor-wait'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md hover:scale-105'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
                                 }`}
+                            title="Descargar PDF"
                         >
-                            {isGenerating ? (
-                                <>Generando...</>
-                            ) : (
-                                <>
-                                    <Download className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Guardar PDF</span>
-                                </>
-                            )}
+                            <Download className="w-5 h-5" />
                         </button>
 
                         <button
@@ -123,239 +158,150 @@ const QRServiceTicket = ({ service, company: companyProp, onClose, darkMode }) =
                     </div>
                 </div>
 
-                {/* 2. Scrollable Preview Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-500/10 flex justify-center items-start">
-
-                    {/* The "Paper" Document */}
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
+                    
+                    {/* The Ticket Design */}
                     <div
                         ref={ticketRef}
-                        id="qr-ticket-content"
-                        className="bg-white text-slate-900 w-full max-w-[210mm] min-h-[297mm] shadow-xl p-8 md:p-12 relative flex flex-col"
-                        style={{ aspectRatio: '210/297' }} // A4 aspect ratio hint
+                        className="bg-white w-full max-w-[380px] shadow-xl overflow-hidden relative flex flex-col text-sm"
+                        style={{ minHeight: '600px' }}
                     >
-                        {/* Paper Background Pattern/Watermark (Optional) */}
-                        <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
-                            style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #000 1px, transparent 0)', backgroundSize: '20px 20px' }}>
-                        </div>
-
-                        {/* Document Content */}
-
                         {/* Header Section */}
-                        <div className="flex justify-between items-start mb-12 border-b-2 border-slate-900 pb-8">
-                            <div className="flex items-start gap-6">
-                                {/* Logo */}
-                                {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="h-24 w-auto object-contain" />
-                                ) : (
-                                    <div className="h-24 w-24 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-4xl">
-                                        {company?.nombre?.charAt(0) || 'C'}
+                        <div className="relative bg-gradient-to-r from-[#1e3a8a] to-[#2563eb] text-white p-6 pb-12 rounded-br-[60px]">
+                            <div className="flex justify-between items-start mb-4">
+                                {/* Profile Image / Logo */}
+                                <div className="w-24 h-20 bg-white/20 rounded-lg overflow-hidden flex items-center justify-center backdrop-blur-sm border border-white/10">
+                                    {company?.logo_uri ? (
+                                        <img src={company.logo_uri} alt="Logo" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="font-bold text-3xl">{company?.nombre?.charAt(0) || 'C'}</span>
+                                    )}
+                                </div>
+                                
+                                {/* Badge & Date */}
+                                <div className="text-right">
+                                    <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold mb-1 inline-block border border-white/10">
+                                        #{service.orden_numero}
+                                    </div>
+                                    <p className="text-[10px] font-medium opacity-90">
+                                        {parseDate(service.fecha).toLocaleDateString('es-MX', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Brand Name */}
+                            <h1 className="text-xl font-black uppercase tracking-wide mb-3 leading-tight">
+                                {company?.nombre || 'MI EMPRESA'}
+                            </h1>
+
+                            {/* Contact Info */}
+                            <div className="space-y-1 text-[10px] font-medium opacity-90">
+                                {company?.direccion && (
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-3 h-3 text-red-400 shrink-0" />
+                                        <span className="truncate">{company.direccion}</span>
                                     </div>
                                 )}
-
-                                {/* Company Info */}
-                                <div>
-                                    <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">
-                                        {company?.nombre || 'Centro de Servicio'}
-                                    </h1>
-                                    <div className="space-y-1 text-sm text-slate-600 font-medium">
-                                        <p>{company?.direccion}</p>
-                                        <p>{company?.ciudad}</p>
-                                        <p className="flex items-center gap-2">
-                                            {company?.telefono && <span>Tel: {company.telefono}</span>}
-                                            {company?.correo && <span>• {company.correo}</span>}
-                                        </p>
+                                {company?.telefono && (
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-3 h-3 text-orange-400 shrink-0" />
+                                        <span>{company.telefono}</span>
                                     </div>
+                                )}
+                                {company?.correo && (
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-3 h-3 text-blue-300 shrink-0" />
+                                        <span>{company.correo}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Body Content */}
+                        <div className="px-6 py-6 space-y-6">
+                            
+                            {/* Cliente Info */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-gray-400 text-xs font-medium mb-0.5">Cliente</p>
+                                    <p className="font-bold text-gray-900 text-base leading-tight">
+                                        {service.cliente_nombre || 'Cliente General'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-400 text-xs font-medium mb-0.5">Teléfono</p>
+                                    <p className="font-bold text-gray-900 text-base leading-tight">
+                                        {service.cliente_telefono || 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-gray-400 text-xs font-medium mb-0.5">Técnico Responsable</p>
+                                    <p className="font-bold text-gray-900 text-base leading-tight">
+                                        {service.tecnico_nombre || 'Sin asignar'}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="text-right">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Orden de Servicio</p>
-                                <p className="text-5xl font-black text-blue-600">#{service.orden_numero}</p>
-                                <p className="text-sm font-bold text-slate-500 mt-2 uppercase tracking-wide">
-                                    {new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            {/* Equipo / Modelo */}
+                            <div>
+                                <p className="text-gray-400 text-xs font-medium mb-0.5">Equipo / Modelo</p>
+                                <p className="font-bold text-gray-900 text-base">
+                                    {service.equipo_tipo ? `${service.equipo_tipo} ` : ''} 
+                                    {service.equipo_modelo || service.marca_principal || service.modelo || 'Equipo Genérico'}
                                 </p>
                             </div>
-                        </div>
 
-                        {/* Main Grid Content */}
-                        <div className="grid grid-cols-12 gap-8 mb-12">
-
-                            {/* Left Side: Details (8 cols) */}
-                            <div className="col-span-8 space-y-8">
-
-                                {/* Client Info Box */}
-                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Información del Cliente</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-xs text-slate-500 uppercase font-bold mb-1">Cliente</p>
-                                            <p className="text-lg font-bold text-slate-800">{service.cliente_nombre}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500 uppercase font-bold mb-1">Contacto</p>
-                                            <p className="text-base text-slate-800">{service.cliente_telefono}</p>
-                                        </div>
-                                    </div>
+                            {/* Detalles del Servicio */}
+                            <div>
+                                <h3 className="text-[#1e3a8a] font-bold text-lg mb-3">Detalles del Servicio</h3>
+                                
+                                <div className="mb-3">
+                                    <p className="text-blue-600 text-xs font-bold mb-1">Problema Reportado</p>
+                                    <p className="text-gray-800 italic font-medium">
+                                        "{service.problema_reportado || service.falla_reportada || 'Sin reporte'}"
+                                    </p>
                                 </div>
 
-                                {/* Equipment Info Box */}
-                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Detalles del Equipo</h4>
-                                    <div className="grid grid-cols-3 gap-4 mb-4">
-                                        <div>
-                                            <p className="text-xs text-slate-500 uppercase font-bold mb-1">Equipo</p>
-                                            <p className="font-bold text-slate-800">{service.equipo_tipo}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500 uppercase font-bold mb-1">Marca/Modelo</p>
-                                            <p className="font-bold text-slate-800">{service.equipo_modelo}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500 uppercase font-bold mb-1">Serie</p>
-                                            <p className="font-mono text-sm bg-white border px-2 py-0.5 rounded inline-block">
-                                                {service.equipo_serie || 'S/N'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 uppercase font-bold mb-1">Problema Reportado</p>
-                                        <p className="text-sm text-slate-700 italic border-l-4 border-red-400 pl-3">
-                                            "{service.problema_reportado}"
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Refacciones Section */}
-                                {(() => {
-                                    let parts = [];
-                                    try {
-                                        parts = JSON.parse(service.repuestos_descripcion || '[]');
-                                        if (!Array.isArray(parts)) parts = [];
-                                    } catch (e) {
-                                        if (service.repuestos_descripcion && typeof service.repuestos_descripcion === 'string' && service.repuestos_descripcion.trim().length > 0) {
-                                            parts = [{ id: 'legacy', cantidad: 1, producto: service.repuestos_descripcion, costoPublico: service.repuestos_costo || 0 }];
-                                        }
-                                    }
-
-                                    if (parts.length === 0) return null;
-
-                                    return (
-                                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
-                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Refacciones y Materiales</h4>
-                                            <div className="overflow-hidden">
-                                                <table className="w-full text-sm">
-                                                    <thead>
-                                                        <tr className="text-left text-[10px] text-slate-400 uppercase tracking-wider">
-                                                            <th className="pb-2 font-bold w-12 text-center">Cant.</th>
-                                                            <th className="pb-2 font-bold">Descripción</th>
-                                                            <th className="pb-2 font-bold text-right">Precio</th>
-                                                            <th className="pb-2 font-bold text-right">Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-200">
-                                                        {parts.map((part, idx) => (
-                                                            <tr key={idx} className="text-slate-700">
-                                                                <td className="py-2 text-center font-bold text-slate-500">{part.cantidad}</td>
-                                                                <td className="py-2 pr-4">{part.producto || part.descripcion}</td>
-                                                                <td className="py-2 text-right font-mono text-xs text-slate-500">${formatCurrency(part.costoPublico || part.precio_publico)}</td>
-                                                                <td className="py-2 text-right font-mono text-xs font-bold">${formatCurrency((part.cantidad || 0) * (part.costoPublico || part.precio_publico || 0))}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-
-                                {/* Financial Summary */}
-                                <div className="flex justify-between items-end border-t-2 border-slate-100 pt-6">
-                                    <div className="text-sm text-slate-500">
-                                        <p className="mb-1"><span className="font-bold text-slate-700">Estado Actual:</span> {getStatusLabel(service.status)}</p>
-                                        <p><span className="font-bold text-slate-700">Técnico:</span> {service.tecnico_nombre || 'Por asignar'}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Estimado</p>
-                                        <p className="text-3xl font-black text-slate-900">${formatCurrency(service.total)}</p>
-                                        {service.anticipo > 0 && (
-                                            <p className="text-sm font-bold text-green-600 mt-1">
-                                                Anticipo: -${formatCurrency(service.anticipo)}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right Side: QR & Instructions (4 cols) */}
-                            <div className="col-span-4 flex flex-col">
-                                <div className="bg-slate-900 text-white rounded-2xl p-6 flex-1 flex flex-col items-center text-center relative overflow-hidden print-force-bg">
-                                    {/* Abstract BG */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[60px] opacity-30"></div>
-                                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500 rounded-full blur-[60px] opacity-30"></div>
-
-                                    <div className="relative z-10 w-full flex flex-col items-center">
-                                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                                            <QrCodeIcon className="w-5 h-5 text-blue-400" />
-                                            Seguimiento Online
-                                        </h3>
-
-                                        <div className="bg-white p-4 rounded-xl shadow-2xl mb-6">
-                                            <QRCodeSVG
-                                                value={publicUrl}
-                                                size={160}
-                                                level="H"
-                                                includeMargin={false}
-                                            />
-                                        </div>
-
-                                        <p className="text-xs font-medium text-slate-300 mb-4 leading-relaxed">
-                                            Escanea este código con la cámara de tu celular para ver el estado de tu reparación en tiempo real.
-                                        </p>
-
-                                        <div className="w-full h-px bg-slate-700 my-4"></div>
-
-                                        <p className="text-[10px] text-slate-500 font-mono break-all opacity-60">
-                                            {publicUrl}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer / Terms */}
-                        <div className="mt-auto pt-8 border-t-2 border-dashed border-slate-300">
-                            <div className="grid grid-cols-2 gap-8 text-[10px] text-slate-500">
                                 <div>
-                                    <p className="font-bold text-slate-700 uppercase mb-2">Términos y Condiciones</p>
-                                    <ul className="list-disc pl-3 space-y-1">
-                                        <li>Garantía de 30 días en mano de obra.</li>
-                                        <li>No hay garantía por daños líquidos o golpes posteriore</li>
-                                        <li>Equipos no reclamados después de 60 días causan abandono.</li>
-                                        <li>El taller no se responsabiliza por pérdida de información.</li>
-                                    </ul>
-                                </div>
-                                <div className="text-right flex flex-col justify-end">
-                                    <p className="font-bold text-slate-700 uppercase">Gracias por su preferencia</p>
-                                    <p>{company?.nombre}</p>
-                                    <p className="mt-2 text-slate-400">Generado por CotizApp</p>
+                                    <p className="text-gray-400 text-xs font-medium mb-1">Observaciones de Recepción</p>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50 min-h-[60px]">
+                                        <p className="text-gray-600 text-xs leading-relaxed">
+                                            {service.observaciones || service.comentarios || 'Sin observaciones adicionales.'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
+                            {/* QR Code */}
+                            <div className="flex flex-col items-center justify-center pt-4 pb-2">
+                                <QRCodeSVG
+                                    value={publicUrl}
+                                    size={180}
+                                    level="H"
+                                    className="mb-3"
+                                />
+                                <p className="text-gray-500 text-xs font-bold text-center">
+                                    Escanee para ver el estado de su equipo
+                                </p>
+                            </div>
+
+                            {/* Footer Terms */}
+                            <div className="border-t border-dashed border-gray-200 pt-4">
+                                <p className="text-[9px] text-gray-400 text-justify leading-tight">
+                                    <span className="font-bold text-gray-500">Términos y Condiciones:</span> Después de 30 días naturales a partir de la fecha de recepción, no nos hacemos responsables por equipos olvidados, pudiendo estos ser desechados o vendidos para recuperar costos de mano de obra y/o materiales. No hay garantía en software ni virus.
+                                </p>
+                            </div>
+
+                        </div>
                     </div>
+
                 </div>
             </div>
-
-            {/* Print Specific Styles */}
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                    @media print {
-                        body { background: white; margin: 0; padding: 0; }
-                        @page { size: A4; margin: 0; }
-                        .print-force-bg { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #0f172a !important; color: white !important; }
-                    }
-                `
-            }} />
         </div>
     );
 };

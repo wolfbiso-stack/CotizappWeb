@@ -16,6 +16,7 @@ import PhoneServiceForm from './components/PhoneServiceForm';
 import CCTVServiceForm from './components/CCTVServiceForm';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate } from './utils/format';
+import { generateToken } from './utils/token';
 
 // --- UTILS ---
 const computeFileHash = async (file) => {
@@ -605,6 +606,34 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
                     </div>
                 )}
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -672,6 +701,34 @@ const ClientDetails = ({ client, onBack }) => {
                     Cliente creado el: {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'N/A'}
                 </div>
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -1977,6 +2034,10 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: 'servicio_fecha', direction: 'desc' });
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
 
     useEffect(() => {
         fetchServices();
@@ -2000,6 +2061,16 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
             setLoading(false);
             setRefreshing(false);
         }
+    };
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
     };
 
     const requestSort = (key) => {
@@ -2164,6 +2235,20 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
                                                         </span>
                                                     )}
                                                     <button
+                                                        onClick={() => handleShowQR(service)}
+                                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        title="Ver Ticket QR"
+                                                    >
+                                                        <QrCode className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleShowReceipt(service)}
+                                                        className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                        title="Imprimir Ticket"
+                                                    >
+                                                        <ScrollText className="w-5 h-5" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => onViewService(service)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                         title="Ver Servicio"
@@ -2228,6 +2313,18 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
+                                                onClick={() => handleShowQR(service)}
+                                                className="p-2.5 bg-purple-50 text-purple-600 rounded-xl"
+                                            >
+                                                <QrCode className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleShowReceipt(service)}
+                                                className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                            >
+                                                <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
                                                 onClick={() => onViewService(service)}
                                                 className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
                                             >
@@ -2253,12 +2350,55 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
                     </>
                 )}
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
 
 const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
+
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
@@ -2594,6 +2734,34 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     </div>
                 )}
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -2924,7 +3092,6 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="flex items-center justify-end gap-2">
 
-                                                    {/* QR Button */}
                                                     <button
                                                         onClick={() => handleShowQR(service)}
                                                         className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
@@ -2932,7 +3099,6 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
                                                     >
                                                         <QrCode className="w-5 h-5" />
                                                     </button>
-
                                                     <button
                                                         onClick={() => handleShowReceipt(service)}
                                                         className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
@@ -3088,6 +3254,21 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
 const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
 
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
+
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
 
@@ -3152,6 +3333,12 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.rfc && <p className="text-[10px] font-bold text-blue-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
                                     <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => handleShowQR(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
+                                            <QrCode className="w-3.5 h-3.5" /> TICKET QR
+                                        </button>
+                                        <button onClick={() => handleShowReceipt(service)} className="px-4 py-1.5 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-all flex items-center gap-2 shadow-sm">
+                                            <ScrollText className="w-3.5 h-3.5" /> RECIBO
+                                        </button>
                                         <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
@@ -3434,6 +3621,34 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     )}
                 </div>
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -3446,6 +3661,10 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     const [showNewServiceModal, setShowNewServiceModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
 
     const serviceCategories = [
         { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10', implemented: true, table: 'servicios_cctv' },
@@ -3570,6 +3789,16 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     useEffect(() => {
         fetchAllServices();
     }, []);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service.original);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service.original);
+        setShowReceipt(true);
+    };
 
     const requestSort = (key) => {
         let direction = 'asc';
@@ -3837,6 +4066,24 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    {service.type !== 'CCTV' && service.type !== 'Redes' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleShowQR(service)}
+                                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                                title="Ver Ticket QR"
+                                                            >
+                                                                <QrCode className="w-5 h-5" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleShowReceipt(service)}
+                                                                className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                                title="Imprimir Ticket"
+                                                            >
+                                                                <ScrollText className="w-5 h-5" />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                     <button
                                                         onClick={() => handleViewServiceUnified(service)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -3887,6 +4134,24 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                             <span className="text-lg font-bold text-blue-600">#{service.folio}</span>
                                         </div>
                                         <div className="flex gap-2">
+                                            {service.type !== 'CCTV' && service.type !== 'Redes' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleShowQR(service)}
+                                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        title="Ver Ticket QR"
+                                                    >
+                                                        <QrCode className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleShowReceipt(service)}
+                                                        className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                        title="Imprimir Ticket"
+                                                    >
+                                                        <ScrollText className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            )}
                                             <button
                                                 onClick={() => handleViewServiceUnified(service)}
                                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -4001,6 +4266,34 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     </div>
                 </div>
             )}
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -4355,6 +4648,21 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, u
 const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
 
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
+
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
 
@@ -4407,6 +4715,12 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.rfc && <p className="text-[10px] font-bold text-rose-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
                                     <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => handleShowQR(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
+                                            <QrCode className="w-3.5 h-3.5" /> TICKET QR
+                                        </button>
+                                        <button onClick={() => handleShowReceipt(service)} className="px-4 py-1.5 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-all flex items-center gap-2 shadow-sm">
+                                            <ScrollText className="w-3.5 h-3.5" /> RECIBO
+                                        </button>
                                         <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
@@ -4604,6 +4918,34 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     </div>
                 </div>
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -5135,6 +5477,21 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
 const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
 
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
+
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
 
@@ -5198,6 +5555,12 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.rfc && <p className="text-[10px] font-bold text-purple-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
                                     <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => handleShowQR(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
+                                            <QrCode className="w-3.5 h-3.5" /> TICKET QR
+                                        </button>
+                                        <button onClick={() => handleShowReceipt(service)} className="px-4 py-1.5 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-all flex items-center gap-2 shadow-sm">
+                                            <ScrollText className="w-3.5 h-3.5" /> RECIBO
+                                        </button>
                                         <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
@@ -5509,12 +5872,55 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     </div>
                 )}
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
 
 const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     if (!service) return null;
+
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
+    };
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
@@ -5812,6 +6218,34 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     </div>
                 </div>
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -5821,6 +6255,10 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: 'fecha', direction: 'desc' });
+    const [showQRTicket, setShowQRTicket] = useState(false);
+    const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
 
     useEffect(() => {
         fetchServices();
@@ -5844,6 +6282,16 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
             setLoading(false);
             setRefreshing(false);
         }
+    };
+
+    const handleShowQR = (service) => {
+        setSelectedServiceForQR(service);
+        setShowQRTicket(true);
+    };
+
+    const handleShowReceipt = (service) => {
+        setSelectedServiceForReceipt(service);
+        setShowReceipt(true);
     };
 
     const requestSort = (key) => {
@@ -5984,6 +6432,20 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
+                                                        onClick={() => handleShowQR(service)}
+                                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        title="Ver QR de Seguimiento"
+                                                    >
+                                                        <QrCode className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleShowReceipt(service)}
+                                                        className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                                                        title="Imprimir Ticket"
+                                                    >
+                                                        <ScrollText className="w-5 h-5" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => onViewService(service)}
                                                         className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
                                                         title="Ver Detalle"
@@ -6048,6 +6510,18 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                         </div>
                                         <div className="flex gap-2">
                                             <button
+                                                onClick={() => handleShowQR(service)}
+                                                className="p-2.5 bg-purple-50 text-purple-600 rounded-xl"
+                                            >
+                                                <QrCode className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleShowReceipt(service)}
+                                                className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                            >
+                                                <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
                                                 onClick={() => onViewService(service)}
                                                 className="p-2.5 bg-cyan-50 text-cyan-600 rounded-xl"
                                             >
@@ -6073,6 +6547,34 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                     </>
                 )}
             </div>
+
+            {/* QR Ticket Modal */}
+            {
+                showQRTicket && selectedServiceForQR && (
+                    <QRServiceTicket
+                        service={selectedServiceForQR}
+                        onClose={() => {
+                            setShowQRTicket(false);
+                            setSelectedServiceForQR(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Receipt Modal */}
+            {
+                showReceipt && selectedServiceForReceipt && (
+                    <ServiceReceipt
+                        service={selectedServiceForReceipt}
+                        onClose={() => {
+                            setShowReceipt(false);
+                            setSelectedServiceForReceipt(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
         </div>
     );
 };
@@ -6303,6 +6805,7 @@ const App = () => {
                 const newService = {
                     user_id: session.user.id,
                     orden_numero: newOrden,
+                    token: generateToken(),
                     fecha: payloadData.fecha,
                     tecnico_nombre: payloadData.tecnico_nombre,
                     cliente_nombre: payloadData.cliente_nombre,
@@ -6684,6 +7187,7 @@ const App = () => {
                     ...strictPayload,
                     user_id: session.user.id,
                     orden_numero: newOrden,
+                    token: generateToken(),
                 };
 
                 const result = await supabase
@@ -6779,7 +7283,7 @@ const App = () => {
     };
 
     const fetchNextNetworkServiceFolio = async (userId) => {
-        const folioPrefix = `R-${new Date().getFullYear()}-`;
+        const folioPrefix = `NET-${new Date().getFullYear()}-`;
         try {
             const { data, error } = await supabase
                 .from('servicios_redes')
@@ -6801,7 +7305,7 @@ const App = () => {
         } catch (error) {
             console.error('Error fetching next Network folio:', error);
             const currentYear = new Date().getFullYear();
-            return `R-${currentYear}-100`;
+            return `NET-${currentYear}-100`;
         }
     };
 
@@ -6989,7 +7493,7 @@ const App = () => {
                     pagado: payloadData.pagado,
                     entregado: payloadData.entregado,
                     incluir_iva: payloadData.incluir_iva,
-                    public_token: crypto.randomUUID(),
+                    token: generateToken(),
                     status: 'recibido'
                 };
 

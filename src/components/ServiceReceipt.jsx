@@ -49,7 +49,7 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
 
     // Construct Public URL
     const basePath = document.querySelector('base')?.getAttribute('href') || '/CotizappWeb/';
-    const publicUrl = `${window.location.origin}${basePath}track/${service.public_token}`;
+    const publicUrl = `${window.location.origin}${basePath}#/track/${service.token}`;
 
     const remaining = (service.total || 0) - (service.anticipo || 0);
 
@@ -203,7 +203,7 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                                     includeMargin={false}
                                 />
                             </div>
-                            <p className="text-[8px] break-all">{service.public_token}</p>
+                            <p className="text-[8px] break-all">{service.token}</p>
                         </div>
 
                         {/* Footer Disclaimer */}
