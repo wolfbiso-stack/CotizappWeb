@@ -25,6 +25,31 @@ const computeFileHash = async (file) => {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
+const deleteServicePhotos = async (serviceId) => {
+    try {
+        const { data: photos, error: fetchError } = await supabase
+            .from('servicio_fotos')
+            .select('uri')
+            .eq('servicio_id', serviceId);
+
+        if (fetchError) throw fetchError;
+
+        if (photos && photos.length > 0) {
+            const paths = photos.map(photo => {
+                const parts = photo.uri.split('servicio-files-v2/');
+                return parts.length > 1 ? parts[1].split('?')[0] : null;
+            }).filter(Boolean);
+
+            if (paths.length > 0) {
+                await supabase.storage.from('servicio-files-v2').remove(paths);
+            }
+            await supabase.from('servicio_fotos').delete().eq('servicio_id', serviceId);
+        }
+    } catch (error) {
+        console.error('Error in deleteServicePhotos:', error);
+    }
+};
+
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -1998,6 +2023,17 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
     const handleDelete = async (numero) => {
         if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
+            // First get the UUID of the service to delete photos
+            const { data: serviceData } = await supabase
+                .from('servicios_cctv')
+                .select('id')
+                .eq('servicio_numero', numero)
+                .single();
+
+            if (serviceData) {
+                await deleteServicePhotos(serviceData.id);
+            }
+
             const { error } = await supabase
                 .from('servicios_cctv')
                 .delete()
@@ -2235,16 +2271,22 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-blue-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start gap-4">
                                 {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
-                                    <div className="flex gap-3 mt-2">
-                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                                <div className="flex flex-col">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                        {company?.telefono && <p className="text-[10px] font-bold text-slate-600">Tel: {company.telefono}</p>}
+                                        {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
+                                        {company?.rfc && <p className="text-[10px] font-bold text-blue-600 uppercase">RFC: {company.rfc}</p>}
+                                    </div>
+                                    <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
                                     </div>
@@ -2760,6 +2802,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
     const handleDelete = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
+            await deleteServicePhotos(id);
             const { error } = await supabase
                 .from('servicios_pc')
                 .delete()
@@ -3068,16 +3111,22 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-blue-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start gap-4">
                                 {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
-                                    <div className="flex gap-3 mt-2">
-                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                                <div className="flex flex-col">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                        {company?.telefono && <p className="text-[10px] font-bold text-slate-600">Tel: {company.telefono}</p>}
+                                        {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
+                                        {company?.rfc && <p className="text-[10px] font-bold text-blue-600 uppercase">RFC: {company.rfc}</p>}
+                                    </div>
+                                    <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
                                     </div>
@@ -3453,7 +3502,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.fecha,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_celular'
+                    tableName: 'servicios_celulares'
                 })),
                 ...(printerData || []).map(s => ({
                     ...s,
@@ -3464,7 +3513,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.fecha,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_impresora'
+                    tableName: 'servicios_impresoras'
                 })),
                 ...(networkData || []).map(s => ({
                     ...s,
@@ -3542,6 +3591,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     const handleDelete = async (service) => {
         if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
+            await deleteServicePhotos(service.id);
             const idField = 'id';
             const idValue = service.id;
 
@@ -4020,6 +4070,7 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, u
     const handleDelete = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
+            await deleteServicePhotos(id);
             const { error } = await supabase
                 .from('servicios_celulares')
                 .delete()
@@ -4315,18 +4366,22 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-rose-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start gap-4">
                                 {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
-                                    <div className="w-20 h-20 bg-rose-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-rose-600/20">
-                                        {company?.nombre?.charAt(0) || 'C'}
-                                    </div>
+                                    <div className="w-20 h-20 bg-rose-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-rose-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
-                                    <div className="flex gap-3 mt-2">
-                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all flex items-center gap-2 shadow-lg shadow-rose-600/20">
+                                <div className="flex flex-col">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                        {company?.telefono && <p className="text-[10px] font-bold text-slate-600">Tel: {company.telefono}</p>}
+                                        {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
+                                        {company?.rfc && <p className="text-[10px] font-bold text-rose-600 uppercase">RFC: {company.rfc}</p>}
+                                    </div>
+                                    <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
                                     </div>
@@ -4796,6 +4851,7 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
     const handleDelete = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
+            await deleteServicePhotos(id);
             const { error } = await supabase
                 .from('servicios_impresoras')
                 .delete()
@@ -5101,16 +5157,22 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-purple-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start gap-4">
                                 {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-purple-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
-                                    <div className="flex gap-3 mt-2">
-                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-lg shadow-purple-600/20">
+                                <div className="flex flex-col">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                        {company?.telefono && <p className="text-[10px] font-bold text-slate-600">Tel: {company.telefono}</p>}
+                                        {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
+                                        {company?.rfc && <p className="text-[10px] font-bold text-purple-600 uppercase">RFC: {company.rfc}</p>}
+                                    </div>
+                                    <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
                                     </div>
@@ -5476,16 +5538,22 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-cyan-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start gap-4">
                                 {company?.logo_uri ? (
-                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1" />
+                                    <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-cyan-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-cyan-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{company?.nombre || 'Mi Empresa'}</h2>
-                                    <div className="flex gap-3 mt-2">
-                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-cyan-600 text-white rounded-xl text-xs font-bold hover:bg-cyan-700 transition-all flex items-center gap-2 shadow-lg shadow-cyan-600/20">
+                                <div className="flex flex-col">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
+                                    {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                        {company?.telefono && <p className="text-[10px] font-bold text-slate-600">Tel: {company.telefono}</p>}
+                                        {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
+                                        {company?.rfc && <p className="text-[10px] font-bold text-cyan-600 uppercase">RFC: {company.rfc}</p>}
+                                    </div>
+                                    <div className="flex gap-3 mt-3 no-print">
+                                        <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-cyan-600 text-white rounded-xl text-xs font-bold hover:bg-cyan-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
                                     </div>
@@ -5790,6 +5858,7 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
     const handleDelete = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
+            await deleteServicePhotos(id);
             const { error } = await supabase
                 .from('servicios_redes')
                 .delete()
@@ -6216,7 +6285,7 @@ const App = () => {
                     equipo_imei: payloadData.equipo_imei, // Assuming IMEI is mapped to equipo_imei
                     equipo_pass: payloadData.equipo_pass,
                     estado_fisico: payloadData.estado_fisico,
-                    trabajo_realizado: typeof payloadData.trabajo_realizado === 'string' ? JSON.parse(payloadData.trabajo_realizado || '[]') : payloadData.trabajo_realizado,
+                    trabajo_realizado: payloadData.trabajo_realizado,
                     costo_total: payloadData.total, // Mapping total to costo_total as requested
                     anticipo: payloadData.anticipo,
                     incluir_iva: payloadData.incluir_iva,
@@ -6252,7 +6321,7 @@ const App = () => {
                     equipo_imei: payloadData.equipo_imei,
                     equipo_pass: payloadData.equipo_pass,
                     estado_fisico: payloadData.estado_fisico,
-                    trabajo_realizado: typeof payloadData.trabajo_realizado === 'string' ? JSON.parse(payloadData.trabajo_realizado || '[]') : payloadData.trabajo_realizado,
+                    trabajo_realizado: payloadData.trabajo_realizado,
                     costo_total: payloadData.total,
                     anticipo: payloadData.anticipo,
                     incluir_iva: payloadData.incluir_iva,
@@ -6548,10 +6617,10 @@ const App = () => {
 
             // Strict Schema Mapping for servicios_impresoras
             const safeJsonParse = (val) => {
-                if (typeof val === 'string') {
-                    try { return JSON.parse(val || '[]'); } catch { return []; }
+                if (typeof val === 'string' && val.trim().startsWith('[')) {
+                    try { return JSON.parse(val); } catch { return []; }
                 }
-                return val || [];
+                return Array.isArray(val) ? val : [];
             };
 
             const strictPayload = {
@@ -6567,7 +6636,7 @@ const App = () => {
                 estado_consumibles: payloadData.estado_consumibles,
                 problema_reportado: payloadData.problema_reportado,
                 diagnostico: payloadData.diagnostico,
-                trabajo_realizado: safeJsonParse(payloadData.trabajo_realizado),
+                trabajo_realizado: payloadData.trabajo_realizado,
                 repuestos_descripcion: typeof payloadData.repuestos_descripcion === 'string' ? payloadData.repuestos_descripcion : JSON.stringify(payloadData.repuestos_descripcion),
                 costo_repuestos: payloadData.costo_repuestos,
                 costo_total: payloadData.total, // Mapping total to costo_total
@@ -6895,7 +6964,7 @@ const App = () => {
                     equipo_serie: payloadData.equipo_serie,
                     problema_reportado: payloadData.problema_reportado,
                     diagnostico_tecnico: payloadData.diagnostico_tecnico,
-                    trabajo_realizado: typeof payloadData.trabajo_realizado === 'string' ? JSON.parse(payloadData.trabajo_realizado || '[]') : payloadData.trabajo_realizado,
+                    trabajo_realizado: payloadData.trabajo_realizado,
                     repuestos_descripcion: typeof payloadData.repuestos_descripcion === 'string' ? payloadData.repuestos_descripcion : JSON.stringify(payloadData.repuestos_descripcion),
                     mano_obra: payloadData.mano_obra,
                     repuestos_costo: payloadData.repuestos_costo,
@@ -6931,7 +7000,7 @@ const App = () => {
                     equipo_serie: payloadData.equipo_serie,
                     problema_reportado: payloadData.problema_reportado,
                     diagnostico_tecnico: payloadData.diagnostico_tecnico,
-                    trabajo_realizado: typeof payloadData.trabajo_realizado === 'string' ? JSON.parse(payloadData.trabajo_realizado || '[]') : payloadData.trabajo_realizado,
+                    trabajo_realizado: payloadData.trabajo_realizado,
                     repuestos_descripcion: typeof payloadData.repuestos_descripcion === 'string' ? payloadData.repuestos_descripcion : JSON.stringify(payloadData.repuestos_descripcion),
                     mano_obra: payloadData.mano_obra,
                     repuestos_costo: payloadData.repuestos_costo,
