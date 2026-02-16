@@ -607,33 +607,7 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
                 )}
             </div>
 
-            {/* QR Ticket Modal */}
-            {
-                showQRTicket && selectedServiceForQR && (
-                    <QRServiceTicket
-                        service={selectedServiceForQR}
-                        onClose={() => {
-                            setShowQRTicket(false);
-                            setSelectedServiceForQR(null);
-                        }}
-                        darkMode={darkMode}
-                    />
-                )
-            }
 
-            {/* Receipt Modal */}
-            {
-                showReceipt && selectedServiceForReceipt && (
-                    <ServiceReceipt
-                        service={selectedServiceForReceipt}
-                        onClose={() => {
-                            setShowReceipt(false);
-                            setSelectedServiceForReceipt(null);
-                        }}
-                        darkMode={darkMode}
-                    />
-                )
-            }
         </div>
     );
 };
@@ -702,33 +676,7 @@ const ClientDetails = ({ client, onBack }) => {
                 </div>
             </div>
 
-            {/* QR Ticket Modal */}
-            {
-                showQRTicket && selectedServiceForQR && (
-                    <QRServiceTicket
-                        service={selectedServiceForQR}
-                        onClose={() => {
-                            setShowQRTicket(false);
-                            setSelectedServiceForQR(null);
-                        }}
-                        darkMode={darkMode}
-                    />
-                )
-            }
 
-            {/* Receipt Modal */}
-            {
-                showReceipt && selectedServiceForReceipt && (
-                    <ServiceReceipt
-                        service={selectedServiceForReceipt}
-                        onClose={() => {
-                            setShowReceipt(false);
-                            setSelectedServiceForReceipt(null);
-                        }}
-                        darkMode={darkMode}
-                    />
-                )
-            }
         </div>
     );
 };
@@ -2029,7 +1977,7 @@ const ChangelogView = ({ darkMode }) => {
 };
 
 
-const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
+const CCTVList = ({ darkMode, onNavigate, onViewService, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -2041,7 +1989,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user }) => {
 
     useEffect(() => {
         fetchServices();
-    }, [user]);
+    }, [user, refreshTrigger]);
 
     const fetchServices = async () => {
         if (!user) return;
@@ -2903,7 +2851,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     );
 };
 
-const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
+const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -2915,7 +2863,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
 
     useEffect(() => {
         fetchServices();
-    }, [user]);
+    }, [user, refreshTrigger]);
 
     const fetchServices = async () => {
         if (!user) return;
@@ -3654,7 +3602,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, user }) => {
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, user, refreshTrigger }) => {
     const [unifiedServices, setUnifiedServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3715,6 +3663,15 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
             // Fetch Network services
             const { data: networkData } = await supabase.from('servicios_redes').select('*').eq('user_id', user.id);
 
+            // Fetch Photos ID Reference (Lightweight)
+            const { data: photosData } = await supabase
+                .from('servicio_fotos')
+                .select('servicio_id, tipo_servicio')
+                .eq('user_id', user.id);
+
+            const photosLookup = new Set();
+            photosData?.forEach(p => photosLookup.add(`${p.tipo_servicio}-${p.servicio_id}`));
+
             const unified = [
                 ...(cctvData || []).map(s => ({
                     ...s,
@@ -3725,7 +3682,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.servicio_fecha || s.created_at,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_cctv'
+                    tableName: 'servicios_cctv',
+                    hasPhotos: photosLookup.has(`servicios_cctv-${s.id}`)
                 })),
                 ...(pcData || []).map(s => ({
                     ...s,
@@ -3736,7 +3694,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.fecha,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_pc'
+                    tableName: 'servicios_pc',
+                    hasPhotos: photosLookup.has(`servicios_pc-${s.id}`)
                 })),
                 ...(phoneData || []).map(s => ({
                     ...s,
@@ -3747,7 +3706,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.fecha,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_celulares'
+                    tableName: 'servicios_celulares',
+                    hasPhotos: photosLookup.has(`servicios_celulares-${s.id}`)
                 })),
                 ...(printerData || []).map(s => ({
                     ...s,
@@ -3758,7 +3718,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.fecha,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_impresoras'
+                    tableName: 'servicios_impresoras',
+                    hasPhotos: photosLookup.has(`servicios_impresoras-${s.id}`)
                 })),
                 ...(networkData || []).map(s => ({
                     ...s,
@@ -3769,7 +3730,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     fecha: s.fecha,
                     total: s.total,
                     original: s,
-                    tableName: 'servicios_redes'
+                    tableName: 'servicios_redes',
+                    hasPhotos: photosLookup.has(`servicios_redes-${s.id}`)
                 }))
             ].sort((a, b) => {
                 const dateA = parseDate(a.fecha);
@@ -3788,7 +3750,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
 
     useEffect(() => {
         fetchAllServices();
-    }, []);
+    }, [refreshTrigger]);
 
     const handleShowQR = (service) => {
         setSelectedServiceForQR(service.original);
@@ -4045,7 +4007,14 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-sm font-bold text-blue-600">#{service.folio}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-blue-600">#{service.folio}</span>
+                                                    {service.hasPhotos && (
+                                                        <div className="bg-blue-100 p-1 rounded-full" title="Tiene evidencia fotográfica">
+                                                            <Image className="w-3 h-3 text-blue-600" />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente}</span>
@@ -4131,7 +4100,14 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                 }`}>
                                                 {service.type}
                                             </span>
-                                            <span className="text-lg font-bold text-blue-600">#{service.folio}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg font-bold text-blue-600">#{service.folio}</span>
+                                                {service.hasPhotos && (
+                                                    <div className="bg-blue-100 p-1 rounded-full" title="Tiene evidencia fotográfica">
+                                                        <Image className="w-4 h-4 text-blue-600" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex gap-2">
                                             {service.type !== 'CCTV' && service.type !== 'Redes' && (
@@ -4298,7 +4274,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     );
 };
 
-const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
+const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -4310,7 +4286,7 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, u
 
     useEffect(() => {
         fetchServices();
-    }, [user]);
+    }, [user, refreshTrigger]);
 
     const fetchServices = async () => {
         if (!user) return;
@@ -5130,7 +5106,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
 // --- MAIN APP ---
 
-const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
+const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -5142,7 +5118,7 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
 
     useEffect(() => {
         fetchServices();
-    }, [user]);
+    }, [user, refreshTrigger]);
 
     const fetchServices = async () => {
         if (!user) return;
@@ -6250,7 +6226,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     );
 };
 
-const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user }) => {
+const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -6262,7 +6238,7 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
 
     useEffect(() => {
         fetchServices();
-    }, [user]);
+    }, [user, refreshTrigger]);
 
     const fetchServices = async () => {
         if (!user) return;
@@ -6655,6 +6631,7 @@ const App = () => {
     const [savedClients, setSavedClients] = useState([]);
     // Quotations from DB
     const [quotations, setQuotations] = useState([]);
+    const [servicesRefreshTrigger, setServicesRefreshTrigger] = useState(0);
     const [editingQuotationId, setEditingQuotationId] = useState(null);
     const [viewingQuotation, setViewingQuotation] = useState(null);
 
@@ -6789,6 +6766,12 @@ const App = () => {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    useEffect(() => {
+        if (session?.user && activeTab === 'cotizaciones-list') {
+            fetchQuotations(session.user.id);
+        }
+    }, [activeTab, session]);
 
     // PHONE SERVICE FORM STATE & HANDLERS
     const [editingPhoneService, setEditingPhoneService] = useState(null); // null, 'new', or service object
@@ -6931,6 +6914,7 @@ const App = () => {
                 await Promise.all(uploadPromises);
             }
 
+            setServicesRefreshTrigger(prev => prev + 1);
             alert('Servicio de celular guardado correctamente');
             setEditingPhoneService(null);
         } catch (error) {
@@ -7095,8 +7079,9 @@ const App = () => {
                 }
             }
 
-            setEditingCCTVService(null);
+            setServicesRefreshTrigger(prev => prev + 1);
             alert('Servicio CCTV guardado correctamente');
+            setEditingCCTVService(null);
         } catch (error) {
             console.error('Error saving CCTV service:', error);
             alert('Error al guardar el servicio CCTV');
@@ -7269,6 +7254,7 @@ const App = () => {
                 await Promise.all(uploadPromises);
             }
 
+            setServicesRefreshTrigger(prev => prev + 1);
             alert('Servicio de Impresora guardado correctamente');
             setEditingPrinterService(null);
 
@@ -7430,6 +7416,7 @@ const App = () => {
                 await Promise.all(uploadPromises);
             }
 
+            setServicesRefreshTrigger(prev => prev + 1);
             alert('Servicio de Redes guardado correctamente');
             setEditingNetworkService(null);
             if (activeTab === 'services-network-view' && selectedService?.id === data.id) {
@@ -7608,6 +7595,7 @@ const App = () => {
                 await Promise.all(uploadPromises);
             }
 
+            setServicesRefreshTrigger(prev => prev + 1);
             alert('Servicio guardado correctamente');
             setEditingPCService(null);
 
@@ -7859,8 +7847,8 @@ const App = () => {
                 items: JSON.parse(JSON.stringify(items))
             });
 
+            await fetchQuotations(session.user.id);
             alert(editingQuotationId ? 'Cotización actualizada' : 'Cotización guardada');
-            fetchQuotations(session.user.id);
             setEditingQuotationId(null);
 
             // Redirect to list to prevent duplication if saved again
@@ -7886,7 +7874,7 @@ const App = () => {
 
             if (error) throw error;
 
-            fetchQuotations(session.user.id);
+            await fetchQuotations(session.user.id);
         } catch (error) {
             console.error('Error deleting quotation:', error);
             alert('Error al eliminar cotización: ' + error.message);
@@ -7946,8 +7934,8 @@ const App = () => {
 
             if (insertError) throw insertError;
 
+            await fetchQuotations(session.user.id);
             alert(`Cotización duplicada como: ${nextFolio}`);
-            fetchQuotations(session.user.id);
         } catch (error) {
             console.error('Error duplicating quotation:', error);
             alert('Error al duplicar cotización: ' + error.message);
@@ -8931,9 +8919,10 @@ const App = () => {
                                 setEditingPrinterService={setEditingPrinterService}
                                 setEditingNetworkService={setEditingNetworkService}
                                 user={session?.user}
+                                refreshTrigger={servicesRefreshTrigger}
                             />
                         )}
-                        {activeTab === 'services-cctv-list' && <CCTVList darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} user={session?.user} />}
+                        {activeTab === 'services-cctv-list' && <CCTVList key={`cctv-${servicesRefreshTrigger}`} darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} user={session?.user} refreshTrigger={servicesRefreshTrigger} />}
                         {activeTab === 'services-cctv-view' && (
                             <CCTVServiceView
                                 service={selectedService}
@@ -8945,12 +8934,14 @@ const App = () => {
                         )}
                         {activeTab === 'services-pc-list' && (
                             <PCList
+                                key={`pc-${servicesRefreshTrigger}`}
                                 darkMode={isDark}
                                 onNavigate={setActiveTab}
                                 onViewService={handleViewPCService}
                                 onCreateNew={() => setEditingPCService('new')}
                                 onEdit={(service) => setEditingPCService(service)}
                                 user={session?.user}
+                                refreshTrigger={servicesRefreshTrigger}
                             />
                         )}
                         {activeTab === 'services-pc-view' && (
@@ -8964,6 +8955,7 @@ const App = () => {
                         )}
                         {activeTab === 'services-phone-list' && (
                             <PhoneList
+                                key={`phone-${servicesRefreshTrigger}`}
                                 darkMode={isDark}
                                 onNavigate={setActiveTab}
                                 onViewService={(service) => {
@@ -8973,6 +8965,7 @@ const App = () => {
                                 onCreateNew={() => setEditingPhoneService('new')}
                                 onEdit={(service) => setEditingPhoneService(service)}
                                 user={session?.user}
+                                refreshTrigger={servicesRefreshTrigger}
                             />
                         )}
                         {activeTab === 'services-phone-view' && (
@@ -9017,6 +9010,7 @@ const App = () => {
 
                         {activeTab === 'services-network-list' && (
                             <NetworkList
+                                key={`network-${servicesRefreshTrigger}`}
                                 darkMode={isDark}
                                 onNavigate={setActiveTab}
                                 onViewService={(service) => {
@@ -9026,10 +9020,12 @@ const App = () => {
                                 onCreateNew={() => setEditingNetworkService('new')}
                                 onEdit={(service) => setEditingNetworkService(service)}
                                 user={session?.user}
+                                refreshTrigger={servicesRefreshTrigger}
                             />
                         )}
                         {activeTab === 'services-printer-list' && (
                             <PrinterList
+                                key={`printer-${servicesRefreshTrigger}`}
                                 darkMode={isDark}
                                 onNavigate={setActiveTab}
                                 onViewService={(service) => {
@@ -9039,6 +9035,7 @@ const App = () => {
                                 onCreateNew={() => setEditingPrinterService('new')}
                                 onEdit={(service) => setEditingPrinterService(service)}
                                 user={session?.user}
+                                refreshTrigger={servicesRefreshTrigger}
                             />
                         )}
                         {activeTab === 'services-printer-view' && (
