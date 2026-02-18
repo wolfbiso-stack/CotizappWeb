@@ -1,9 +1,9 @@
 // Status mapping utilities for repair tracking
 
 export const STATUS_OPTIONS = [
-    { value: 'recibido', label: 'Recibido', color: 'blue', progress: 20 },
+    { value: 'recibido', label: 'Recibido', color: 'black', progress: 20 },
     { value: 'diagnosticado', label: 'Diagnosticado', color: 'yellow', progress: 40 },
-    { value: 'listo_para_entregar', label: 'Listo para Entregar', color: 'green', progress: 80 },
+    { value: 'listo_para_entregar', label: 'Listo para Entregar', color: 'blue', progress: 80 },
     { value: 'entregado', label: 'Entregado', color: 'green', progress: 100 },
     { value: 'no_reparable', label: 'No fue posible reparar', color: 'red', progress: 100 }
 ];

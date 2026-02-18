@@ -43,10 +43,44 @@ export const formatDate = (dateString) => {
     // But "formatDate" is likely used in receipts or titles where long date is better.
     // "formatServiceDate" is used in the table.
     // Let's stick to modifying formatServiceDate which is used in the list.
-    
+
     return new Date(dateString).toLocaleDateString('es-MX', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
+};
+
+/**
+ * Formats a date string specifically for HTML <input type="date">
+ * Handles ISO strings, DD/MM/YYYY, and normal date strings.
+ * Always returns YYYY-MM-DD format.
+ */
+export const formatDateForInput = (dateString) => {
+    if (!dateString) return new Date().toLocaleDateString('en-CA');
+
+    try {
+        // If it's already YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return dateString;
+        }
+
+        // If it's DD/MM/YYYY
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+            const [day, month, year] = dateString.split('/');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Handle ISO strings with 'T' or other standard date strings
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+            // Use en-CA for YYYY-MM-DD format
+            return date.toLocaleDateString('en-CA');
+        }
+
+        return new Date().toLocaleDateString('en-CA'); // Final fallback
+    } catch (error) {
+        console.error("Error formatting date for input:", error);
+        return new Date().toLocaleDateString('en-CA');
+    }
 };

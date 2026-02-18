@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, User, Monitor, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, ShieldCheck, HardDrive } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import { Plus, Trash2, Save, FileText, Image as ImageIcon, X, Upload, Printer, DollarSign, PenTool, Hash, Download, Check, AlertTriangle, FileInput, FolderOpen, User, Monitor, Settings, ShoppingCart, Calendar, ShieldCheck, HardDrive } from 'lucide-react';
+import QuoteSelector from './QuoteSelector';
+import { formatCurrency, formatDateForInput } from '../utils/format';
 import { supabase } from '../../utils/supabase';
 
 const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
@@ -46,6 +47,9 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
     // Valid parts array state
     const [parts, setParts] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [showQuoteSelector, setShowQuoteSelector] = useState(false);
+
     // File Upload State
     const [files, setFiles] = useState([]);
     // Existing Photos State
@@ -96,7 +100,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 ...service,
                 observaciones: servicioObservaciones,
                 equipo_password: servicioPassword,
-                fecha: service.fecha ? service.fecha.split('T')[0] : new Date().toLocaleDateString('en-CA'),
+                fecha: formatDateForInput(service.fecha),
                 mano_obra: service.mano_obra || 0,
                 repuestos_costo: service.repuestos_costo || 0,
                 anticipo: service.anticipo || 0,
@@ -135,7 +139,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: parseFloat(value) || 0
+            [name]: Math.max(0, parseFloat(value) || 0)
         }));
     };
 
@@ -157,9 +161,11 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     const updatePart = (id, field, value) => {
         setParts(parts.map(p => {
             if (p.id === id) {
+                const numericFields = ['cantidad', 'costoPublico', 'costoEmpresa'];
+                const newValue = numericFields.includes(field) ? Math.max(0, parseFloat(value) || 0) : value;
                 return {
                     ...p,
-                    [field]: (field === 'descripcion' || field === 'producto' || field === 'numeroSerie') ? value : (parseFloat(value) || 0)
+                    [field]: newValue
                 };
             }
             return p;
@@ -213,9 +219,29 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
     const labelClass = `block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`;
 
+    const handleQuoteSelect = (quoteItems) => {
+        const newParts = quoteItems.map(item => ({
+            id: Date.now() + Math.random(), // Generate unique ID
+            cantidad: item.cantidad || 1,
+            producto: item.articulo || item.producto || '',
+            costoEmpresa: item.costoEmpresa || 0,
+            costoPublico: item.precioUnitario || item.precio || 0,
+            numeroSerie: ''
+        }));
+
+        setParts([...parts, ...newParts]);
+    };
+
     return createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className={`w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            {showQuoteSelector && (
+                <QuoteSelector
+                    onSelect={handleQuoteSelect}
+                    onClose={() => setShowQuoteSelector(false)}
+                    darkMode={darkMode}
+                />
+            )}
+            <div className={`w-full max-w-5xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Header */}
                 <div className={`px-8 py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
                     <div className="flex items-center gap-4">
@@ -237,7 +263,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
                     {/* Basic Info Section */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="col-span-2">
@@ -428,13 +454,22 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Desglose de refacciones utilizadas</p>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={addPart}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'}`}
-                            >
-                                <Plus className="w-4 h-4" /> Agregar
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={addPart}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'}`}
+                                >
+                                    <Plus className="w-4 h-4" /> Agregar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowQuoteSelector(true)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${darkMode ? 'bg-purple-900/50 text-purple-300 hover:bg-purple-900/70' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'}`}
+                                >
+                                    <FolderOpen className="w-4 h-4" /> Desde Cotización
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-3">
@@ -447,7 +482,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             value={part.cantidad}
                                             onChange={(e) => updatePart(part.id, 'cantidad', e.target.value)}
                                             className={`${inputClass} text-center px-1`}
-                                            min="1"
+                                            min="0"
                                         />
                                     </div>
                                     <div className="w-full md:flex-1">
@@ -466,6 +501,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
                                             <input
                                                 type="number"
+                                                min="0"
                                                 value={part.costoEmpresa}
                                                 onChange={(e) => updatePart(part.id, 'costoEmpresa', e.target.value)}
                                                 className={`${inputClass} pl-6 border-rose-100 focus:border-rose-300`}
@@ -478,6 +514,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                             <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
                                             <input
                                                 type="number"
+                                                min="0"
                                                 value={part.costoPublico}
                                                 onChange={(e) => updatePart(part.id, 'costoPublico', e.target.value)}
                                                 className={`${inputClass} pl-6 border-blue-100 focus:border-blue-300`}
@@ -519,7 +556,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     {/* Photos Section */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-purple-500">
-                            <Image className="w-5 h-5" />
+                            <ImageIcon className="w-5 h-5" />
                             <h3 className="font-bold uppercase text-xs tracking-widest">Evidencia Fotográfica</h3>
                         </div>
 
@@ -555,7 +592,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                             {/* Upload Button */}
                             <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-blue-400 group">
-                                <Image className="w-8 h-8 text-slate-300 group-hover:text-blue-400 mb-2" />
+                                <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-blue-400 mb-2" />
                                 <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-blue-500">Subir Foto</span>
                                 <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
                             </label>
@@ -572,6 +609,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
                                 <input
                                     type="number"
+                                    min="0"
                                     name="mano_obra"
                                     value={formData.mano_obra}
                                     onChange={handleNumberChange}
@@ -586,6 +624,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
                                 <input
                                     type="number"
+                                    min="0"
                                     name="anticipo"
                                     value={formData.anticipo}
                                     onChange={handleNumberChange}

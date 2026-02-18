@@ -1,4 +1,12 @@
-node_modules
-dist
-.env
-.env.local
+git add .
+git commit -m "Todo funcional menos borrado de fotos de servicios"
+git push
+
+
+
+CORRER SERVIDOR
+
+cd C:\cotizappweb
+npm run dev
+
+https://wolfbiso-stack.github.io/CotizappWeb/

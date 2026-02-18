@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, User, Wifi, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, Activity, ArrowDown, ArrowUp, Router } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import { X, Save, User, Wifi, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, Activity, ArrowDown, ArrowUp, Router, FolderOpen } from 'lucide-react';
+import QuoteSelector from './QuoteSelector';
+import { formatCurrency, formatDateForInput } from '../utils/format';
 import { supabase } from '../../utils/supabase';
 
 const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
@@ -56,6 +57,9 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     const [existingPhotos, setExistingPhotos] = useState([]);
     const [photosToDelete, setPhotosToDelete] = useState([]);
 
+    // Quote Selector State
+    const [showQuoteSelector, setShowQuoteSelector] = useState(false);
+
     useEffect(() => {
         if (service) {
             let loadedParts = [];
@@ -89,7 +93,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             setFormData({
                 ...formData,
                 ...service,
-                fecha: service.fecha ? service.fecha.split('T')[0] : new Date().toLocaleDateString('en-CA'),
+                fecha: formatDateForInput(service.fecha),
                 mano_obra: service.mano_obra || 0,
                 costo_materiales: service.costo_materiales || 0,
                 anticipo: service.anticipo || 0,
@@ -142,7 +146,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: parseFloat(value) || 0
+            [name]: Math.max(0, parseFloat(value) || 0)
         }));
     };
 
@@ -164,9 +168,10 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     const updatePart = (id, field, value) => {
         setParts(parts.map(p => {
             if (p.id === id) {
+                const isNumeric = field === 'cantidad' || field === 'costoEmpresa' || field === 'costoPublico';
                 return {
                     ...p,
-                    [field]: (field === 'descripcion' || field === 'producto' || field === 'numeroSerie') ? value : (parseFloat(value) || 0)
+                    [field]: isNumeric ? Math.max(field === 'cantidad' ? 1 : 0, parseFloat(value) || 0) : value
                 };
             }
             return p;
@@ -220,8 +225,28 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
     const labelClass = `block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`;
 
+    const handleQuoteSelect = (quoteItems) => {
+        const newParts = quoteItems.map(item => ({
+            id: Date.now() + Math.random(),
+            cantidad: item.cantidad || 1,
+            producto: item.articulo || item.producto || '',
+            costoEmpresa: item.costoEmpresa || 0,
+            costoPublico: item.precioUnitario || item.precio || 0,
+            numeroSerie: ''
+        }));
+
+        setParts([...parts, ...newParts]);
+    };
+
     return createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            {showQuoteSelector && (
+                <QuoteSelector
+                    onSelect={handleQuoteSelect}
+                    onClose={() => setShowQuoteSelector(false)}
+                    darkMode={darkMode}
+                />
+            )}
             <div className={`w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Header */}
                 <div className={`px-8 py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
@@ -244,7 +269,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
                     {/* Basic Info Section */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="col-span-2">
@@ -468,13 +493,22 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Desglose de materiales y equipos</p>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={addPart}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'}`}
-                            >
-                                <Plus className="w-4 h-4" /> Agregar
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={addPart}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'}`}
+                                >
+                                    <Plus className="w-4 h-4" /> Agregar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowQuoteSelector(true)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${darkMode ? 'bg-purple-900/40 text-purple-300 hover:bg-purple-900/60' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'}`}
+                                >
+                                    <FolderOpen className="w-4 h-4" /> Desde Cotización
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-4">
@@ -509,6 +543,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                                 value={part.costoEmpresa}
                                                 onChange={(e) => updatePart(part.id, 'costoEmpresa', e.target.value)}
                                                 className={`${inputClass} pl-6 border-rose-100 focus:border-rose-300`}
+                                                min="0"
                                             />
                                         </div>
                                     </div>
@@ -521,6 +556,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                                 value={part.costoPublico}
                                                 onChange={(e) => updatePart(part.id, 'costoPublico', e.target.value)}
                                                 className={`${inputClass} pl-6 border-blue-100 focus:border-blue-300`}
+                                                min="0"
                                             />
                                         </div>
                                     </div>
@@ -616,6 +652,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     value={formData.mano_obra}
                                     onChange={handleNumberChange}
                                     className={`${inputClass} pl-7 font-bold text-blue-600`}
+                                    min="0"
                                 />
                             </div>
                         </div>
@@ -630,6 +667,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     value={formData.anticipo}
                                     onChange={handleNumberChange}
                                     className={`${inputClass} pl-7 font-bold text-rose-600`}
+                                    min="0"
                                 />
                             </div>
                         </div>

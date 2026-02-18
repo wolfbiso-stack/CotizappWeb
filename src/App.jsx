@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart3, TrendingUp, DollarSign, Filter, Trophy } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -14,8 +14,11 @@ import PrinterServiceForm from './components/PrinterServiceForm';
 import NetworkServiceForm from './components/NetworkServiceForm';
 import PhoneServiceForm from './components/PhoneServiceForm';
 import CCTVServiceForm from './components/CCTVServiceForm';
+import Products from './components/Products';
+import SubscriptionView from './components/SubscriptionView';
+import ProductAutocomplete from './components/ProductAutocomplete';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
-import { formatCurrency, formatServiceDate } from './utils/format';
+import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
 
 // --- UTILS ---
@@ -169,6 +172,8 @@ const QuotationStatusToggle = ({ quotation, onStatusChange, darkMode }) => {
 const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode, onStatusChange }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const handleDeleteClick = (id) => {
         if (window.confirm('¿Estás seguro de eliminar esta cotización?')) {
@@ -190,6 +195,17 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
         );
     });
 
+    // Pagination logic
+    const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(filteredQuotations.length / itemsPerPage);
+    const paginatedQuotations = itemsPerPage === -1
+        ? filteredQuotations
+        : filteredQuotations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Reset to page 1 when search term changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, itemsPerPage]);
+
     return (
         <div className="w-full px-4 md:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
@@ -205,9 +221,9 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="mb-6">
-                <div className="relative">
+            {/* Search Bar and Pagination Controls */}
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
                     <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${darkMode ? 'text-slate-400' : 'text-slate-400'}`} />
                     <input
                         type="text"
@@ -216,6 +232,19 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm`}
                     />
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className={`text-sm font-medium whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Mostrar:</span>
+                    <select
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                        className={`px-4 py-3 rounded-xl border transition-all font-medium ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 hover:border-slate-600 hover:bg-slate-750' : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50'} focus:outline-none focus:border-blue-500 focus:ring-0 shadow-sm cursor-pointer`}
+                    >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={-1}>Todos</option>
+                    </select>
                 </div>
             </div>
 
@@ -251,7 +280,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                 </tr>
                             </thead>
                             <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
-                                {filteredQuotations.map((quotation) => (
+                                {paginatedQuotations.map((quotation) => (
                                     <tr
                                         key={quotation.id}
                                         className={`transition-all duration-500 ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
@@ -313,11 +342,63 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                 ))}
                             </tbody>
                         </table>
+
+                        {/* Pagination Controls */}
+                        {itemsPerPage !== -1 && totalPages > 1 && (
+                            <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${darkMode ? 'border-slate-600' : 'border-slate-100'}`}>
+                                <div className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredQuotations.length)} de {filteredQuotations.length} cotizaciones
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className={`px-3 py-2 rounded-lg font-medium transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600' : 'text-slate-700'}`}
+                                    >
+                                        Anterior
+                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                                            const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                                            const showEllipsis = (page === 2 && currentPage > 3) || (page === totalPages - 1 && currentPage < totalPages - 2);
+
+                                            if (showEllipsis) {
+                                                return <span key={page} className="px-2 text-slate-400">...</span>;
+                                            }
+
+                                            if (!showPage) return null;
+
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`px-3 py-2 rounded-lg font-medium transition-all ${page === currentPage
+                                                        ? 'bg-blue-600 text-white shadow-lg'
+                                                        : darkMode
+                                                            ? 'text-slate-300 hover:bg-slate-700'
+                                                            : 'text-slate-700 hover:bg-slate-100'
+                                                        }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className={`px-3 py-2 rounded-lg font-medium transition-all ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600' : 'text-slate-700'}`}
+                                    >
+                                        Siguiente
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Mobile Cards View */}
                     <div className="md:hidden space-y-4">
-                        {filteredQuotations.map((quotation) => (
+                        {paginatedQuotations.map((quotation) => (
                             <div
                                 key={quotation.id}
                                 className={`p-5 rounded-2xl border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'} transition-all duration-300`}
@@ -377,6 +458,59 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                 </div>
                             </div>
                         ))}
+
+                        {/* Mobile Pagination Controls */}
+                        {itemsPerPage !== -1 && totalPages > 1 && (
+                            <div className={`mt-6 p-4 rounded-2xl border flex flex-col items-center gap-4 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                                <div className={`text-sm text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredQuotations.length)} de {filteredQuotations.length}
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap justify-center">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600 bg-slate-700' : 'text-slate-700 bg-white border border-slate-200'}`}
+                                    >
+                                        ← Anterior
+                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let page;
+                                            if (totalPages <= 5) {
+                                                page = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                page = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                page = totalPages - 4 + i;
+                                            } else {
+                                                page = currentPage - 2 + i;
+                                            }
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`px-3 py-2 rounded-lg font-medium transition-all ${page === currentPage
+                                                        ? 'bg-blue-600 text-white shadow-lg'
+                                                        : darkMode
+                                                            ? 'text-slate-300 bg-slate-700'
+                                                            : 'text-slate-700 bg-white border border-slate-200'
+                                                        }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600 bg-slate-700' : 'text-slate-700 bg-white border border-slate-200'}`}
+                                    >
+                                        Siguiente →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </>
             )}
@@ -1194,7 +1328,7 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                     <Plus className="w-4 h-4" /> Agregar Producto
                 </button>
             </div>
-            <div className="overflow-x-auto hidden md:block">
+            <div className="hidden md:block relative z-10">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className={`${darkMode ? 'bg-slate-800/50 text-slate-300' : 'bg-gray-50/50 text-slate-600'}`}>
@@ -1219,7 +1353,7 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                     setCanDrag(false);
                                 }}
                                 onDragOver={(e) => handleDragOver(e, index)}
-                                className={`transition-all group cursor-default ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'} ${draggedIndex === index ? 'opacity-20 bg-indigo-50' : ''}`}
+                                className={`transition-all group cursor-default relative focus-within:z-[60] ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'} ${draggedIndex === index ? 'opacity-20 bg-indigo-50' : ''}`}
                             >
                                 <td className="p-2 text-center pointer-events-none">
                                     <div
@@ -1234,18 +1368,24 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                 <td className="p-2">
                                     <input
                                         type="number"
+                                        min="0"
                                         value={item.qty}
-                                        onChange={(e) => onUpdateItem(item.id, 'qty', parseInt(e.target.value))}
+                                        onChange={(e) => onUpdateItem(item.id, 'qty', Math.max(0, parseInt(e.target.value) || 0))}
                                         className={`w-16 border rounded-md p-2 text-center focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm ${darkMode ? 'bg-slate-900 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
                                     />
                                 </td>
-                                <td className="p-2">
-                                    <input
-                                        type="text"
+                                <td className="p-2 relative">
+                                    <ProductAutocomplete
                                         value={item.desc}
-                                        onChange={(e) => onUpdateItem(item.id, 'desc', e.target.value)}
-                                        className={`w-full border rounded-md p-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm font-medium ${darkMode ? 'bg-slate-900 border-slate-600 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-700'}`}
-                                        placeholder="Descripción del producto o servicio"
+                                        onChange={(val) => onUpdateItem(item.id, 'desc', val)}
+                                        onSelect={(product) => {
+                                            onUpdateItem(item.id, 'desc', product.nombre);
+                                            onUpdateItem(item.id, 'price', product.precio);
+                                            onUpdateItem(item.id, 'cost', product.costo || 0);
+                                        }}
+                                        darkMode={darkMode}
+                                        placeholder="Descripción o buscar producto..."
+                                        user={session?.user}
                                     />
                                 </td>
                                 <td className="p-2">
@@ -1253,8 +1393,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                         <span className={`absolute left-0 top-2 pl-2 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>$</span>
                                         <input
                                             type="number"
+                                            min="0"
                                             value={item.cost || 0}
-                                            onChange={(e) => onUpdateItem(item.id, 'cost', parseFloat(e.target.value))}
+                                            onChange={(e) => onUpdateItem(item.id, 'cost', Math.max(0, parseFloat(e.target.value) || 0))}
                                             className={`w-28 pl-6 border rounded-md p-2 text-right focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all shadow-sm font-medium ${darkMode ? 'bg-slate-900 border-slate-600 text-orange-400' : 'bg-orange-50 border-orange-200 text-orange-700'}`}
                                             placeholder="0.00"
                                         />
@@ -1265,8 +1406,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                         <span className={`absolute left-0 top-2 pl-2 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>$</span>
                                         <input
                                             type="number"
+                                            min="0"
                                             value={item.price}
-                                            onChange={(e) => onUpdateItem(item.id, 'price', parseFloat(e.target.value))}
+                                            onChange={(e) => onUpdateItem(item.id, 'price', Math.max(0, parseFloat(e.target.value) || 0))}
                                             className={`w-32 pl-6 border rounded-md p-2 text-right focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-bold ${darkMode ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-white border-slate-200 text-blue-700'}`}
                                         />
                                     </div>
@@ -1286,8 +1428,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                 <td className="p-2">
                                     <input
                                         type="number"
+                                        min="0"
                                         value={item.discount}
-                                        onChange={(e) => onUpdateItem(item.id, 'discount', parseFloat(e.target.value))}
+                                        onChange={(e) => onUpdateItem(item.id, 'discount', Math.max(0, parseFloat(e.target.value) || 0))}
                                         className={`w-full border rounded-md p-2 text-center focus:text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm text-xs ${darkMode ? 'bg-slate-900 border-slate-600 text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`}
                                         placeholder="0"
                                     />
@@ -1319,7 +1462,7 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                 {items.map((item, index) => (
                     <div
                         key={item.id}
-                        className={`p-4 rounded-xl border relative ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                        className={`p-4 rounded-xl border relative z-0 focus-within:z-[60] ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
                     >
                         <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2">
@@ -1339,12 +1482,17 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Descripción</label>
-                                <input
-                                    type="text"
+                                <ProductAutocomplete
                                     value={item.desc}
-                                    onChange={(e) => onUpdateItem(item.id, 'desc', e.target.value)}
-                                    className={`w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
+                                    onChange={(val) => onUpdateItem(item.id, 'desc', val)}
+                                    onSelect={(product) => {
+                                        onUpdateItem(item.id, 'desc', product.nombre);
+                                        onUpdateItem(item.id, 'price', product.precio);
+                                        onUpdateItem(item.id, 'cost', product.costo || 0);
+                                    }}
+                                    darkMode={darkMode}
                                     placeholder="Nombre del producto..."
+                                    user={session?.user}
                                 />
                             </div>
 
@@ -1353,8 +1501,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                     <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Cantidad</label>
                                     <input
                                         type="number"
+                                        min="0"
                                         value={item.qty}
-                                        onChange={(e) => onUpdateItem(item.id, 'qty', parseInt(e.target.value))}
+                                        onChange={(e) => onUpdateItem(item.id, 'qty', Math.max(0, parseInt(e.target.value) || 0))}
                                         className={`w-full border rounded-lg p-3 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
                                     />
                                 </div>
@@ -1362,8 +1511,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                     <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">% Descuento</label>
                                     <input
                                         type="number"
+                                        min="0"
                                         value={item.discount}
-                                        onChange={(e) => onUpdateItem(item.id, 'discount', parseFloat(e.target.value))}
+                                        onChange={(e) => onUpdateItem(item.id, 'discount', Math.max(0, parseFloat(e.target.value) || 0))}
                                         className={`w-full border rounded-lg p-3 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}
                                     />
                                 </div>
@@ -1376,8 +1526,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                         <span className="absolute left-3 top-3 text-slate-400 text-xs">$</span>
                                         <input
                                             type="number"
+                                            min="0"
                                             value={item.cost || 0}
-                                            onChange={(e) => onUpdateItem(item.id, 'cost', parseFloat(e.target.value))}
+                                            onChange={(e) => onUpdateItem(item.id, 'cost', Math.max(0, parseFloat(e.target.value) || 0))}
                                             className={`w-full pl-6 border rounded-lg p-3 text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-orange-400' : 'bg-orange-50/50 border-orange-100 text-orange-700'}`}
                                         />
                                     </div>
@@ -1388,8 +1539,9 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                                         <span className="absolute left-3 top-3 text-slate-400 text-xs">$</span>
                                         <input
                                             type="number"
+                                            min="0"
                                             value={item.price}
-                                            onChange={(e) => onUpdateItem(item.id, 'price', parseFloat(e.target.value))}
+                                            onChange={(e) => onUpdateItem(item.id, 'price', Math.max(0, parseFloat(e.target.value) || 0))}
                                             className={`w-full pl-6 border rounded-lg p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all ${darkMode ? 'bg-slate-800 border-slate-600 text-blue-400' : 'bg-white border-slate-200 text-blue-700'}`}
                                         />
                                     </div>
@@ -1905,6 +2057,217 @@ const TemplateCreative = ({ company, client, items, terms, folio, date, dueDate,
     </div>
 );
 
+const PrintableNotaDeVenta = ({ service, company, darkMode }) => {
+    if (!service) return null;
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return `${date.getDate()} / ${months[date.getMonth()]} / ${date.getFullYear()}`;
+    };
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        }).format(amount || 0);
+    };
+
+    const getItems = () => {
+        const items = [];
+        const original = service.original || {};
+
+        // 1. Labor / Service
+        items.push({
+            qty: 1,
+            description: 'Mano de Obra',
+            detail: original.problema_reportado || original.diagnostico_tecnico || original.diagnostico || '',
+            price: original.mano_obra || 0,
+            total: original.mano_obra || 0
+        });
+
+        // 2. Parts / Repuestos
+        try {
+            let parts = [];
+            let partsData = original.repuestos_descripcion || original.inventario_materiales || original.materiales_descripcion;
+            const partsCosto = original.repuestos_costo || original.costo_repuestos || original.costo_materiales || original.materiales;
+
+            if (partsData) {
+                if (typeof partsData === 'string' && partsData.trim().startsWith('[')) {
+                    parts = JSON.parse(partsData);
+                } else if (Array.isArray(partsData)) {
+                    parts = partsData;
+                } else if (typeof partsData === 'string' && partsData.trim() !== '') {
+                    // Plain text description
+                    items.push({
+                        qty: 1,
+                        description: partsData,
+                        detail: '',
+                        price: partsCosto || 0,
+                        total: partsCosto || 0
+                    });
+                }
+            }
+
+            if (Array.isArray(parts) && parts.length > 0) {
+                parts.forEach(p => {
+                    items.push({
+                        qty: p.cantidad || 1,
+                        description: p.producto || p.descripcion || 'Material/Repuesto',
+                        detail: p.numeroSerie ? `S/N: ${p.numeroSerie}` : '',
+                        price: p.costoPublico || p.precio_publico || 0,
+                        total: (p.cantidad || 1) * (p.costoPublico || p.precio_publico || 0)
+                    });
+                });
+            }
+        } catch (e) {
+            console.error('Error parsing parts for Nota de Venta:', e);
+        }
+
+        return items;
+    };
+
+    const items = getItems();
+    const original = service.original || {};
+    const subtotal = items.reduce((acc, item) => acc + item.total, 0);
+    const totalItemsCount = items.reduce((acc, item) => acc + (parseInt(item.qty) || 0), 0);
+    const anticipo = original.anticipo || 0;
+    const total = service.total || subtotal;
+    const discount = 0;
+
+    return (
+        <div className="bg-white text-slate-900 w-[900px] min-h-[1100px] flex flex-col font-sans relative" id="nota-venta-printable">
+            <style>{`
+                .print-exact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .bg-brand-900 { background-color: #0f172a !important; }
+                .bg-brand-100 { background-color: #f1f5f9 !important; }
+                .text-brand-900 { color: #0f172a !important; }
+                .text-brand-800 { color: #1e293b !important; }
+                .border-brand-900 { border-color: #0f172a !important; }
+            `}</style>
+
+            <div className="h-4 bg-brand-900 w-full print-exact"></div>
+
+            <div className="px-10 py-6 flex justify-between items-start">
+                <div className="w-1/2">
+                    <div className="flex items-center gap-3 mb-4">
+                        {company?.logo_uri ? (
+                            <img src={company.logo_uri} alt="Logo" className="h-12 max-w-[80px] object-contain" />
+                        ) : (
+                            <div className="h-12 w-12 bg-brand-900 text-white flex items-center justify-center rounded-lg font-bold text-xl print-exact">
+                                {company?.nombre?.substring(0, 2).toUpperCase() || 'CS'}
+                            </div>
+                        )}
+                        <div>
+                            <h1 className="text-2xl font-bold text-brand-900 tracking-tight">{company?.nombre || 'MI EMPRESA'}</h1>
+                            <p className="text-xs text-brand-800 uppercase tracking-widest font-semibold">{company?.eslogan || 'Tecnología & Desarrollo'}</p>
+                        </div>
+                    </div>
+
+                    <div className="text-sm text-gray-500 space-y-1">
+                        <p className="flex items-center"><span className="w-20 font-medium text-gray-900">Dirección:</span> {company?.direccion || 'N/A'}</p>
+                        <p className="flex items-center"><span className="w-20 font-medium text-gray-900">Teléfono:</span> {company?.telefono || 'N/A'}</p>
+                        <p className="flex items-center"><span className="w-20 font-medium text-gray-900">Email:</span> {company?.correo || 'N/A'}</p>
+                    </div>
+                </div>
+
+                <div className="text-right">
+                    <h2 className="text-4xl font-extralight text-gray-300 mb-6 uppercase">NOTA DE VENTA</h2>
+                    <div className="inline-block bg-brand-100 rounded-lg p-4 text-left print-exact">
+                        <div className="mb-2">
+                            <span className="block text-xs uppercase text-brand-800 font-bold tracking-wider">Orden #</span>
+                            <span className="text-xl font-mono text-brand-900 font-bold">ORD-{service.folio || service.orden_numero}</span>
+                        </div>
+                        <div>
+                            <span className="block text-xs uppercase text-brand-800 font-bold tracking-wider">Fecha</span>
+                            <span className="text-base font-medium text-brand-900">{formatDate(service.fecha)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr className="border-gray-100 mx-10" />
+
+            <div className="px-10 py-4">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Cliente</span>
+                <h3 className="text-xl font-bold text-gray-800">{service.cliente || service.cliente_nombre || 'Cliente General'}</h3>
+                {service.telefono && <p className="text-gray-500 text-sm mt-1">Tel: {service.telefono}</p>}
+            </div>
+
+            <div className="px-10 flex-1">
+                <table className="w-full text-left border-collapse overflow-hidden rounded-lg">
+                    <thead>
+                        <tr className="bg-brand-900 text-white text-xs uppercase tracking-wider print-exact">
+                            <th className="py-4 px-4 font-bold w-16 text-center">Cant.</th>
+                            <th className="py-4 px-4 font-bold">Descripción / Servicio</th>
+                            <th className="py-4 px-4 font-bold text-right w-32">Precio Unit.</th>
+                            <th className="py-4 px-4 font-bold text-right w-32">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-sm text-gray-700">
+                        {items.map((item, idx) => (
+                            <tr key={idx} className="border-b border-gray-100">
+                                <td className="py-4 px-4 text-center font-bold">{item.qty}</td>
+                                <td className="py-4 px-4">
+                                    <p className="font-semibold text-gray-900">{item.description}</p>
+                                    {item.detail && <p className="text-xs text-gray-500 mt-0.5">{item.detail}</p>}
+                                </td>
+                                <td className="py-4 px-4 text-right font-mono">{formatCurrency(item.price)}</td>
+                                <td className="py-4 px-4 text-right font-mono font-medium text-gray-900">{formatCurrency(item.total)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="px-10 py-8 flex justify-end">
+                <div className="w-1/2 lg:w-1/3">
+
+                    <div className="flex justify-between py-2 text-sm text-gray-600">
+                        <span>Total Artículos/Servicios:</span>
+                        <span className="font-bold">{totalItemsCount}</span>
+                    </div>
+
+                    <div className="border-t border-gray-200 my-2"></div>
+
+                    <div className="flex justify-between py-2 text-sm text-gray-600">
+                        <span>Subtotal:</span>
+                        <span className="font-mono text-gray-900">{formatCurrency(subtotal)}</span>
+                    </div>
+
+                    {anticipo > 0 && (
+                        <div className="flex justify-between py-2 text-sm text-blue-600">
+                            <span>Anticipo:</span>
+                            <span className="font-mono font-medium">- {formatCurrency(anticipo)}</span>
+                        </div>
+                    )}
+
+                    {discount > 0 && (
+                        <div className="flex justify-between py-2 text-sm text-green-600">
+                            <span>Descuento:</span>
+                            <span className="font-mono font-medium">- {formatCurrency(discount)}</span>
+                        </div>
+                    )}
+
+                    <div className="flex justify-between py-4 border-t-2 border-brand-900 mt-2 items-center">
+                        <span className="text-base font-bold text-brand-900 uppercase tracking-widest">Total Nota</span>
+                        <span className="text-2xl font-bold text-brand-900 font-mono">{formatCurrency(total - anticipo - discount)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-gray-50 px-10 py-6 border-t border-gray-200 mt-4 text-center print-exact">
+                <p className="text-sm font-semibold text-gray-800">¡Gracias por su confianza!</p>
+                <p className="text-xs text-gray-500 mt-1 max-w-2xl mx-auto">
+                    Este documento es una nota de venta. Para cualquier duda o aclaración sobre este servicio, favor de contactarse en un lapso no mayor a 5 días hábiles.
+                </p>
+            </div>
+        </div>
+    );
+};
+
 const PrintableQuotation = ({
     company,
     client,
@@ -1977,7 +2340,7 @@ const ChangelogView = ({ darkMode }) => {
 };
 
 
-const CCTVList = ({ darkMode, onNavigate, onViewService, user, refreshTrigger }) => {
+const CCTVList = ({ darkMode, onNavigate, onViewService, onShowNotaVenta, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -2197,6 +2560,13 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user, refreshTrigger })
                                                         <ScrollText className="w-5 h-5" />
                                                     </button>
                                                     <button
+                                                        onClick={() => onShowNotaVenta({ ...service, type: 'CCTV', tableName: 'servicios_cctv', original: service })}
+                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Generar Nota de Venta"
+                                                    >
+                                                        <FileText className="w-5 h-5" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => onViewService(service)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                         title="Ver Servicio"
@@ -2271,6 +2641,13 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, user, refreshTrigger })
                                                 className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
                                             >
                                                 <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onShowNotaVenta({ ...service, type: 'CCTV', tableName: 'servicios_cctv', original: service })}
+                                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => onViewService(service)}
@@ -2780,12 +3157,12 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
 
     const getStatusColorClass = (colorName) => {
         const colors = {
-            blue: 'bg-blue-100 text-blue-700 border-blue-300',
-            yellow: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-            green: 'bg-green-100 text-green-700 border-green-300',
-            purple: 'bg-purple-100 text-purple-700 border-purple-300',
-            red: 'bg-red-100 text-red-700 border-red-300',
-            gray: 'bg-gray-100 text-gray-700 border-gray-300'
+            black: 'bg-slate-900 text-white ring-slate-900/20 shadow-lg shadow-slate-900/10',
+            yellow: 'bg-amber-400 text-amber-950 ring-amber-400/20 shadow-lg shadow-amber-400/10',
+            blue: 'bg-blue-600 text-white ring-blue-600/20 shadow-lg shadow-blue-600/10',
+            green: 'bg-emerald-500 text-white ring-emerald-500/20 shadow-lg shadow-emerald-500/10',
+            red: 'bg-rose-500 text-white ring-rose-500/20 shadow-lg shadow-rose-500/10',
+            gray: 'bg-slate-500 text-white ring-slate-500/20 shadow-lg shadow-slate-500/10'
         };
         return colors[colorName] || colors.gray;
     };
@@ -2808,20 +3185,20 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                     setIsOpen(!isOpen);
                 }}
                 disabled={updating}
-                className={`w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-md hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all flex items-center justify-between gap-2 ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${darkMode ? 'bg-slate-800 border-slate-600 text-slate-200' : 'text-slate-700'}`}
+                className={`w-full px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-between gap-3 group relative overflow-hidden ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95 cursor-pointer shadow-md hover:shadow-xl'} ring-1`}
             >
                 {updating ? (
-                    <div className="flex items-center gap-2">
-                        <Loader className="w-4 h-4 animate-spin text-blue-500" />
-                        <span>Actualizando...</span>
+                    <div className="flex items-center gap-2 justify-center w-full">
+                        <Loader className="w-4 h-4 animate-spin" />
+                        <span>Espere...</span>
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center gap-2 overflow-hidden">
-                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColorClass(displayColor).split(' ')[0].replace('bg-', 'bg-').replace('-100', '-500')}`}></span>
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div className={`w-1.5 h-1.5 rounded-full bg-white opacity-50 group-hover:opacity-100 transition-opacity animate-pulse`}></div>
                             <span className="truncate">{displayLabel}</span>
                         </div>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 opacity-70 group-hover:opacity-100 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                     </>
                 )}
             </button>
@@ -2834,15 +3211,23 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                         <button
                             key={status.value}
                             onClick={() => handleStatusUpdate(status.value)}
-                            className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between group transition-colors ${darkMode
-                                ? 'hover:bg-slate-700 text-slate-200'
-                                : 'hover:bg-slate-50 text-slate-700'
+                            className={`w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-between group transition-all ${darkMode
+                                ? 'hover:bg-slate-700/50 text-slate-400 hover:text-white'
+                                : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'
                                 }`}
                         >
-                            <div className="flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full bg-${status.color}-500`}></span>
-                                <span className="font-medium">{status.label}</span>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-2 h-2 rounded-full shadow-sm ${status.color === 'black' ? 'bg-slate-900' :
+                                    status.color === 'yellow' ? 'bg-amber-400' :
+                                        status.color === 'blue' ? 'bg-blue-600' :
+                                            status.color === 'green' ? 'bg-emerald-500' :
+                                                status.color === 'red' ? 'bg-rose-500' : 'bg-slate-400'
+                                    }`}></div>
+                                <span>{status.label}</span>
                             </div>
+                            {statusValue === status.value && (
+                                <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -2851,7 +3236,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     );
 };
 
-const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
+const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onShowNotaVenta, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3054,6 +3439,13 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
                                                     >
                                                         <ScrollText className="w-5 h-5" />
                                                     </button>
+                                                    <button
+                                                        onClick={() => onShowNotaVenta({ ...service, type: 'PC', tableName: 'servicios_pc', original: service })}
+                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Generar Nota de Venta"
+                                                    >
+                                                        <FileText className="w-5 h-5" />
+                                                    </button>
 
                                                     {service.pagado && service.entregado ? (
                                                         <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
@@ -3138,6 +3530,13 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user
                                                 className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
                                             >
                                                 <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onShowNotaVenta({ ...service, type: 'PC', tableName: 'servicios_pc', original: service })}
+                                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => onViewService(service)}
@@ -3602,7 +4001,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, user, refreshTrigger }) => {
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger }) => {
     const [unifiedServices, setUnifiedServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -3613,6 +4012,8 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
     const [showReceipt, setShowReceipt] = useState(false);
     const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const serviceCategories = [
         { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10', implemented: true, table: 'servicios_cctv' },
@@ -3805,6 +4206,17 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         s.type.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Pagination logic
+    const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(filteredServices.length / itemsPerPage);
+    const paginatedServices = itemsPerPage === -1
+        ? filteredServices
+        : filteredServices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Reset to page 1 when search term changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, itemsPerPage]);
+
     const handleDelete = async (service) => {
         if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
         try {
@@ -3931,9 +4343,9 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="mb-6">
-                <div className="relative">
+            {/* Search Bar and Pagination Controls */}
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                         type="text"
@@ -3942,6 +4354,19 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className={`w-full pl-12 pr-4 py-4 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 focus:border-blue-500'} focus:outline-none focus:ring-4 focus:ring-blue-500/10 shadow-sm`}
                     />
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className={`text-sm font-medium whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Mostrar:</span>
+                    <select
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                        className={`px-4 py-4 rounded-2xl border transition-all font-medium ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 hover:border-slate-600 hover:bg-slate-750' : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50'} focus:outline-none focus:border-blue-500 focus:ring-0 shadow-sm cursor-pointer`}
+                    >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={-1}>Todos</option>
+                    </select>
                 </div>
             </div>
 
@@ -3994,7 +4419,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                     </tr>
                                 </thead>
                                 <tbody className={`divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
-                                    {filteredServices.map((service) => (
+                                    {paginatedServices.map((service) => (
                                         <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' :
@@ -4054,6 +4479,13 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                         </>
                                                     )}
                                                     <button
+                                                        onClick={() => onShowNotaVenta(service)}
+                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Generar Nota de Venta"
+                                                    >
+                                                        <FileText className="w-5 h-5" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleViewServiceUnified(service)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                         title="Ver Servicio"
@@ -4080,11 +4512,64 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Pagination Controls */}
+                            {itemsPerPage !== -1 && totalPages > 1 && (
+                                <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                                    <div className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                                        Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredServices.length)} de {filteredServices.length} servicios
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            disabled={currentPage === 1}
+                                            className={`px-3 py-2 rounded-lg font-medium transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600' : 'text-slate-700'}`}
+                                        >
+                                            Anterior
+                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                                                // Show first page, last page, current page, and pages around current
+                                                const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                                                const showEllipsis = (page === 2 && currentPage > 3) || (page === totalPages - 1 && currentPage < totalPages - 2);
+
+                                                if (showEllipsis) {
+                                                    return <span key={page} className="px-2 text-slate-400">...</span>;
+                                                }
+
+                                                if (!showPage) return null;
+
+                                                return (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => setCurrentPage(page)}
+                                                        className={`px-3 py-2 rounded-lg font-medium transition-all ${page === currentPage
+                                                            ? 'bg-blue-600 text-white shadow-lg'
+                                                            : darkMode
+                                                                ? 'text-slate-300 hover:bg-slate-700'
+                                                                : 'text-slate-700 hover:bg-slate-100'
+                                                            }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className={`px-3 py-2 rounded-lg font-medium transition-all ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600' : 'text-slate-700'}`}
+                                        >
+                                            Siguiente
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Mobile Cards View */}
                         <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
-                            {filteredServices.map((service) => (
+                            {paginatedServices.map((service) => (
                                 <div
                                     key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
                                     className={`rounded-2xl p-6 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
@@ -4128,6 +4613,13 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                     </button>
                                                 </>
                                             )}
+                                            <button
+                                                onClick={() => onShowNotaVenta(service)}
+                                                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
+                                            </button>
                                             <button
                                                 onClick={() => handleViewServiceUnified(service)}
                                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -4181,6 +4673,59 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                     </div>
                                 </div>
                             ))}
+
+                            {/* Mobile Pagination Controls */}
+                            {itemsPerPage !== -1 && totalPages > 1 && (
+                                <div className={`mt-6 p-4 rounded-2xl border flex flex-col items-center gap-4 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                                    <div className={`text-sm text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                                        Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredServices.length)} de {filteredServices.length}
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap justify-center">
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            disabled={currentPage === 1}
+                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600 bg-slate-700' : 'text-slate-700 bg-white border border-slate-200'}`}
+                                        >
+                                            ← Anterior
+                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                let page;
+                                                if (totalPages <= 5) {
+                                                    page = i + 1;
+                                                } else if (currentPage <= 3) {
+                                                    page = i + 1;
+                                                } else if (currentPage >= totalPages - 2) {
+                                                    page = totalPages - 4 + i;
+                                                } else {
+                                                    page = currentPage - 2 + i;
+                                                }
+                                                return (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => setCurrentPage(page)}
+                                                        className={`px-3 py-2 rounded-lg font-medium transition-all ${page === currentPage
+                                                            ? 'bg-blue-600 text-white shadow-lg'
+                                                            : darkMode
+                                                                ? 'text-slate-300 bg-slate-700'
+                                                                : 'text-slate-700 bg-white border border-slate-200'
+                                                            }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'} ${darkMode ? 'text-slate-300 disabled:text-slate-600 bg-slate-700' : 'text-slate-700 bg-white border border-slate-200'}`}
+                                        >
+                                            Siguiente →
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </>
                 )}
@@ -4274,7 +4819,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     );
 };
 
-const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
+const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onShowNotaVenta, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -4476,6 +5021,13 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, u
                                                     >
                                                         <ScrollText className="w-5 h-5" />
                                                     </button>
+                                                    <button
+                                                        onClick={() => onShowNotaVenta({ ...service, type: 'Celular', tableName: 'servicios_celulares', original: service })}
+                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Generar Nota de Venta"
+                                                    >
+                                                        <FileText className="w-5 h-5" />
+                                                    </button>
 
                                                     {service.pagado && service.entregado ? (
                                                         <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
@@ -4562,6 +5114,13 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, u
                                                 className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
                                             >
                                                 <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onShowNotaVenta({ ...service, type: 'Celular', tableName: 'servicios_celulares', original: service })}
+                                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => onViewService(service)}
@@ -4943,8 +5502,8 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
         : `fixed inset-y-0 left-0 z-20 w-72 ${isGlass ? 'text-amber-900' : 'text-white'} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : 'bg-transparent'} no-print`;
 
     const textMuted = isGlass ? 'text-amber-700/70' : 'text-blue-200';
-    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : 'hover:text-white';
-    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : 'font-bold text-white';
+    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : 'hover:text-white hover:bg-white/10 rounded-xl';
+    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : 'font-bold text-white bg-white/20 rounded-xl shadow-sm';
     const inactiveClass = isGlass ? 'text-amber-800' : 'text-blue-100';
 
     return (
@@ -5035,8 +5594,8 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                             {/* Products */}
                             <li>
                                 <button
-                                    onClick={() => setActiveTab('items')}
-                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'items' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                    onClick={() => setActiveTab('products')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'products' ? activeClass : `${inactiveClass} ${textHover}`}`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <ShoppingCart className="w-4 h-4" />
@@ -5044,7 +5603,39 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                     </div>
                                 </button>
                             </li>
+
+                            {/* Reports */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('informes')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'informes' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <BarChart3 className="w-4 h-4" />
+                                        <span>Informes</span>
+                                    </div>
+                                </button>
+                            </li>
+
+                            {/* Subscribe Button - Eye-catching */}
+                            <li className="pt-4">
+                                <button
+                                    onClick={() => setActiveTab('suscripcion')}
+                                    className={`w-full group relative flex items-center justify-center gap-3 py-4 px-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-xl overflow-hidden
+                                        ${activeTab === 'suscripcion'
+                                            ? 'bg-white text-blue-600 scale-95'
+                                            : 'bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white hover:scale-105 hover:shadow-orange-500/40 active:scale-95'
+                                        }`}
+                                >
+                                    <Zap className={`w-5 h-5 fill-current ${activeTab === 'suscripcion' ? 'animate-pulse' : 'group-hover:animate-bounce'}`} />
+                                    <span>SUSCRÍBETE</span>
+
+                                    {/* Shining effect */}
+                                    <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[45deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out"></div>
+                                </button>
+                            </li>
                         </ul>
+
                     </div>
 
 
@@ -5106,7 +5697,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
 // --- MAIN APP ---
 
-const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
+const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onShowNotaVenta, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -5306,6 +5897,13 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                                     >
                                                         <ScrollText className="w-5 h-5" />
                                                     </button>
+                                                    <button
+                                                        onClick={() => onShowNotaVenta({ ...service, type: 'Impresora', tableName: 'servicios_impresoras', original: service })}
+                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Generar Nota de Venta"
+                                                    >
+                                                        <FileText className="w-5 h-5" />
+                                                    </button>
 
                                                     {service.pagado && service.entregado ? (
                                                         <span className="hidden sm:inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-600 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-md mr-2">
@@ -5391,6 +5989,13 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                                 className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
                                             >
                                                 <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onShowNotaVenta({ ...service, type: 'Impresora', tableName: 'servicios_impresoras', original: service })}
+                                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => onViewService(service)}
@@ -6226,7 +6831,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     );
 };
 
-const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, user, refreshTrigger }) => {
+const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onShowNotaVenta, user, refreshTrigger }) => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -6422,6 +7027,13 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                                         <ScrollText className="w-5 h-5" />
                                                     </button>
                                                     <button
+                                                        onClick={() => onShowNotaVenta({ ...service, type: 'Redes', tableName: 'servicios_redes', original: service })}
+                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Generar Nota de Venta"
+                                                    >
+                                                        <FileText className="w-5 h-5" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => onViewService(service)}
                                                         className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
                                                         title="Ver Detalle"
@@ -6498,6 +7110,13 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                                 <ScrollText className="w-5 h-5" />
                                             </button>
                                             <button
+                                                onClick={() => onShowNotaVenta({ ...service, type: 'Redes', tableName: 'servicios_redes', original: service })}
+                                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
+                                            </button>
+                                            <button
                                                 onClick={() => onViewService(service)}
                                                 className="p-2.5 bg-cyan-50 text-cyan-600 rounded-xl"
                                             >
@@ -6555,7 +7174,464 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
     );
 };
 
+
+const ReportsView = ({ darkMode, user }) => {
+    const [loading, setLoading] = useState(true);
+    const [earningsData, setEarningsData] = useState([]);
+    const [frequentClients, setFrequentClients] = useState([]);
+    const [topSpenders, setTopSpenders] = useState([]);
+    const [stats, setStats] = useState({ totalEarnings: 0, totalServices: 0, avgTicket: 0 });
+
+    // Filters
+    const [datePreset, setDatePreset] = useState('1m'); // '1w', '1m', '1y', 'custom'
+    const [dateRange, setDateRange] = useState({
+        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        end: new Date().toISOString().split('T')[0]
+    });
+
+    const handlePresetChange = (preset) => {
+        setDatePreset(preset);
+        if (preset === 'custom') return;
+
+        let days = 30;
+        if (preset === '1w') days = 7;
+        if (preset === '1y') days = 365;
+
+        setDateRange({
+            start: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            end: new Date().toISOString().split('T')[0]
+        });
+    };
+    const [serviceType, setServiceType] = useState('all');
+
+    const fetchReportsData = async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const tables = [
+                { name: 'servicios_cctv', dateField: 'servicio_fecha', clientField: 'cliente_nombre', partsField: 'inventario_materiales' },
+                { name: 'servicios_pc', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'repuestos_descripcion' },
+                { name: 'servicios_celulares', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'repuestos_descripcion' },
+                { name: 'servicios_impresoras', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'repuestos_descripcion' },
+                { name: 'servicios_redes', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'materiales_descripcion' }
+            ];
+
+            const promises = tables.map(t =>
+                supabase.from(t.name)
+                    .select(`id, total, ${t.dateField}, created_at, ${t.clientField}, ${t.partsField}`)
+                    .eq('user_id', user.id)
+                    .then(res => {
+                        if (res.error) {
+                            console.error(`Error fetching from ${t.name}:`, res.error);
+                            return { data: [], error: res.error };
+                        }
+                        console.log(`Fetched ${res.data?.length || 0} records from ${t.name}`);
+                        return res;
+                    })
+            );
+
+            const results = await Promise.all(promises);
+
+            const parsePartsExpense = (partsData) => {
+                if (!partsData) return 0;
+                let parts = [];
+                try {
+                    if (typeof partsData === 'string') {
+                        if (partsData.trim().startsWith('[')) parts = JSON.parse(partsData);
+                    } else if (Array.isArray(partsData)) {
+                        parts = partsData;
+                    }
+                } catch (e) { return 0; }
+
+                return parts.reduce((acc, p) => acc + ((Number(p.costo_empresa || p.costoEmpresa) || 0) * (Number(p.cantidad) || 1)), 0);
+            };
+
+            const normalizeDate = (d) => {
+                if (!d) return '';
+                const s = String(d).trim();
+                if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.split('T')[0];
+
+                // Handle DD/MM/YYYY
+                const parts = s.split('/');
+                if (parts.length === 3) {
+                    if (parts[2].length === 4) { // DD/MM/YYYY
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                }
+
+                try {
+                    const date = new Date(s);
+                    if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
+                } catch (e) { }
+                return s;
+            };
+
+            let allServices = [];
+            results.forEach((res, index) => {
+                const table = tables[index];
+                if (res.data) {
+                    allServices = [...allServices, ...res.data.map(s => {
+                        const expense = parsePartsExpense(s[table.partsField]);
+                        const total = Number(s.total) || 0;
+                        const rawDate = s[table.dateField] || s.created_at;
+                        return {
+                            ...s,
+                            type: table.name.replace('servicios_', ''),
+                            date: normalizeDate(rawDate),
+                            cliente_nombre: s[table.clientField],
+                            expense: expense,
+                            profit: total - expense
+                        };
+                    })];
+                }
+            });
+
+            // Apply Filters
+            const filtered = allServices.filter(s => {
+                const dateMatch = s.date >= dateRange.start && s.date <= dateRange.end;
+                const typeMatch = serviceType === 'all' || s.type === serviceType;
+                return dateMatch && typeMatch;
+            });
+
+            // Calculate Stats
+            const totalEarnings = filtered.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+            const totalExpenses = filtered.reduce((sum, s) => sum + (s.expense || 0), 0);
+            const totalProfit = totalEarnings - totalExpenses;
+            const totalServices = filtered.length;
+            const avgTicket = totalServices > 0 ? totalEarnings / totalServices : 0;
+
+            setStats({ totalEarnings, totalExpenses, totalProfit, totalServices, avgTicket });
+
+            // Generate Continuous Timeline
+            const earningsByDate = filtered.reduce((acc, s) => {
+                const date = s.date;
+                acc[date] = (acc[date] || 0) + (Number(s.total) || 0);
+                return acc;
+            }, {});
+
+            // Fill gaps in timeline
+            const timeline = [];
+            let curr = new Date(dateRange.start + 'T00:00:00');
+            const end = new Date(dateRange.end + 'T00:00:00');
+
+            while (curr <= end) {
+                const dateStr = curr.toISOString().split('T')[0];
+                timeline.push({
+                    date: dateStr,
+                    amount: earningsByDate[dateStr] || 0
+                });
+                curr.setDate(curr.getDate() + 1);
+            }
+
+            setEarningsData(timeline);
+
+            // Frequent Clients & Top Spenders
+            const clientStats = filtered.reduce((acc, s) => {
+                const name = s.cliente_nombre || 'Desconocido';
+                if (!acc[name]) acc[name] = { name, count: 0, total: 0 };
+                acc[name].count += 1;
+                acc[name].total += (Number(s.total) || 0);
+                return acc;
+            }, {});
+
+            const clientsArray = Object.values(clientStats);
+            setFrequentClients([...clientsArray].sort((a, b) => b.count - a.count).slice(0, 5));
+            setTopSpenders([...clientsArray].sort((a, b) => b.total - a.total).slice(0, 5));
+
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchReportsData();
+    }, [user, dateRange, serviceType]);
+
+    const formatMoney = (val) => `$${formatCurrency(val)}`;
+
+    // Simple Bar Chart Component
+    const MiniBarChart = ({ data }) => {
+        if (!data || data.length === 0) return <div className="h-64 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+            <BarChart2 className="w-10 h-10 mb-2 opacity-20" />
+            <p className="font-bold text-sm">Sin datos para el período</p>
+        </div>;
+
+        const maxVal = Math.max(...data.map(d => d.amount), 1);
+
+        return (
+            <div className={`p-8 rounded-[2.5rem] border transition-all duration-500 ${darkMode ? 'bg-slate-800/50 border-slate-700 shadow-2xl' : 'bg-white border-slate-100 shadow-2xl shadow-blue-500/5'}`}>
+                <div className="flex justify-between items-center mb-10">
+                    <h3 className={`text-lg font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>Tendencia de Ingresos</h3>
+                    <div className="flex gap-2">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400">INGRESOS DIARIOS</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-end gap-1.5 h-64 w-full px-2 group/chart">
+                    {data.map((d, i) => (
+                        <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                            <div
+                                className={`w-full ${d.amount > 0 ? 'bg-gradient-to-t from-blue-600 to-indigo-400 hover:from-blue-500 hover:to-indigo-300' : 'bg-slate-100 dark:bg-slate-800'} rounded-2xl transition-all duration-700 ease-out cursor-help relative group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] shadow-sm`}
+                                style={{ height: `${(d.amount / maxVal) * 95}%`, minHeight: d.amount > 0 ? '6px' : '4px' }}
+                            >
+                                {d.amount > 0 && (
+                                    <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 pointer-events-none transition-all duration-300 opacity-0 group-hover:opacity-100 z-50 transform group-hover:scale-110 translate-y-2 group-hover:translate-y-0">
+                                        <div className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-[10px] font-black py-2 px-4 rounded-2xl shadow-2xl whitespace-nowrap border border-white/10 dark:border-slate-200">
+                                            <div className="text-blue-400 dark:text-blue-600 mb-0.5 uppercase tracking-tighter opacity-70">{d.date}</div>
+                                            <div className="text-xs">{formatMoney(d.amount)}</div>
+                                        </div>
+                                        <div className="w-2 h-2 bg-slate-900 dark:bg-white rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="w-full px-4 md:px-12 py-10 animate-in fade-in duration-700 bg-slate-50/30 dark:bg-transparent min-h-screen">
+            {/* Header Area */}
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-8">
+                <div className="flex items-center gap-6">
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+                        <div className={`relative p-5 rounded-[1.5rem] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} border shadow-2xl`}>
+                            <TrendingUp className="w-10 h-10 text-blue-600" />
+                        </div>
+                    </div>
+                    <div>
+                        <h1 className={`text-5xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                            Dashboard de <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent italic">Negocio</span>
+                        </h1>
+                        <div className="flex items-center gap-3">
+                            <span className={`text-sm font-semibold px-3 py-1 rounded-full ${darkMode ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>PRO ANALYTICS</span>
+                            <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
+                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Visualización de métricas avanzadas en tiempo real</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Glass Filter Bar */}
+                <div className={`p-2 rounded-[2rem] border backdrop-blur-3xl transition-all duration-500 flex flex-wrap gap-2 ${darkMode ? 'bg-slate-800/40 border-slate-700/50 shadow-2xl shadow-blue-500/5' : 'bg-white/90 border-slate-200/50 shadow-2xl shadow-blue-500/10'}`}>
+                    <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all ${darkMode ? 'bg-slate-700/30 text-slate-300' : 'bg-slate-50 text-slate-600'}`}>
+                        <Filter className="w-4 h-4 text-blue-500" />
+                        <select
+                            value={serviceType}
+                            onChange={(e) => setServiceType(e.target.value)}
+                            className="bg-transparent border-none text-sm font-black focus:ring-0 cursor-pointer outline-none pr-6"
+                        >
+                            <option value="all">Servicios: Todos</option>
+                            <option value="pc">Equipos PC</option>
+                            <option value="cctv">Sistemas CCTV</option>
+                            <option value="celulares">Telefonía Celular</option>
+                            <option value="impresoras">Servicio Impresoras</option>
+                            <option value="redes">Infraestructura Redes</option>
+                        </select>
+                    </div>
+
+                    <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all ${darkMode ? 'bg-slate-700/30 text-slate-300' : 'bg-slate-50 text-slate-600'}`}>
+                        <Calendar className="w-4 h-4 text-indigo-500" />
+                        <select
+                            value={datePreset}
+                            onChange={(e) => handlePresetChange(e.target.value)}
+                            className="bg-transparent border-none text-sm font-black focus:ring-0 cursor-pointer outline-none pr-6"
+                        >
+                            <option value="1w">Semana Actual</option>
+                            <option value="1m">Últimos 30 días</option>
+                            <option value="1y">Año en curso</option>
+                            <option value="custom">Personalizado...</option>
+                        </select>
+
+                        {datePreset === 'custom' && (
+                            <div className="flex items-center gap-3 pr-2 border-l border-slate-300/40 pl-4 ml-2 animate-in fade-in zoom-in-95 duration-300">
+                                <input
+                                    type="date"
+                                    value={dateRange.start}
+                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                    className={`bg-transparent border-none text-xs font-black focus:ring-0 outline-none w-28 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                                />
+                                <span className={`text-slate-300 font-thin ${darkMode ? 'opacity-20' : ''}`}>|</span>
+                                <input
+                                    type="date"
+                                    value={dateRange.end}
+                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                    className={`bg-transparent border-none text-xs font-black focus:ring-0 outline-none w-28 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={fetchReportsData}
+                        className={`p-2.5 rounded-[1.5rem] transition-all hover:scale-105 active:scale-95 ${darkMode ? 'bg-slate-700/50 hover:bg-blue-500/20 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'} border border-transparent hover:border-blue-500/30`}
+                        title="Actualizar datos"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex flex-col items-center justify-center min-h-[500px] gap-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-blue-500 rounded-full blur-2xl opacity-20 animate-pulse"></div>
+                        <Loader className="w-16 h-16 animate-spin text-blue-600 relative z-10" />
+                    </div>
+                    <div className="text-center">
+                        <p className={`text-xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Analizando Datos...</p>
+                        <p className="text-slate-400 font-medium tracking-wide">Construyendo métricas de rendimiento</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-12 pb-20">
+                    {/* Stat Cards Container */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {/* Gross Revenue */}
+                        <div className={`group relative overflow-hidden p-8 rounded-[2.5rem] border transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 ${darkMode ? 'bg-slate-800/80 border-slate-700/50 shadow-2xl shadow-blue-900/20' : 'bg-white border-slate-100 shadow-2xl shadow-blue-500/10'}`}>
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl transition-all duration-700 group-hover:scale-150 group-hover:bg-indigo-500/20"></div>
+                            <div className="relative flex justify-between items-start mb-8">
+                                <div className="p-4 bg-gradient-to-br from-indigo-500 to-blue-700 rounded-2xl text-white shadow-xl shadow-indigo-500/30 rotate-3 group-hover:rotate-0 transition-transform">
+                                    <DollarSign className="w-7 h-7" />
+                                </div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${darkMode ? 'bg-slate-700 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
+                                    Bruto
+                                </div>
+                            </div>
+                            <h3 className={`text-xs font-bold uppercase tracking-widest mb-2 opacity-60 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Ingresos Totales</h3>
+                            <p className={`text-4xl font-black tracking-tighter ${darkMode ? 'text-white' : 'text-slate-900'}`}>{formatMoney(stats.totalEarnings)}</p>
+                            <div className="mt-6 h-2 w-full bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-indigo-500 via-blue-500 to-indigo-600 rounded-full w-full animate-progress-glow"></div>
+                            </div>
+                        </div>
+
+                        {/* Company Costs */}
+                        <div className={`group relative overflow-hidden p-8 rounded-[2.5rem] border transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 ${darkMode ? 'bg-slate-800/80 border-slate-700/50 shadow-2xl shadow-rose-900/20' : 'bg-white border-slate-100 shadow-2xl shadow-rose-500/10'}`}>
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl transition-all duration-700 group-hover:scale-150 group-hover:bg-rose-500/20"></div>
+                            <div className="relative flex justify-between items-start mb-8">
+                                <div className="p-4 bg-gradient-to-br from-rose-500 to-pink-700 rounded-2xl text-white shadow-xl shadow-rose-500/30 -rotate-3 group-hover:rotate-0 transition-transform">
+                                    <ShoppingCart className="w-7 h-7" />
+                                </div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${darkMode ? 'bg-slate-700 text-rose-400' : 'bg-rose-50 text-rose-600'}`}>
+                                    Costos
+                                </div>
+                            </div>
+                            <h3 className={`text-xs font-bold uppercase tracking-widest mb-2 opacity-60 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Gasto Empresa</h3>
+                            <p className={`text-4xl font-black tracking-tighter ${darkMode ? 'text-white' : 'text-slate-900'}`}>{formatMoney(stats.totalExpenses)}</p>
+                            <div className="mt-6 h-2 w-full bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-rose-500 to-pink-600 rounded-full w-[40%]"></div>
+                            </div>
+                        </div>
+
+                        {/* Net Profit */}
+                        <div className={`group relative overflow-hidden p-8 rounded-[2.5rem] border transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 ${darkMode ? 'bg-slate-800/80 border-slate-700/50 shadow-2xl shadow-emerald-900/20' : 'bg-white border-slate-100 shadow-2xl shadow-emerald-500/10'}`}>
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl transition-all duration-700 group-hover:scale-150 group-hover:bg-emerald-500/20"></div>
+                            <div className="relative flex justify-between items-start mb-8">
+                                <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-2xl text-white shadow-xl shadow-emerald-500/30 rotate-6 group-hover:rotate-0 transition-transform">
+                                    <Zap className="w-7 h-7" />
+                                </div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${darkMode ? 'bg-slate-700 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
+                                    Beneficio
+                                </div>
+                            </div>
+                            <h3 className={`text-xs font-bold uppercase tracking-widest mb-2 opacity-60 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Ganancia Real</h3>
+                            <p className={`text-4xl font-black tracking-tighter ${darkMode ? 'text-white' : 'text-slate-900'}`}>{formatMoney(stats.totalProfit)}</p>
+                            <div className="mt-6 h-2 w-full bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600 rounded-full w-[75%]"></div>
+                            </div>
+                        </div>
+
+                        {/* Service Volume */}
+                        <div className={`group relative overflow-hidden p-8 rounded-[2.5rem] border transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 ${darkMode ? 'bg-slate-800/80 border-slate-700/50 shadow-2xl shadow-purple-900/20' : 'bg-white border-slate-100 shadow-2xl shadow-slate-500/10'}`}>
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-slate-500/10 rounded-full blur-3xl transition-all duration-700 group-hover:scale-150 group-hover:bg-slate-500/20"></div>
+                            <div className="relative flex justify-between items-start mb-8">
+                                <div className="p-4 bg-gradient-to-br from-slate-700 to-slate-900 rounded-2xl text-white shadow-xl shadow-slate-800/40 -rotate-6 group-hover:rotate-0 transition-transform">
+                                    <Users className="w-7 h-7" />
+                                </div>
+                            </div>
+                            <h3 className={`text-xs font-bold uppercase tracking-widest mb-2 opacity-60 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Volumen Servicios</h3>
+                            <p className={`text-4xl font-black tracking-tighter ${darkMode ? 'text-white' : 'text-slate-900'}`}>{stats.totalServices}</p>
+                            <div className="mt-6 flex gap-1.5 h-2 w-full bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 w-[25%] transition-all hover:w-[35%]"></div>
+                                <div className="h-full bg-indigo-500 w-[15%] transition-all hover:w-[25%]"></div>
+                                <div className="h-full bg-emerald-500 w-[30%] transition-all hover:w-[40%]"></div>
+                                <div className="h-full bg-rose-500 w-[30%] transition-all hover:w-[40%]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Chart & Deep Insights Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        {/* Interactive Main Chart */}
+                        <div className="lg:col-span-2">
+                            <MiniBarChart data={earningsData} />
+                        </div>
+
+                        {/* Top Performers / Clients */}
+                        <div className={`p-8 rounded-[2.5rem] border backdrop-blur-3xl transition-all duration-500 ${darkMode ? 'bg-slate-800/40 border-slate-700 shadow-2xl' : 'bg-white/80 border-slate-100 shadow-2xl shadow-blue-500/5'}`}>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-2xl">
+                                    <Trophy className="w-5 h-5" />
+                                </div>
+                                <h3 className={`text-lg font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>Top Clientes</h3>
+                            </div>
+
+                            <div className="space-y-8">
+                                <section>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-5">💰 MAYOR FACTURACIÓN</p>
+                                    <div className="space-y-4">
+                                        {topSpenders.map((client, i) => (
+                                            <div key={i} className="group/item flex justify-between items-center p-3 rounded-2xl transition-all hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs transition-colors ${i === 0 ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-slate-100 dark:bg-slate-700 dark:text-slate-300 text-slate-500'}`}>
+                                                        {i + 1}
+                                                    </div>
+                                                    <span className={`text-sm font-bold truncate max-w-[140px] ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>{client.name}</span>
+                                                </div>
+                                                <span className="text-sm font-black text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-3 py-1 rounded-lg">{formatMoney(client.total)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent"></div>
+
+                                <section>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-5">🔄 MÁS RECURRENTES</p>
+                                    <div className="space-y-4">
+                                        {frequentClients.map((client, i) => (
+                                            <div key={i} className="group/item flex justify-between items-center p-3 rounded-2xl transition-all hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-black text-xs">
+                                                        {i + 1}
+                                                    </div>
+                                                    <span className={`text-sm font-bold truncate max-w-[140px] ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>{client.name}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                                                    <span className="text-xs font-black text-indigo-600">{client.count}</span>
+                                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">serv.</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const App = () => {
+
     // 1. Check for critical configuration errors first
     if (!supabase) {
         return <SupabaseConfigError />;
@@ -6640,6 +7716,8 @@ const App = () => {
     const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
     const [expirationDate, setExpirationDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
     const [showPreview, setShowPreview] = useState(false);
+    const [showNotaPreview, setShowNotaPreview] = useState(false);
+    const [selectedServiceForNota, setSelectedServiceForNota] = useState(null);
 
     // Auth State: Folio with COT-YYYY-XXX format
     const [folio, setFolio] = useState('COT-' + new Date().getFullYear() + '-100');
@@ -7964,8 +9042,8 @@ const App = () => {
         }));
         setItems(loadedItems);
         setTerms(quotation.terminos || '');
-        setQuotationDate(quotation.fecha || new Date().toISOString().split('T')[0]);
-        setExpirationDate(quotation.fecha_vencimiento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        setQuotationDate(formatDateForInput(quotation.fecha));
+        setExpirationDate(formatDateForInput(quotation.fecha_vencimiento));
         setEditingQuotationId(quotation.id);
 
         // Set Initial State for Dirty Check
@@ -8123,7 +9201,7 @@ const App = () => {
 
     const removeItem = (id) => setItems(items.filter(i => i.id !== id));
     const updateItem = (id, field, value) => {
-        setItems(items.map(i => i.id === id ? { ...i, [field]: value } : i));
+        setItems(prevItems => prevItems.map(i => i.id === id ? { ...i, [field]: value } : i));
     };
 
     const moveItem = (fromIndex, toIndex) => {
@@ -8172,10 +9250,58 @@ const App = () => {
                 }
 
                 pdf.save(`Cotizacion-${folio}.pdf`);
-                alert('PDF generado correctamente');
+                alert('Cotización generada correctamente');
             } catch (err) {
                 console.error('Error generating PDF:', err);
                 alert('Error al generar el PDF. Por favor intente de nuevo.');
+            } finally {
+                setIsGenerating(false);
+            }
+        }, 500);
+    };
+
+    const generateNotaPDF = async () => {
+        setIsGenerating(true);
+        setTimeout(async () => {
+            const element = document.getElementById('nota-venta-printable');
+            if (!element) {
+                console.error('Nota de Venta Export element not found');
+                alert('Error: No se encontró el elemento de exportación de la nota.');
+                setIsGenerating(false);
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                const folioNota = selectedServiceForNota?.folio || selectedServiceForNota?.orden_numero || 'NVM';
+                pdf.save(`NotaDeVenta-${folioNota}.pdf`);
+                alert('Nota de Venta generada correctamente');
+            } catch (err) {
+                console.error('Error generating Nota PDF:', err);
+                alert('Error al generar la Nota de Venta. Por favor intente de nuevo.');
             } finally {
                 setIsGenerating(false);
             }
@@ -8699,486 +9825,564 @@ const App = () => {
                     </div>
                 )}
 
-                <main className={`flex-1 transition-all duration-300 md:p-8 p-3 h-screen overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
-                    <div ref={contentRef} className={`w-full h-full md:rounded-[2.5rem] rounded-3xl shadow-2xl overflow-y-auto md:px-8 px-4 md:py-10 py-6 ${isDark ? 'bg-slate-800' : currentTheme === 'glass' ? 'bg-orange-50/40 backdrop-blur-sm' : 'bg-white'} print:bg-white print:p-0 print:rounded-none print:shadow-none print:h-auto print:overflow-visible`}>
+                <main className={`flex-1 transition-all duration-300 md:p-8 p-3 ${mobileMode ? 'h-[calc(100vh-60px)]' : 'h-screen'} overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
+                    <div className={`w-full h-full md:rounded-[2.5rem] rounded-3xl shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'} print:bg-white print:rounded-none print:shadow-none`}>
+                        <div ref={contentRef} className={`w-full h-full overflow-y-auto md:px-8 px-4 md:py-10 py-6 ${currentTheme === 'glass' && !isDark ? 'bg-orange-50/40 backdrop-blur-sm' : ''} print:p-0 print:h-auto print:overflow-visible`}>
 
-                        {activeTab === 'cotizaciones-list' && (
-                            <QuotationList
-                                quotations={quotations}
-                                onCreateNew={() => {
-                                    setClient({ name: '', phone: '', email: '', address: '' });
-                                    setItems([]);
-                                    setTerms(localStorage.getItem('defaultTerms') || '');
-                                    setQuotationDate(new Date().toISOString().split('T')[0]);
-                                    setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-                                    setEditingQuotationId(null);
-                                    fetchNextFolio(session.user.id);
-                                    setActiveTab('cotizaciones-new');
-                                }}
-                                onView={viewQuotation}
-                                onEdit={loadQuotationForEdit}
-                                onDuplicate={duplicateQuotation}
-                                onDelete={deleteQuotation}
-                                darkMode={isDark}
-                                onStatusChange={() => fetchQuotations(session.user.id)}
-                            />
-                        )}
+                            {activeTab === 'cotizaciones-list' && (
+                                <QuotationList
+                                    quotations={quotations}
+                                    onCreateNew={() => {
+                                        setClient({ name: '', phone: '', email: '', address: '' });
+                                        setItems([]);
+                                        setTerms(localStorage.getItem('defaultTerms') || '');
+                                        setQuotationDate(new Date().toISOString().split('T')[0]);
+                                        setExpirationDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                                        setEditingQuotationId(null);
+                                        fetchNextFolio(session.user.id);
+                                        setActiveTab('cotizaciones-new');
+                                    }}
+                                    onView={viewQuotation}
+                                    onEdit={loadQuotationForEdit}
+                                    onDuplicate={duplicateQuotation}
+                                    onDelete={deleteQuotation}
+                                    darkMode={isDark}
+                                    onStatusChange={() => fetchQuotations(session.user.id)}
+                                />
+                            )}
 
-                        {activeTab === 'cotizaciones-new' && (
-                            <div className="w-full px-4 md:px-8 py-8 pb-20">
-                                {/* Header */}
-                                <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b pb-6 ${isDark ? 'border-slate-600' : ''}`}>
-                                    <div>
-                                        <h1 className={`md:text-3xl text-2xl font-extrabold tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
-                                            Generador de <span className="text-blue-600">Cotizaciones</span>
-                                        </h1>
-                                        <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
-                                    </div>
-                                    <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 w-full md:w-auto">
-                                        <button
-                                            onClick={() => setShowPreview(true)}
-                                            className="flex-1 md:flex-none btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-                                            title="Vista Previa"
-                                        >
-                                            <Eye className="w-5 h-5" />
-                                            <span className="sm:inline">Vista Previa</span>
-                                        </button>
-                                        <button
-                                            onClick={saveQuotation}
-                                            className="flex-1 md:flex-none btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <Download className="w-5 h-5" />
-                                            {editingQuotationId ? 'Actualizar' : (
-                                                <>
-                                                    <span className="md:hidden">Guardar</span>
-                                                    <span className="hidden md:inline">Guardar</span>
-                                                </>
-                                            )}
-                                        </button>
-                                        <button
-                                            onClick={generatePDF}
-                                            disabled={isGenerating}
-                                            className={`w-full md:w-auto btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            <Download className="w-5 h-5" />
-                                            {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Full Width Editor */}
-                                <div className="w-full max-w-5xl mx-auto space-y-6">
-                                    {/* Company Data Auto-filled */}
-                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                                        <div className="flex items-center gap-3 w-full">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1 shrink-0">
-                                                {company.logo_uri ? (
-                                                    <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
-                                                ) : (
-                                                    <Building2 className="w-6 h-6" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-blue-900">Emisor: {company.nombre || 'Nombre de tu Empresa'}</p>
-                                                <p className="text-xs text-blue-700">Los datos se tomarán de tu configuración.</p>
-                                            </div>
+                            {activeTab === 'cotizaciones-new' && (
+                                <div className="w-full px-4 md:px-8 py-8 pb-20">
+                                    {/* Header */}
+                                    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b pb-6 ${isDark ? 'border-slate-600' : ''}`}>
+                                        <div>
+                                            <h1 className={`md:text-3xl text-2xl font-extrabold tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                                                Generador de <span className="text-blue-600">Cotizaciones</span>
+                                            </h1>
+                                            <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Crea documentos profesionales en segundos.</p>
                                         </div>
-                                        <button onClick={() => setActiveTab('configuracion')} className="text-blue-600 text-xs font-bold hover:underline">Editar</button>
-                                    </div>
-
-                                    {/* Quotation Details (Folio, Date, Expiration) */}
-                                    <div className={`p-6 rounded-xl shadow-lg border text-left backdrop-blur-md ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/50'}`}>
-                                        <h3 className={`font-bold flex items-center gap-2 mb-4 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                                            <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div>
-                                                <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
-                                                <input
-                                                    type="text"
-                                                    value={folio}
-                                                    readOnly
-                                                    className={`w-full border rounded-lg p-3 text-sm font-bold text-center ${isDark ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-slate-100 border-slate-200 text-blue-600'}`}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Cotización</label>
-                                                <input
-                                                    type="date"
-                                                    value={quotationDate}
-                                                    onChange={(e) => setQuotationDate(e.target.value)}
-                                                    className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Vencimiento</label>
-                                                <input
-                                                    type="date"
-                                                    value={expirationDate}
-                                                    onChange={(e) => setExpirationDate(e.target.value)}
-                                                    className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Client Section with Selector */}
-                                    <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left backdrop-blur-md ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/50 border-white/40'}`}>
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                                            <h3 className={`font-bold flex items-center gap-2 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                                                <User className="w-5 h-5 text-gray-500" /> Datos del Cliente
-                                            </h3>
-                                            <select
-                                                className={`border rounded-lg text-sm block p-2 outline-none w-full md:w-64 focus:ring-blue-500 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
-                                                onChange={(e) => handleSelectClient(e.target.value)}
-                                                defaultValue=""
+                                        <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 w-full md:w-auto">
+                                            <button
+                                                onClick={() => setShowPreview(true)}
+                                                className="flex-1 md:flex-none btn bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 shadow-sm px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                                title="Vista Previa"
                                             >
-                                                <option value="" disabled>Seleccionar Cliente Guardado...</option>
-                                                {savedClients.map(c => (
-                                                    <option key={c.id} value={c.id}>{c.nombre} {c.empresa ? `(${c.empresa})` : ''}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <input
-                                                type="text"
-                                                placeholder="Nombre del Cliente"
-                                                value={client.name}
-                                                onChange={(e) => updateClient('name', e.target.value)}
-                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Teléfono"
-                                                value={client.phone}
-                                                onChange={(e) => updateClient('phone', e.target.value)}
-                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                            />
-                                            <input
-                                                type="email"
-                                                placeholder="Correo Electrónico"
-                                                value={client.email}
-                                                onChange={(e) => updateClient('email', e.target.value)}
-                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Dirección / Ciudad"
-                                                value={client.address}
-                                                onChange={(e) => updateClient('address', e.target.value)}
-                                                className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
-                                            />
-                                        </div>
-                                    </div>
-                                    <ItemsTable
-                                        items={items}
-                                        onAddItem={addItem}
-                                        onRemoveItem={removeItem}
-                                        onUpdateItem={updateItem}
-                                        onMoveItem={moveItem}
-                                        darkMode={isDark}
-                                    />
-
-                                    {/* Global IVA Switch */}
-                                    <div className={`p-4 rounded-xl flex items-center justify-end gap-3 backdrop-blur-md ${isDark ? 'bg-slate-800/80' : 'bg-white/60'}`}>
-                                        <span className={`font-bold text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Desglosar IVA (16%)</span>
-                                        <button
-                                            onClick={() => setIncludeIva(!includeIva)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${includeIva ? 'bg-blue-600' : 'bg-gray-200'}`}
-                                        >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIva ? 'translate-x-6' : 'translate-x-1'}`} />
-                                        </button>
-                                    </div>
-
-                                    <TermsInput value={terms} onChange={setTerms} darkMode={isDark} />
-                                </div>
-                            </div>
-                        )}
-                        {activeTab === 'clientes' && (
-                            <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
-                        )}
-                        {activeTab === 'configuracion' && (
-                            <SettingsView
-                                companyData={company}
-                                onCompanyChange={updateCompany}
-                                onSave={saveCompanySettings}
-                                darkMode={isDark}
-                                selectedTemplate={selectedTemplate}
-                                onTemplateChange={handleTemplateChange}
-                            />
-                        )}
-                        {activeTab === 'servicios' && (
-                            <ServiciosView
-                                darkMode={isDark}
-                                onNavigate={setActiveTab}
-                                setSelectedService={setSelectedService}
-                                setEditingCCTVService={setEditingCCTVService}
-                                setEditingPCService={setEditingPCService}
-                                setEditingPhoneService={setEditingPhoneService}
-                                setEditingPrinterService={setEditingPrinterService}
-                                setEditingNetworkService={setEditingNetworkService}
-                                user={session?.user}
-                                refreshTrigger={servicesRefreshTrigger}
-                            />
-                        )}
-                        {activeTab === 'services-cctv-list' && <CCTVList key={`cctv-${servicesRefreshTrigger}`} darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} user={session?.user} refreshTrigger={servicesRefreshTrigger} />}
-                        {activeTab === 'services-cctv-view' && (
-                            <CCTVServiceView
-                                service={selectedService}
-                                onBack={() => setActiveTab('servicios')}
-                                onEdit={(service) => setEditingCCTVService(service)}
-                                darkMode={isDark}
-                                company={company}
-                            />
-                        )}
-                        {activeTab === 'services-pc-list' && (
-                            <PCList
-                                key={`pc-${servicesRefreshTrigger}`}
-                                darkMode={isDark}
-                                onNavigate={setActiveTab}
-                                onViewService={handleViewPCService}
-                                onCreateNew={() => setEditingPCService('new')}
-                                onEdit={(service) => setEditingPCService(service)}
-                                user={session?.user}
-                                refreshTrigger={servicesRefreshTrigger}
-                            />
-                        )}
-                        {activeTab === 'services-pc-view' && (
-                            <PCServiceView
-                                service={selectedService}
-                                onBack={() => setActiveTab('servicios')}
-                                onEdit={(service) => setEditingPCService(service)}
-                                darkMode={isDark}
-                                company={company}
-                            />
-                        )}
-                        {activeTab === 'services-phone-list' && (
-                            <PhoneList
-                                key={`phone-${servicesRefreshTrigger}`}
-                                darkMode={isDark}
-                                onNavigate={setActiveTab}
-                                onViewService={(service) => {
-                                    setSelectedService(service);
-                                    setActiveTab('services-phone-view');
-                                }}
-                                onCreateNew={() => setEditingPhoneService('new')}
-                                onEdit={(service) => setEditingPhoneService(service)}
-                                user={session?.user}
-                                refreshTrigger={servicesRefreshTrigger}
-                            />
-                        )}
-                        {activeTab === 'services-phone-view' && (
-                            <PhoneServiceView
-                                service={selectedService}
-                                onBack={() => setActiveTab('servicios')}
-                                onEdit={(service) => setEditingPhoneService(service)}
-                                darkMode={isDark}
-                                company={company}
-                            />
-                        )}
-
-                        {/* PC Service Form Modal */}
-                        {editingPCService && (
-                            <PCServiceForm
-                                service={editingPCService === 'new' ? null : editingPCService}
-                                onSave={handleSavePCService}
-                                onCancel={() => setEditingPCService(null)}
-                                darkMode={isDark}
-                            />
-                        )}
-
-                        {/* CCTV Service Form Modal */}
-                        {editingCCTVService && (
-                            <CCTVServiceForm
-                                service={editingCCTVService === 'new' ? null : editingCCTVService}
-                                onSave={handleSaveCCTVService}
-                                onCancel={() => setEditingCCTVService(null)}
-                                darkMode={isDark}
-                            />
-                        )}
-
-                        {/* Phone Service Form Modal */}
-                        {editingPhoneService && (
-                            <PhoneServiceForm
-                                service={editingPhoneService === 'new' ? null : editingPhoneService}
-                                onSave={handleSavePhoneService}
-                                onCancel={() => setEditingPhoneService(null)}
-                                darkMode={isDark}
-                            />
-                        )}
-
-                        {activeTab === 'services-network-list' && (
-                            <NetworkList
-                                key={`network-${servicesRefreshTrigger}`}
-                                darkMode={isDark}
-                                onNavigate={setActiveTab}
-                                onViewService={(service) => {
-                                    setSelectedService(service);
-                                    setActiveTab('services-network-view');
-                                }}
-                                onCreateNew={() => setEditingNetworkService('new')}
-                                onEdit={(service) => setEditingNetworkService(service)}
-                                user={session?.user}
-                                refreshTrigger={servicesRefreshTrigger}
-                            />
-                        )}
-                        {activeTab === 'services-printer-list' && (
-                            <PrinterList
-                                key={`printer-${servicesRefreshTrigger}`}
-                                darkMode={isDark}
-                                onNavigate={setActiveTab}
-                                onViewService={(service) => {
-                                    setSelectedService(service);
-                                    setActiveTab('services-printer-view');
-                                }}
-                                onCreateNew={() => setEditingPrinterService('new')}
-                                onEdit={(service) => setEditingPrinterService(service)}
-                                user={session?.user}
-                                refreshTrigger={servicesRefreshTrigger}
-                            />
-                        )}
-                        {activeTab === 'services-printer-view' && (
-                            <PrinterServiceView
-                                service={selectedService}
-                                onBack={() => setActiveTab('servicios')}
-                                onEdit={(service) => setEditingPrinterService(service)}
-                                darkMode={isDark}
-                                company={company}
-                            />
-                        )}
-                        {activeTab === 'services-network-view' && (
-                            <NetworkServiceView
-                                service={selectedService}
-                                onBack={() => setActiveTab('servicios')}
-                                onEdit={(service) => setEditingNetworkService(service)}
-                                darkMode={isDark}
-                                company={company}
-                            />
-                        )}
-
-                        {/* Printer Service Form Modal */}
-                        {editingPrinterService && (
-                            <PrinterServiceForm
-                                service={editingPrinterService === 'new' ? null : editingPrinterService}
-                                onSave={handleSavePrinterService}
-                                onCancel={() => setEditingPrinterService(null)}
-                                darkMode={isDark}
-                            />
-                        )}
-
-                        {/* Network Service Form Modal */}
-                        {editingNetworkService && (
-                            <NetworkServiceForm
-                                service={editingNetworkService === 'new' ? null : editingNetworkService}
-                                onSave={handleSaveNetworkService}
-                                onCancel={() => setEditingNetworkService(null)}
-                                darkMode={isDark}
-                            />
-                        )}
-                        {activeTab === 'contratos' && (
-                            <ContractsView darkMode={isDark} company={company} />
-                        )}
-
-                        {/* Global Preview Modal */}
-                        {showPreview && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                                <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-                                    {/* Modal Header */}
-                                    <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                                        <h3 className={`font-bold text-lg flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
-                                            <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
-                                        </h3>
-                                        <div className="flex items-center gap-2">
+                                                <Eye className="w-5 h-5" />
+                                                <span className="sm:inline">Vista Previa</span>
+                                            </button>
+                                            <button
+                                                onClick={saveQuotation}
+                                                className="flex-1 md:flex-none btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <Download className="w-5 h-5" />
+                                                {editingQuotationId ? 'Actualizar' : (
+                                                    <>
+                                                        <span className="md:hidden">Guardar</span>
+                                                        <span className="hidden md:inline">Guardar</span>
+                                                    </>
+                                                )}
+                                            </button>
                                             <button
                                                 onClick={generatePDF}
                                                 disabled={isGenerating}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                className={`w-full md:w-auto btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
-                                                <Download className="w-4 h-4" />
+                                                <Download className="w-5 h-5" />
                                                 {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setShowPreview(false);
-                                                    if (viewingQuotation) {
-                                                        setViewingQuotation(null);
-                                                    }
-                                                }}
-                                                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                                            >
-                                                <X className="w-6 h-6" />
                                             </button>
                                         </div>
                                     </div>
 
-                                    {/* Modal Content - Scrollable */}
-                                    <div className={`overflow-auto p-8 flex justify-center ${isDark ? 'bg-slate-900/50' : 'bg-slate-200/50'}`} ref={previewContainerRef}>
-                                        <div
-                                            className="bg-white shadow-xl origin-top transition-transform duration-200"
-                                            style={{
-                                                transform: `scale(${previewScale})`,
-                                                width: '900px',
-                                                height: 'auto'
-                                            }}
-                                        >
-                                            <div ref={quotationRef}>
-                                                <PrintableQuotation
-                                                    company={company}
-                                                    client={viewingQuotation ? {
-                                                        name: viewingQuotation.nombre_cliente,
-                                                        phone: viewingQuotation.telefono,
-                                                        email: viewingQuotation.correo,
-                                                        address: ''
-                                                    } : client}
-                                                    items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
-                                                        id: index + 1,
-                                                        qty: art.cantidad,
-                                                        desc: art.articulo,
-                                                        price: art.precioUnitario,
-                                                        discount: art.descuento || 0,
-                                                        tax: 0
-                                                    })) : items}
-                                                    terms={viewingQuotation ? viewingQuotation.terminos : terms}
-                                                    folio={viewingQuotation ? viewingQuotation.folio : folio}
-                                                    includeIva={includeIva}
-                                                    template={selectedTemplate}
-                                                />
+                                    {/* Full Width Editor */}
+                                    <div className="w-full max-w-5xl mx-auto space-y-6">
+                                        {/* Company Data Auto-filled */}
+                                        <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                                            <div className="flex items-center gap-3 w-full">
+                                                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm overflow-hidden p-1 shrink-0">
+                                                    {company.logo_uri ? (
+                                                        <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
+                                                    ) : (
+                                                        <Building2 className="w-6 h-6" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-blue-900">Emisor: {company.nombre || 'Nombre de tu Empresa'}</p>
+                                                    <p className="text-xs text-blue-700">Los datos se tomarán de tu configuración.</p>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => setActiveTab('configuracion')} className="text-blue-600 text-xs font-bold hover:underline">Editar</button>
+                                        </div>
 
+                                        {/* Quotation Details (Folio, Date, Expiration) */}
+                                        <div className={`p-6 rounded-xl shadow-lg border text-left backdrop-blur-md ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/60 border-white/50'}`}>
+                                            <h3 className={`font-bold flex items-center gap-2 mb-4 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                                                <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <div>
+                                                    <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
+                                                    <input
+                                                        type="text"
+                                                        value={folio}
+                                                        readOnly
+                                                        className={`w-full border rounded-lg p-3 text-sm font-bold text-center ${isDark ? 'bg-slate-900 border-slate-600 text-blue-400' : 'bg-slate-100 border-slate-200 text-blue-600'}`}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Cotización</label>
+                                                    <input
+                                                        type="date"
+                                                        value={quotationDate}
+                                                        onChange={(e) => setQuotationDate(e.target.value)}
+                                                        className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fecha de Vencimiento</label>
+                                                    <input
+                                                        type="date"
+                                                        value={expirationDate}
+                                                        onChange={(e) => setExpirationDate(e.target.value)}
+                                                        className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Client Section with Selector */}
+                                        <div className={`p-6 rounded-xl shadow-lg border transition-all hover:shadow-xl text-left backdrop-blur-md ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/50 border-white/40'}`}>
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                                                <h3 className={`font-bold flex items-center gap-2 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                                                    <User className="w-5 h-5 text-gray-500" /> Datos del Cliente
+                                                </h3>
+                                                <select
+                                                    className={`border rounded-lg text-sm block p-2 outline-none w-full md:w-64 focus:ring-blue-500 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
+                                                    onChange={(e) => handleSelectClient(e.target.value)}
+                                                    defaultValue=""
+                                                >
+                                                    <option value="" disabled>Seleccionar Cliente Guardado...</option>
+                                                    {savedClients.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.nombre} {c.empresa ? `(${c.empresa})` : ''}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Nombre del Cliente"
+                                                    value={client.name}
+                                                    onChange={(e) => updateClient('name', e.target.value)}
+                                                    className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Teléfono"
+                                                    value={client.phone}
+                                                    onChange={(e) => updateClient('phone', e.target.value)}
+                                                    className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                />
+                                                <input
+                                                    type="email"
+                                                    placeholder="Correo Electrónico"
+                                                    value={client.email}
+                                                    onChange={(e) => updateClient('email', e.target.value)}
+                                                    className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Dirección / Ciudad"
+                                                    value={client.address}
+                                                    onChange={(e) => updateClient('address', e.target.value)}
+                                                    className={`border rounded-lg text-sm block w-full p-2.5 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                />
+                                            </div>
+                                        </div>
+                                        <ItemsTable
+                                            items={items}
+                                            onAddItem={addItem}
+                                            onRemoveItem={removeItem}
+                                            onUpdateItem={updateItem}
+                                            onMoveItem={moveItem}
+                                            darkMode={isDark}
+                                        />
+
+                                        {/* Global IVA Switch */}
+                                        <div className={`p-4 rounded-xl flex items-center justify-end gap-3 backdrop-blur-md ${isDark ? 'bg-slate-800/80' : 'bg-white/60'}`}>
+                                            <span className={`font-bold text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Desglosar IVA (16%)</span>
+                                            <button
+                                                onClick={() => setIncludeIva(!includeIva)}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${includeIva ? 'bg-blue-600' : 'bg-gray-200'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeIva ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+
+                                        <TermsInput value={terms} onChange={setTerms} darkMode={isDark} />
+                                    </div>
+                                </div>
+                            )}
+                            {activeTab === 'clientes' && (
+                                <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
+                            )}
+                            {activeTab === 'configuracion' && (
+                                <SettingsView
+                                    companyData={company}
+                                    onCompanyChange={updateCompany}
+                                    onSave={saveCompanySettings}
+                                    darkMode={isDark}
+                                    selectedTemplate={selectedTemplate}
+                                    onTemplateChange={handleTemplateChange}
+                                />
+                            )}
+                            {activeTab === 'products' && (
+                                <Products darkMode={isDark} user={session?.user} />
+                            )}
+                            {activeTab === 'informes' && (
+                                <ReportsView darkMode={isDark} user={session?.user} />
+                            )}
+                            {activeTab === 'suscripcion' && (
+                                <SubscriptionView darkMode={isDark} />
+                            )}
+                            {activeTab === 'servicios' && (
+
+                                <ServiciosView
+                                    darkMode={isDark}
+                                    onNavigate={setActiveTab}
+                                    setSelectedService={setSelectedService}
+                                    setEditingCCTVService={setEditingCCTVService}
+                                    setEditingPCService={setEditingPCService}
+                                    setEditingPhoneService={setEditingPhoneService}
+                                    setEditingPrinterService={setEditingPrinterService}
+                                    setEditingNetworkService={setEditingNetworkService}
+                                    onShowNotaVenta={(service) => {
+                                        setSelectedServiceForNota(service);
+                                        setShowNotaPreview(true);
+                                    }}
+                                    user={session?.user}
+                                    refreshTrigger={servicesRefreshTrigger}
+                                />
+                            )}
+                            {activeTab === 'services-cctv-list' && <CCTVList key={`cctv-${servicesRefreshTrigger}`} darkMode={isDark} onNavigate={setActiveTab} onViewService={handleViewService} onShowNotaVenta={(service) => { setSelectedServiceForNota(service); setShowNotaPreview(true); }} user={session?.user} refreshTrigger={servicesRefreshTrigger} />}
+                            {activeTab === 'services-cctv-view' && (
+                                <CCTVServiceView
+                                    service={selectedService}
+                                    onBack={() => setActiveTab('servicios')}
+                                    onEdit={(service) => setEditingCCTVService(service)}
+                                    darkMode={isDark}
+                                    company={company}
+                                />
+                            )}
+                            {activeTab === 'services-pc-list' && (
+                                <PCList
+                                    key={`pc-${servicesRefreshTrigger}`}
+                                    darkMode={isDark}
+                                    onNavigate={setActiveTab}
+                                    onViewService={handleViewPCService}
+                                    onCreateNew={() => setEditingPCService('new')}
+                                    onEdit={(service) => setEditingPCService(service)}
+                                    onShowNotaVenta={(service) => { setSelectedServiceForNota({ ...service, type: 'PC', tableName: 'servicios_pc', original: service }); setShowNotaPreview(true); }}
+                                    user={session?.user}
+                                    refreshTrigger={servicesRefreshTrigger}
+                                />
+                            )}
+                            {activeTab === 'services-pc-view' && (
+                                <PCServiceView
+                                    service={selectedService}
+                                    onBack={() => setActiveTab('servicios')}
+                                    onEdit={(service) => setEditingPCService(service)}
+                                    darkMode={isDark}
+                                    company={company}
+                                />
+                            )}
+                            {activeTab === 'services-phone-list' && (
+                                <PhoneList
+                                    key={`phone-${servicesRefreshTrigger}`}
+                                    darkMode={isDark}
+                                    onNavigate={setActiveTab}
+                                    onViewService={(service) => {
+                                        setSelectedService(service);
+                                        setActiveTab('services-phone-view');
+                                    }}
+                                    onCreateNew={() => setEditingPhoneService('new')}
+                                    onEdit={(service) => setEditingPhoneService(service)}
+                                    onShowNotaVenta={(service) => { setSelectedServiceForNota({ ...service, type: 'Celular', tableName: 'servicios_celulares', original: service }); setShowNotaPreview(true); }}
+                                    user={session?.user}
+                                    refreshTrigger={servicesRefreshTrigger}
+                                />
+                            )}
+                            {activeTab === 'services-phone-view' && (
+                                <PhoneServiceView
+                                    service={selectedService}
+                                    onBack={() => setActiveTab('servicios')}
+                                    onEdit={(service) => setEditingPhoneService(service)}
+                                    darkMode={isDark}
+                                    company={company}
+                                />
+                            )}
+
+                            {/* PC Service Form Modal */}
+                            {editingPCService && (
+                                <PCServiceForm
+                                    service={editingPCService === 'new' ? null : editingPCService}
+                                    onSave={handleSavePCService}
+                                    onCancel={() => setEditingPCService(null)}
+                                    darkMode={isDark}
+                                />
+                            )}
+
+                            {/* CCTV Service Form Modal */}
+                            {editingCCTVService && (
+                                <CCTVServiceForm
+                                    service={editingCCTVService === 'new' ? null : editingCCTVService}
+                                    onSave={handleSaveCCTVService}
+                                    onCancel={() => setEditingCCTVService(null)}
+                                    darkMode={isDark}
+                                />
+                            )}
+
+                            {/* Phone Service Form Modal */}
+                            {editingPhoneService && (
+                                <PhoneServiceForm
+                                    service={editingPhoneService === 'new' ? null : editingPhoneService}
+                                    onSave={handleSavePhoneService}
+                                    onCancel={() => setEditingPhoneService(null)}
+                                    darkMode={isDark}
+                                />
+                            )}
+
+                            {activeTab === 'services-network-list' && (
+                                <NetworkList
+                                    key={`network-${servicesRefreshTrigger}`}
+                                    darkMode={isDark}
+                                    onNavigate={setActiveTab}
+                                    onViewService={(service) => {
+                                        setSelectedService(service);
+                                        setActiveTab('services-network-view');
+                                    }}
+                                    onCreateNew={() => setEditingNetworkService('new')}
+                                    onEdit={(service) => setEditingNetworkService(service)}
+                                    onShowNotaVenta={(service) => { setSelectedServiceForNota({ ...service, type: 'Redes', tableName: 'servicios_redes', original: service }); setShowNotaPreview(true); }}
+                                    user={session?.user}
+                                    refreshTrigger={servicesRefreshTrigger}
+                                />
+                            )}
+                            {activeTab === 'services-printer-list' && (
+                                <PrinterList
+                                    key={`printer-${servicesRefreshTrigger}`}
+                                    darkMode={isDark}
+                                    onNavigate={setActiveTab}
+                                    onViewService={(service) => {
+                                        setSelectedService(service);
+                                        setActiveTab('services-printer-view');
+                                    }}
+                                    onCreateNew={() => setEditingPrinterService('new')}
+                                    onEdit={(service) => setEditingPrinterService(service)}
+                                    onShowNotaVenta={(service) => { setSelectedServiceForNota({ ...service, type: 'Impresora', tableName: 'servicios_impresoras', original: service }); setShowNotaPreview(true); }}
+                                    user={session?.user}
+                                    refreshTrigger={servicesRefreshTrigger}
+                                />
+                            )}
+                            {activeTab === 'services-printer-view' && (
+                                <PrinterServiceView
+                                    service={selectedService}
+                                    onBack={() => setActiveTab('servicios')}
+                                    onEdit={(service) => setEditingPrinterService(service)}
+                                    darkMode={isDark}
+                                    company={company}
+                                />
+                            )}
+                            {activeTab === 'services-network-view' && (
+                                <NetworkServiceView
+                                    service={selectedService}
+                                    onBack={() => setActiveTab('servicios')}
+                                    onEdit={(service) => setEditingNetworkService(service)}
+                                    darkMode={isDark}
+                                    company={company}
+                                />
+                            )}
+
+                            {/* Printer Service Form Modal */}
+                            {editingPrinterService && (
+                                <PrinterServiceForm
+                                    service={editingPrinterService === 'new' ? null : editingPrinterService}
+                                    onSave={handleSavePrinterService}
+                                    onCancel={() => setEditingPrinterService(null)}
+                                    darkMode={isDark}
+                                />
+                            )}
+
+                            {/* Network Service Form Modal */}
+                            {editingNetworkService && (
+                                <NetworkServiceForm
+                                    service={editingNetworkService === 'new' ? null : editingNetworkService}
+                                    onSave={handleSaveNetworkService}
+                                    onCancel={() => setEditingNetworkService(null)}
+                                    darkMode={isDark}
+                                />
+                            )}
+                            {activeTab === 'contratos' && (
+                                <ContractsView darkMode={isDark} company={company} />
+                            )}
+
+                            {/* Global Preview Modal */}
+                            {showPreview && (
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                                    <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+                                        {/* Modal Header */}
+                                        <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                            <h3 className={`font-bold text-lg flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                                <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={generatePDF}
+                                                    disabled={isGenerating}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                >
+                                                    <Download className="w-4 h-4" />
+                                                    {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowPreview(false);
+                                                        if (viewingQuotation) {
+                                                            setViewingQuotation(null);
+                                                        }
+                                                    }}
+                                                    className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                                                >
+                                                    <X className="w-6 h-6" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Modal Content - Scrollable */}
+                                        <div className={`overflow-auto p-8 flex justify-center ${isDark ? 'bg-slate-900/50' : 'bg-slate-200/50'}`} ref={previewContainerRef}>
+                                            <div
+                                                className="bg-white shadow-xl origin-top transition-transform duration-200"
+                                                style={{
+                                                    transform: `scale(${previewScale})`,
+                                                    width: '900px',
+                                                    height: 'auto'
+                                                }}
+                                            >
+                                                <div ref={quotationRef}>
+                                                    <PrintableQuotation
+                                                        company={company}
+                                                        client={viewingQuotation ? {
+                                                            name: viewingQuotation.nombre_cliente,
+                                                            phone: viewingQuotation.telefono,
+                                                            email: viewingQuotation.correo,
+                                                            address: ''
+                                                        } : client}
+                                                        items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
+                                                            id: index + 1,
+                                                            qty: art.cantidad,
+                                                            desc: art.articulo,
+                                                            price: art.precioUnitario,
+                                                            discount: art.descuento || 0,
+                                                            tax: 0
+                                                        })) : items}
+                                                        terms={viewingQuotation ? viewingQuotation.terminos : terms}
+                                                        folio={viewingQuotation ? viewingQuotation.folio : folio}
+                                                        includeIva={includeIva}
+                                                        template={selectedTemplate}
+                                                    />
+
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
 
-                    {/* Hidden Export Container - Global */}
-                    <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
-                        <div id="quotation-pdf-export" style={{ width: '900px' }}>
-                            <PrintableQuotation
-                                company={company}
-                                client={viewingQuotation ? {
-                                    name: viewingQuotation.nombre_cliente,
-                                    phone: viewingQuotation.telefono,
-                                    email: viewingQuotation.correo,
-                                    address: ''
-                                } : client}
-                                items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
-                                    id: index + 1,
-                                    qty: art.cantidad,
-                                    desc: art.articulo,
-                                    price: art.precioUnitario,
-                                    cost: art.costoEmpresa || 0,
-                                    discount: art.descuento || 0,
-                                    tax: 0
-                                })) : items}
-                                terms={viewingQuotation ? viewingQuotation.terminos : terms}
-                                folio={viewingQuotation ? viewingQuotation.folio : folio}
-                                includeIva={includeIva}
-                                isPdf={true}
-                                template={selectedTemplate}
-                            />
+                            {/* Nota de Venta Preview Modal */}
+                            {showNotaPreview && (
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                                    <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+                                        {/* Modal Header */}
+                                        <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                            <h3 className={`font-bold text-lg flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                                <FileText className="w-5 h-5 text-blue-500" /> Vista Previa: Nota de Venta
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={generateNotaPDF}
+                                                    disabled={isGenerating}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                >
+                                                    <Download className="w-4 h-4" />
+                                                    {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowNotaPreview(false);
+                                                        setSelectedServiceForNota(null);
+                                                    }}
+                                                    className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                                                >
+                                                    <X className="w-6 h-6" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Modal Content - Scrollable */}
+                                        <div className={`overflow-auto p-8 flex justify-center ${isDark ? 'bg-slate-900/50' : 'bg-slate-200/50'}`}>
+                                            <div
+                                                className="bg-white shadow-xl origin-top transition-transform duration-200"
+                                                style={{
+                                                    transform: `scale(${previewScale})`,
+                                                    width: '900px',
+                                                    height: 'auto'
+                                                }}
+                                            >
+                                                <PrintableNotaDeVenta
+                                                    service={selectedServiceForNota}
+                                                    company={company}
+                                                    darkMode={isDark}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Hidden Export Container - Global */}
+                        <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+                            <div id="quotation-pdf-export" style={{ width: '900px' }}>
+                                <PrintableQuotation
+                                    company={company}
+                                    client={viewingQuotation ? {
+                                        name: viewingQuotation.nombre_cliente,
+                                        phone: viewingQuotation.telefono,
+                                        email: viewingQuotation.correo,
+                                        address: ''
+                                    } : client}
+                                    items={viewingQuotation ? viewingQuotation.articulos.map((art, index) => ({
+                                        id: index + 1,
+                                        qty: art.cantidad,
+                                        desc: art.articulo,
+                                        price: art.precioUnitario,
+                                        cost: art.costoEmpresa || 0,
+                                        discount: art.descuento || 0,
+                                        tax: 0
+                                    })) : items}
+                                    terms={viewingQuotation ? viewingQuotation.terminos : terms}
+                                    folio={viewingQuotation ? viewingQuotation.folio : folio}
+                                    includeIva={includeIva}
+                                    isPdf={true}
+                                    template={selectedTemplate}
+                                />
+                            </div>
+                            <div id="nota-venta-printable" style={{ width: '900px' }}>
+                                <PrintableNotaDeVenta
+                                    service={selectedServiceForNota}
+                                    company={company}
+                                    darkMode={isDark}
+                                />
+                            </div>
                         </div>
                     </div>
                 </main>
