@@ -5489,7 +5489,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
 // --- SIDEBAR COMPONENT ---
 
-const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName }) => {
+const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName, trialDaysLeft }) => {
     const setActiveTab = (tab) => {
         setTabOriginal(tab);
         if (mobileMode && onClose) onClose();
@@ -5634,6 +5634,13 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                     {/* Shining effect */}
                                     <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[45deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out"></div>
                                 </button>
+                                {trialDaysLeft !== null && (
+                                    <div className={`mt-2 text-center text-[10px] font-bold uppercase tracking-widest ${textMuted}`}>
+                                        {trialDaysLeft > 0
+                                            ? `${trialDaysLeft} ${trialDaysLeft === 1 ? 'Día restante' : 'Días restantes'}`
+                                            : '¡Prueba terminada!'}
+                                    </div>
+                                )}
                             </li>
                         </ul>
 
@@ -7822,16 +7829,37 @@ const App = () => {
 
     // NEW AUTH EFFECT
     useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setSession(session);
-            if (session) {
-                await fetchProfile(session.user.id);
-                fetchCompanySettings(session.user.id);
-                fetchSavedClients(session.user.id);
-                fetchQuotations(session.user.id);
-            }
+        console.log("App mounted. Starting checkAuth.");
+
+        // FAIL-SAFE: Force loading screen to hide after 5 seconds no matter what
+        const failSafeTimeout = setTimeout(() => {
+            console.warn("FAIL-SAFE: checkAuth is taking too long. Forcing loadingAuth to false.");
             setLoadingAuth(false);
+        }, 5000);
+
+        const checkAuth = async () => {
+            console.log("checkAuth started...");
+            try {
+                const { data } = await supabase.auth.getSession();
+                const session = data?.session || null;
+                console.log("Session details:", session ? `User ID: ${session.user.id}` : "No session found");
+                setSession(session);
+                if (session) {
+                    // Fetch profile but don't let it block indefinitely
+                    console.log("Fetching profile...");
+                    await fetchProfile(session.user.id).catch(e => console.error("Profile fetch failed:", e));
+
+                    fetchCompanySettings(session.user.id);
+                    fetchSavedClients(session.user.id);
+                    fetchQuotations(session.user.id);
+                }
+            } catch (err) {
+                console.error("Critical error in checkAuth:", err);
+            } finally {
+                console.log("checkAuth finished. Loading completed.");
+                setLoadingAuth(false);
+                clearTimeout(failSafeTimeout);
+            }
         };
         checkAuth();
 
@@ -7853,16 +7881,34 @@ const App = () => {
 
     const fetchProfile = async (userId) => {
         try {
-            const { data, error } = await supabase
+            let { data, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .maybeSingle();
 
             if (error) throw error;
+
+            // If profile doesn't exist (e.g. user was created before the trigger existed)
+            if (!data) {
+                console.log("Profile not found, auto-creating for user:", userId);
+                const { data: newData, error: insertError } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: userId,
+                        email: session?.user?.email || '',
+                        trial_start: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                if (insertError) throw insertError;
+                data = newData;
+            }
+
             setProfile(data);
         } catch (error) {
-            console.error('Error fetching profile:', error);
+            console.error('Error fetching/creating profile:', error);
         }
     };
 
@@ -7876,6 +7922,21 @@ const App = () => {
         sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
         return new Date() > sevenDaysLater;
+    };
+
+    const getTrialDaysRemaining = () => {
+        if (!profile) return null;
+        if (profile.is_premium) return null;
+
+        const trialStart = new Date(profile.trial_start);
+        const sevenDaysLater = new Date(trialStart);
+        sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
+        const now = new Date();
+        const diffTime = sevenDaysLater - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays > 0 ? diffDays : 0;
     };
 
     useEffect(() => {
@@ -9812,6 +9873,7 @@ const App = () => {
                     toggleMobileMode={toggleMobileMode}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
+                    trialDaysLeft={getTrialDaysRemaining()}
                     onCreateNew={() => {
                         // Check unsaved changes before resetting for "New"
                         if (hasUnsavedChanges()) {
