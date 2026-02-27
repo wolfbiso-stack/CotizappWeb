@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart3, TrendingUp, DollarSign, Filter, Trophy } from 'lucide-react';
+import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -816,9 +816,9 @@ const ClientDetails = ({ client, onBack }) => {
     );
 };
 
-const ClientsList = ({ onCreateNew, darkMode }) => {
-    const [clients, setClients] = useState([]);
-    const [loading, setLoading] = useState(true);
+const ClientsList = ({ onCreateNew, darkMode, clients: sharedClients, onRefresh, user }) => {
+    const [clients, setClients] = useState(sharedClients || []);
+    const [loading, setLoading] = useState(!sharedClients);
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({ nombre: '', empresa: '', correo: '', numero: '', notas: '' });
     const [saving, setSaving] = useState(false);
@@ -829,7 +829,6 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
 
     const fetchClients = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
             const { data, error } = await supabase
@@ -848,8 +847,13 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
     };
 
     useEffect(() => {
-        fetchClients();
-    }, []);
+        if (!sharedClients || sharedClients.length === 0) {
+            fetchClients();
+        } else {
+            setClients(sharedClients);
+            setLoading(false);
+        }
+    }, [sharedClients]);
 
     const handleSaveClient = async () => {
         if (!formData.nombre) {
@@ -858,7 +862,6 @@ const ClientsList = ({ onCreateNew, darkMode }) => {
         }
         setSaving(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
             let error;
@@ -1275,7 +1278,7 @@ const ClientForm = ({ data, onChange }) => (
     </div>
 );
 
-const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, darkMode }) => {
+const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, darkMode, session }) => {
     const [draggedIndex, setDraggedIndex] = React.useState(null);
     const [canDrag, setCanDrag] = React.useState(false);
 
@@ -2163,7 +2166,6 @@ const PrintableNotaDeVenta = ({ service, company, darkMode }) => {
                         )}
                         <div>
                             <h1 className="text-2xl font-bold text-brand-900 tracking-tight">{company?.nombre || 'MI EMPRESA'}</h1>
-                            <p className="text-xs text-brand-800 uppercase tracking-widest font-semibold">{company?.eslogan || 'Tecnología & Desarrollo'}</p>
                         </div>
                     </div>
 
@@ -3110,19 +3112,23 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    if (!service) return null;
+
     const handleStatusUpdate = async (newStatus) => {
         setUpdating(true);
         try {
             // Determinar campo de ID y de Estado según la tabla
             let idField = 'id';
             let idValue = service.id;
-            // Corregido: para CCTV el campo es 'status' según indicación del usuario, no 'estatus'
-            const statusField = tableName === 'servicios_cctv' ? 'status' : 'status';
+
+            // Standardize status field name
+            const statusField = 'status';
 
             const updatePayload = { [statusField]: newStatus };
 
-            // Sincronizar estado de pago/entrega para todos los servicios (incluido CCTV)
-            if (tableName === 'servicios_pc' || tableName === 'servicios_celular' || tableName === 'servicios_cctv' || tableName === 'servicios_impresora') {
+            // Sincronizar estado de pago/entrega para todos los servicios
+            const tablesToSync = ['servicios_pc', 'servicios_celulares', 'servicios_cctv', 'servicios_impresoras', 'servicios_redes'];
+            if (tablesToSync.includes(tableName)) {
                 if (newStatus === 'entregado') {
                     updatePayload.pagado = true;
                     updatePayload.entregado = true;
@@ -3130,14 +3136,6 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                     updatePayload.pagado = false;
                     updatePayload.entregado = false;
                 }
-            }
-
-            // Handle Printer Service Special Case (No status column)
-            // User confirmed column "status" DOES exist now.
-            if (tableName === 'servicios_impresora') {
-                // No need to delete status or use workaround anymore.
-                // Just ensure status is part of payload.
-                updatePayload.status = newStatus;
             }
 
             const { error } = await supabase
@@ -3168,8 +3166,8 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
         return colors[colorName] || colors.gray;
     };
 
-    const statusValue = (tableName === 'servicios_cctv' ? service.status : (tableName === 'servicios_impresora' ? service.status : service.status)) || 'pendiente';
-    const currentStatus = STATUS_OPTIONS.find(s => s.value === statusValue.toLowerCase());
+    const statusValue = (service.status || 'pendiente').toLowerCase();
+    const currentStatus = STATUS_OPTIONS.find(s => s.value === statusValue);
     const displayLabel = currentStatus ? currentStatus.label : (statusValue || 'Seleccionar Estado');
     const displayColor = currentStatus ? currentStatus.color : 'gray';
 
@@ -4002,9 +4000,9 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger }) => {
-    const [unifiedServices, setUnifiedServices] = useState([]);
-    const [loading, setLoading] = useState(true);
+const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices }) => {
+    const [unifiedServices, setUnifiedServices] = useState(sharedServices || []);
+    const [loading, setLoading] = useState(!sharedServices);
     const [refreshing, setRefreshing] = useState(false);
     const [showNewServiceModal, setShowNewServiceModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -4026,27 +4024,16 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
 
     const parseDate = (d) => {
         if (!d) return 0;
-
-        // Handle YYYY-MM-DD (ISO format) - Common in DB
         if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
             const date = new Date(d + 'T00:00:00');
             if (!isNaN(date.getTime())) return date.getTime();
         }
-
-        // Handle DD/MM/YYYY (Latin format) - Common in legacy/user input
         if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)) {
             const parts = d.split('/');
-            // parts[0] = day, parts[1] = month, parts[2] = year
-            // Create YYYY-MM-DD
             return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T00:00:00`).getTime();
         }
-
-        // Fallback for other formats (timestamps, full ISO strings)
-        // Be careful: new Date('03/01/2026') might be parsed as March 1st (US) in some envs, 
-        // but if it failed regex above, it might be something else.
         const date = new Date(d);
         if (!isNaN(date.getTime())) return date.getTime();
-
         return 0;
     };
 
@@ -4054,92 +4041,32 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         if (!user) return;
         setRefreshing(true);
         try {
-            // Fetch CCTV services
-            const { data: cctvData } = await supabase.from('servicios_cctv').select('*').eq('user_id', user.id);
-            // Fetch PC services
-            const { data: pcData } = await supabase.from('servicios_pc').select('*').eq('user_id', user.id);
-            // Fetch Phone services
-            const { data: phoneData } = await supabase.from('servicios_celulares').select('*').eq('user_id', user.id);
-            // Fetch Printer services
-            const { data: printerData } = await supabase.from('servicios_impresoras').select('*').eq('user_id', user.id);
-            // Fetch Network services
-            const { data: networkData } = await supabase.from('servicios_redes').select('*').eq('user_id', user.id);
-
-            // Fetch Photos ID Reference (Lightweight)
-            const { data: photosData } = await supabase
-                .from('servicio_fotos')
-                .select('servicio_id, tipo_servicio')
-                .eq('user_id', user.id);
+            const [
+                { data: cctvData },
+                { data: pcData },
+                { data: phoneData },
+                { data: printerData },
+                { data: networkData },
+                { data: photosData }
+            ] = await Promise.all([
+                supabase.from('servicios_cctv').select('*').eq('user_id', user.id),
+                supabase.from('servicios_pc').select('*').eq('user_id', user.id),
+                supabase.from('servicios_celulares').select('*').eq('user_id', user.id),
+                supabase.from('servicios_impresoras').select('*').eq('user_id', user.id),
+                supabase.from('servicios_redes').select('*').eq('user_id', user.id),
+                supabase.from('servicio_fotos').select('servicio_id, tipo_servicio').eq('user_id', user.id)
+            ]);
 
             const photosLookup = new Set();
             photosData?.forEach(p => photosLookup.add(`${p.tipo_servicio}-${p.servicio_id}`));
 
             const unified = [
-                ...(cctvData || []).map(s => ({
-                    ...s,
-                    id: s.id,
-                    type: 'CCTV',
-                    folio: s.servicio_numero,
-                    cliente: s.cliente_nombre,
-                    fecha: s.servicio_fecha || s.created_at,
-                    total: s.total,
-                    original: s,
-                    tableName: 'servicios_cctv',
-                    hasPhotos: photosLookup.has(`servicios_cctv-${s.id}`)
-                })),
-                ...(pcData || []).map(s => ({
-                    ...s,
-                    id: s.id,
-                    type: 'PC',
-                    folio: s.orden_numero,
-                    cliente: s.cliente_nombre,
-                    fecha: s.fecha,
-                    total: s.total,
-                    original: s,
-                    tableName: 'servicios_pc',
-                    hasPhotos: photosLookup.has(`servicios_pc-${s.id}`)
-                })),
-                ...(phoneData || []).map(s => ({
-                    ...s,
-                    id: s.id,
-                    type: 'Celular',
-                    folio: s.orden_numero,
-                    cliente: s.cliente_nombre,
-                    fecha: s.fecha,
-                    total: s.total,
-                    original: s,
-                    tableName: 'servicios_celulares',
-                    hasPhotos: photosLookup.has(`servicios_celulares-${s.id}`)
-                })),
-                ...(printerData || []).map(s => ({
-                    ...s,
-                    id: s.id,
-                    type: 'Impresora',
-                    folio: s.orden_numero,
-                    cliente: s.cliente_nombre,
-                    fecha: s.fecha,
-                    total: s.total,
-                    original: s,
-                    tableName: 'servicios_impresoras',
-                    hasPhotos: photosLookup.has(`servicios_impresoras-${s.id}`)
-                })),
-                ...(networkData || []).map(s => ({
-                    ...s,
-                    id: s.id,
-                    type: 'Redes',
-                    folio: s.orden_numero,
-                    cliente: s.cliente_nombre,
-                    fecha: s.fecha,
-                    total: s.total,
-                    original: s,
-                    tableName: 'servicios_redes',
-                    hasPhotos: photosLookup.has(`servicios_redes-${s.id}`)
-                }))
-            ].sort((a, b) => {
-                const dateA = parseDate(a.fecha);
-                const dateB = parseDate(b.fecha);
-                return dateB - dateA;
-            });
+                ...(cctvData || []).map(s => ({ ...s, original: s, type: 'CCTV', folio: s.servicio_numero, cliente: s.cliente_nombre, fecha: s.servicio_fecha || s.created_at, tableName: 'servicios_cctv', hasPhotos: photosLookup.has(`servicios_cctv-${s.id}`) })),
+                ...(pcData || []).map(s => ({ ...s, original: s, type: 'PC', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_pc', hasPhotos: photosLookup.has(`servicios_pc-${s.id}`) })),
+                ...(phoneData || []).map(s => ({ ...s, original: s, type: 'Celular', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_celulares', hasPhotos: photosLookup.has(`servicios_celulares-${s.id}`) })),
+                ...(printerData || []).map(s => ({ ...s, original: s, type: 'Impresora', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_impresoras', hasPhotos: photosLookup.has(`servicios_impresoras-${s.id}`) })),
+                ...(networkData || []).map(s => ({ ...s, original: s, type: 'Redes', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_redes', hasPhotos: photosLookup.has(`servicios_redes-${s.id}`) }))
+            ].sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha));
 
             setUnifiedServices(unified);
         } catch (error) {
@@ -4151,8 +4078,13 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     };
 
     useEffect(() => {
-        fetchAllServices();
-    }, [refreshTrigger]);
+        if (!sharedServices || sharedServices.length === 0) {
+            fetchAllServices();
+        } else {
+            setUnifiedServices(sharedServices);
+            setLoading(false);
+        }
+    }, [refreshTrigger, sharedServices]);
 
     const handleShowQR = (service) => {
         setSelectedServiceForQR(service.original);
@@ -4453,7 +4385,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <StatusDropdown
-                                                    service={service.original}
+                                                    service={service}
                                                     darkMode={darkMode}
                                                     onStatusChange={fetchAllServices}
                                                     tableName={service.tableName}
@@ -5489,7 +5421,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
 // --- SIDEBAR COMPONENT ---
 
-const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName, trialDaysLeft }) => {
+const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName, trialDaysLeft, isPremium }) => {
     const setActiveTab = (tab) => {
         setTabOriginal(tab);
         if (mobileMode && onClose) onClose();
@@ -5516,17 +5448,40 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
             <div className={sidebarClasses}>
                 <div className="p-8 pb-4">
-                    <div className="flex items-center gap-3 mb-1">
+                    <div className="flex items-center gap-3 mb-1 relative">
                         {companyLogo ? (
-                            <img src={companyLogo} alt="Company Logo" className="w-10 h-10 rounded-full object-cover" />
+                            <div className="relative">
+                                <img src={companyLogo} alt="Company Logo" className="w-10 h-10 rounded-full object-cover" />
+                                {isPremium && (
+                                    <div className="absolute -top-1 -right-1 bg-yellow-400 text-slate-900 rounded-full p-0.5 shadow-lg border border-white">
+                                        <Crown className="w-2.5 h-2.5 fill-current" />
+                                    </div>
+                                )}
+                            </div>
                         ) : (
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : 'bg-white/20 text-white'}`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm relative ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : 'bg-white/20 text-white'}`}>
                                 <span className="font-bold text-xl">{companyName?.[0] || 'C'}</span>
+                                {isPremium && (
+                                    <div className="absolute -top-1 -right-1 bg-yellow-400 text-slate-900 rounded-full p-0.5 shadow-lg border border-white">
+                                        <Crown className="w-2.5 h-2.5 fill-current" />
+                                    </div>
+                                )}
                             </div>
                         )}
-                        <div>
-                            <h2 className="font-bold text-lg leading-tight">{companyName || 'Empresa'}</h2>
-                            <p className={`text-xs ${textMuted}`}>{userEmail}</p>
+                        <div className="min-w-0">
+                            <h2 className="font-bold text-lg leading-tight truncate flex items-center gap-1.5">
+                                {companyName || 'Empresa'}
+                            </h2>
+                            <div className="flex flex-col">
+                                <p className={`text-[10px] ${textMuted} truncate flex items-center gap-1`}>
+                                    {userEmail}
+                                    {isPremium && (
+                                        <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-[8px] text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter shadow-sm animate-pulse">
+                                            PREMIUM
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5619,29 +5574,31 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                             </li>
 
                             {/* Subscribe Button - Eye-catching */}
-                            <li className="pt-4">
-                                <button
-                                    onClick={() => setActiveTab('suscripcion')}
-                                    className={`w-full group relative flex items-center justify-center gap-3 py-4 px-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-xl overflow-hidden
-                                        ${activeTab === 'suscripcion'
-                                            ? 'bg-white text-blue-600 scale-95'
-                                            : 'bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white hover:scale-105 hover:shadow-orange-500/40 active:scale-95'
-                                        }`}
-                                >
-                                    <Zap className={`w-5 h-5 fill-current ${activeTab === 'suscripcion' ? 'animate-pulse' : 'group-hover:animate-bounce'}`} />
-                                    <span>SUSCRÍBETE</span>
+                            {!isPremium && (
+                                <li className="pt-4">
+                                    <button
+                                        onClick={() => setActiveTab('suscripcion')}
+                                        className={`w-full group relative flex items-center justify-center gap-3 py-4 px-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-xl overflow-hidden
+                                            ${activeTab === 'suscripcion'
+                                                ? 'bg-white text-blue-600 scale-95'
+                                                : 'bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white hover:scale-105 hover:shadow-orange-500/40 active:scale-95'
+                                            }`}
+                                    >
+                                        <Zap className={`w-5 h-5 fill-current ${activeTab === 'suscripcion' ? 'animate-pulse' : 'group-hover:animate-bounce'}`} />
+                                        <span>SUSCRÍBETE</span>
 
-                                    {/* Shining effect */}
-                                    <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[45deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out"></div>
-                                </button>
-                                {trialDaysLeft !== null && (
-                                    <div className={`mt-2 text-center text-[10px] font-bold uppercase tracking-widest ${textMuted}`}>
-                                        {trialDaysLeft > 0
-                                            ? `${trialDaysLeft} ${trialDaysLeft === 1 ? 'Día restante' : 'Días restantes'}`
-                                            : '¡Prueba terminada!'}
-                                    </div>
-                                )}
-                            </li>
+                                        {/* Shining effect */}
+                                        <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[45deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out"></div>
+                                    </button>
+                                    {trialDaysLeft !== null && (
+                                        <div className={`mt-2 text-center text-[10px] font-bold uppercase tracking-widest ${textMuted}`}>
+                                            {trialDaysLeft > 0
+                                                ? `${trialDaysLeft} ${trialDaysLeft === 1 ? 'Día restante' : 'Días restantes'}`
+                                                : '¡Prueba terminada!'}
+                                        </div>
+                                    )}
+                                </li>
+                            )}
                         </ul>
 
                     </div>
@@ -7183,19 +7140,14 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
 };
 
 
-const ReportsView = ({ darkMode, user }) => {
-    const [loading, setLoading] = useState(true);
-    const [earningsData, setEarningsData] = useState([]);
-    const [frequentClients, setFrequentClients] = useState([]);
-    const [topSpenders, setTopSpenders] = useState([]);
-    const [stats, setStats] = useState({ totalEarnings: 0, totalServices: 0, avgTicket: 0 });
-
+const ReportsView = ({ darkMode, user, services = [] }) => {
     // Filters
     const [datePreset, setDatePreset] = useState('1m'); // '1w', '1m', '1y', 'custom'
     const [dateRange, setDateRange] = useState({
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         end: new Date().toISOString().split('T')[0]
     });
+    const [serviceType, setServiceType] = useState('all');
 
     const handlePresetChange = (preset) => {
         setDatePreset(preset);
@@ -7210,152 +7162,124 @@ const ReportsView = ({ darkMode, user }) => {
             end: new Date().toISOString().split('T')[0]
         });
     };
-    const [serviceType, setServiceType] = useState('all');
 
-    const fetchReportsData = async () => {
-        if (!user) return;
-        setLoading(true);
-        try {
-            const tables = [
-                { name: 'servicios_cctv', dateField: 'servicio_fecha', clientField: 'cliente_nombre', partsField: 'inventario_materiales' },
-                { name: 'servicios_pc', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'repuestos_descripcion' },
-                { name: 'servicios_celulares', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'repuestos_descripcion' },
-                { name: 'servicios_impresoras', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'repuestos_descripcion' },
-                { name: 'servicios_redes', dateField: 'fecha', clientField: 'cliente_nombre', partsField: 'materiales_descripcion' }
-            ];
+    const normalizeDate = (d) => {
+        if (!d) return '';
+        const s = String(d).trim();
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.split('T')[0];
 
-            const promises = tables.map(t =>
-                supabase.from(t.name)
-                    .select(`id, total, ${t.dateField}, created_at, ${t.clientField}, ${t.partsField}`)
-                    .eq('user_id', user.id)
-                    .then(res => {
-                        if (res.error) {
-                            console.error(`Error fetching from ${t.name}:`, res.error);
-                            return { data: [], error: res.error };
-                        }
-                        console.log(`Fetched ${res.data?.length || 0} records from ${t.name}`);
-                        return res;
-                    })
-            );
-
-            const results = await Promise.all(promises);
-
-            const parsePartsExpense = (partsData) => {
-                if (!partsData) return 0;
-                let parts = [];
-                try {
-                    if (typeof partsData === 'string') {
-                        if (partsData.trim().startsWith('[')) parts = JSON.parse(partsData);
-                    } else if (Array.isArray(partsData)) {
-                        parts = partsData;
-                    }
-                } catch (e) { return 0; }
-
-                return parts.reduce((acc, p) => acc + ((Number(p.costo_empresa || p.costoEmpresa) || 0) * (Number(p.cantidad) || 1)), 0);
-            };
-
-            const normalizeDate = (d) => {
-                if (!d) return '';
-                const s = String(d).trim();
-                if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.split('T')[0];
-
-                // Handle DD/MM/YYYY
-                const parts = s.split('/');
-                if (parts.length === 3) {
-                    if (parts[2].length === 4) { // DD/MM/YYYY
-                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                    }
-                }
-
-                try {
-                    const date = new Date(s);
-                    if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
-                } catch (e) { }
-                return s;
-            };
-
-            let allServices = [];
-            results.forEach((res, index) => {
-                const table = tables[index];
-                if (res.data) {
-                    allServices = [...allServices, ...res.data.map(s => {
-                        const expense = parsePartsExpense(s[table.partsField]);
-                        const total = Number(s.total) || 0;
-                        const rawDate = s[table.dateField] || s.created_at;
-                        return {
-                            ...s,
-                            type: table.name.replace('servicios_', ''),
-                            date: normalizeDate(rawDate),
-                            cliente_nombre: s[table.clientField],
-                            expense: expense,
-                            profit: total - expense
-                        };
-                    })];
-                }
-            });
-
-            // Apply Filters
-            const filtered = allServices.filter(s => {
-                const dateMatch = s.date >= dateRange.start && s.date <= dateRange.end;
-                const typeMatch = serviceType === 'all' || s.type === serviceType;
-                return dateMatch && typeMatch;
-            });
-
-            // Calculate Stats
-            const totalEarnings = filtered.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
-            const totalExpenses = filtered.reduce((sum, s) => sum + (s.expense || 0), 0);
-            const totalProfit = totalEarnings - totalExpenses;
-            const totalServices = filtered.length;
-            const avgTicket = totalServices > 0 ? totalEarnings / totalServices : 0;
-
-            setStats({ totalEarnings, totalExpenses, totalProfit, totalServices, avgTicket });
-
-            // Generate Continuous Timeline
-            const earningsByDate = filtered.reduce((acc, s) => {
-                const date = s.date;
-                acc[date] = (acc[date] || 0) + (Number(s.total) || 0);
-                return acc;
-            }, {});
-
-            // Fill gaps in timeline
-            const timeline = [];
-            let curr = new Date(dateRange.start + 'T00:00:00');
-            const end = new Date(dateRange.end + 'T00:00:00');
-
-            while (curr <= end) {
-                const dateStr = curr.toISOString().split('T')[0];
-                timeline.push({
-                    date: dateStr,
-                    amount: earningsByDate[dateStr] || 0
-                });
-                curr.setDate(curr.getDate() + 1);
+        // Handle DD/MM/YYYY
+        const parts = s.split('/');
+        if (parts.length === 3) {
+            if (parts[2].length === 4) { // DD/MM/YYYY
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
-
-            setEarningsData(timeline);
-
-            // Frequent Clients & Top Spenders
-            const clientStats = filtered.reduce((acc, s) => {
-                const name = s.cliente_nombre || 'Desconocido';
-                if (!acc[name]) acc[name] = { name, count: 0, total: 0 };
-                acc[name].count += 1;
-                acc[name].total += (Number(s.total) || 0);
-                return acc;
-            }, {});
-
-            const clientsArray = Object.values(clientStats);
-            setFrequentClients([...clientsArray].sort((a, b) => b.count - a.count).slice(0, 5));
-            setTopSpenders([...clientsArray].sort((a, b) => b.total - a.total).slice(0, 5));
-
-        } catch (error) {
-            console.error('Error fetching reports:', error);
-        } finally {
-            setLoading(false);
         }
+
+        try {
+            const date = new Date(s);
+            if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
+        } catch (e) { }
+        return s;
     };
 
-    useEffect(() => {
-        fetchReportsData();
-    }, [user, dateRange, serviceType]);
+    const parsePartsExpense = (partsData) => {
+        if (!partsData) return 0;
+        let parts = [];
+        try {
+            if (typeof partsData === 'string') {
+                if (partsData.trim().startsWith('[')) parts = JSON.parse(partsData);
+            } else if (Array.isArray(partsData)) {
+                parts = partsData;
+            }
+        } catch (e) { return 0; }
+
+        return parts.reduce((acc, p) => acc + ((Number(p.costo_empresa || p.costoEmpresa) || 0) * (Number(p.cantidad) || 1)), 0);
+    };
+
+    const { stats, earningsData, frequentClients, topSpenders, loading } = useMemo(() => {
+        if (!services || services.length === 0) {
+            return {
+                stats: { totalEarnings: 0, totalExpenses: 0, totalProfit: 0, totalServices: 0, avgTicket: 0 },
+                earningsData: [],
+                frequentClients: [],
+                topSpenders: [],
+                loading: false
+            };
+        }
+
+        const processed = services.map(s => {
+            const partsField = s.tableName === 'servicios_cctv' ? 'inventario_materiales' :
+                (s.tableName === 'servicios_pc' ? 'repuestos_descripcion' :
+                    (s.tableName === 'servicios_celulares' ? 'repuestos_descripcion' :
+                        (s.tableName === 'servicios_impresoras' ? 'repuestos_descripcion' :
+                            'materiales_descripcion')));
+
+            const expense = parsePartsExpense(s[partsField]);
+            const total = Number(s.total) || 0;
+            return {
+                ...s,
+                processedDate: normalizeDate(s.fecha),
+                expense: expense,
+                profit: total - expense
+            };
+        });
+
+        // Apply Filters
+        const filtered = processed.filter(s => {
+            const dateMatch = s.processedDate >= dateRange.start && s.processedDate <= dateRange.end;
+            const typeMatch = serviceType === 'all' || s.type.toLowerCase().includes(serviceType.toLowerCase());
+            return dateMatch && typeMatch;
+        });
+
+        // Calculate Stats
+        const totalEarnings = filtered.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+        const totalExpenses = filtered.reduce((sum, s) => sum + (s.expense || 0), 0);
+        const totalProfit = totalEarnings - totalExpenses;
+        const totalServices = filtered.length;
+        const avgTicket = totalServices > 0 ? totalEarnings / totalServices : 0;
+
+        const stats = { totalEarnings, totalExpenses, totalProfit, totalServices, avgTicket };
+
+        // Timeline
+        const earningsByDate = filtered.reduce((acc, s) => {
+            const date = s.processedDate;
+            acc[date] = (acc[date] || 0) + (Number(s.total) || 0);
+            return acc;
+        }, {});
+
+        const timeline = [];
+        let curr = new Date(dateRange.start + 'T00:00:00');
+        const end = new Date(dateRange.end + 'T00:00:00');
+
+        while (curr <= end) {
+            const dateStr = curr.toISOString().split('T')[0];
+            timeline.push({
+                date: dateStr,
+                amount: earningsByDate[dateStr] || 0
+            });
+            curr.setDate(curr.getDate() + 1);
+        }
+
+        // Clients
+        const clientStats = filtered.reduce((acc, s) => {
+            const name = s.cliente || 'Desconocido';
+            if (!acc[name]) acc[name] = { name, count: 0, total: 0 };
+            acc[name].count += 1;
+            acc[name].total += (Number(s.total) || 0);
+            return acc;
+        }, {});
+
+        const clientsArray = Object.values(clientStats);
+
+        return {
+            stats,
+            earningsData: timeline,
+            frequentClients: [...clientsArray].sort((a, b) => b.count - a.count).slice(0, 5),
+            topSpenders: [...clientsArray].sort((a, b) => b.total - a.total).slice(0, 5),
+            loading: false
+        };
+    }, [services, dateRange, serviceType]);
 
     const formatMoney = (val) => `$${formatCurrency(val)}`;
 
@@ -7477,7 +7401,7 @@ const ReportsView = ({ darkMode, user }) => {
                     </div>
 
                     <button
-                        onClick={fetchReportsData}
+                        onClick={() => { /* Trigger re-calculation by updating a state if needed, or just rely on useMemo dependencies */ }}
                         className={`p-2.5 rounded-[1.5rem] transition-all hover:scale-105 active:scale-95 ${darkMode ? 'bg-slate-700/50 hover:bg-blue-500/20 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'} border border-transparent hover:border-blue-500/30`}
                         title="Actualizar datos"
                     >
@@ -7671,6 +7595,24 @@ const App = () => {
 
     // Content Scroll Ref
     const contentRef = useRef(null);
+    const isInitializing = useRef(false);
+
+    // Timeout helper for Supabase calls
+    const withTimeout = (promise, ms = 10000, timeoutName = 'Promise') => {
+        let timeoutId;
+        const timeoutPromise = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+                reject(new Error(`${timeoutName} timed out after ${ms}ms`));
+            }, ms);
+        });
+
+        return Promise.race([
+            promise,
+            timeoutPromise
+        ]).finally(() => {
+            if (timeoutId) clearTimeout(timeoutId);
+        });
+    };
 
     useEffect(() => {
         const handleResize = () => {
@@ -7716,11 +7658,13 @@ const App = () => {
     const [savedClients, setSavedClients] = useState([]);
     // Quotations from DB
     const [quotations, setQuotations] = useState([]);
+    const [services, setServices] = useState([]); // Hoisted state
     const [servicesRefreshTrigger, setServicesRefreshTrigger] = useState(0);
     const [editingQuotationId, setEditingQuotationId] = useState(null);
     const [viewingQuotation, setViewingQuotation] = useState(null);
 
     const [items, setItems] = useState([]);
+    const [products, setProducts] = useState([]);
     const [terms, setTerms] = useState('');
     const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
     const [expirationDate, setExpirationDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
@@ -7732,6 +7676,7 @@ const App = () => {
     const [folio, setFolio] = useState('COT-' + new Date().getFullYear() + '-100');
 
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isSavingQuotation, setIsSavingQuotation] = useState(false);
 
     // Initial State for Dirty Check (Deep Compare)
     const [initialState, setInitialState] = useState({
@@ -7827,60 +7772,137 @@ const App = () => {
         localStorage.setItem('selectedTemplate', templateId);
     };
 
+    // Unified Initialization Function
+    const initializeAppData = async (currentSession) => {
+        if (!currentSession?.user) {
+            setLoadingAuth(false);
+            return;
+        }
+
+        if (isInitializing.current) {
+            console.log("App initialization already in progress, skipping.");
+            return;
+        }
+
+        try {
+            isInitializing.current = true;
+            console.log("Initializing app data for user:", currentSession.user.id);
+
+            // 1. Fetch Profile First (required for many UI checks like Trial/Premium)
+            const profileData = await withTimeout(
+                fetchProfile(currentSession.user.id, currentSession),
+                8000,
+                'Profile Fetch'
+            ).catch(err => {
+                console.error("Initialization: Profile fetch failed or timed out:", err);
+                return null;
+            });
+
+            if (!profileData) {
+                console.warn("Initialization: Profile fetch returned null, UI may show stale data.");
+            }
+
+            // 2. Fetch all other dependencies in parallel (always fetch fresh data on init)
+            await Promise.allSettled([
+                withTimeout(fetchCompanySettings(currentSession.user.id), 5000, 'CompanySettings'),
+                withTimeout(fetchSavedClients(currentSession.user.id), 5000, 'SavedClients'),
+                withTimeout(fetchQuotations(currentSession.user.id), 5000, 'Quotations'),
+                withTimeout(fetchNextFolio(currentSession.user.id), 5000, 'NextFolio'),
+                withTimeout(fetchProductsInAppAlt(currentSession.user.id), 5000, 'Products'),
+                withTimeout(fetchAllServices(currentSession.user.id), 5000, 'Services')
+            ]);
+
+            console.log("App data initialization complete.");
+        } catch (error) {
+            console.error("Error during app initialization:", error);
+        } finally {
+            isInitializing.current = false;
+            setLoadingAuth(false);
+        }
+    };
+
+    // PAGE VISIBILITY EFFECT: Refresh session when user returns to the tab after inactivity
+    useEffect(() => {
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === 'visible') {
+                console.log("Tab became visible. Refreshing Supabase session...");
+                try {
+                    const { data: { session: refreshedSession }, error } = await supabase.auth.getSession();
+                    if (error) {
+                        console.error("Error refreshing session on visibility change:", error);
+                        return;
+                    }
+                    if (refreshedSession) {
+                        // Session is still valid — update state so components have fresh token
+                        setSession(refreshedSession);
+                        // Increment refresh trigger so all data components (ServiciosView, CCTVList, etc.) re-fetch
+                        setServicesRefreshTrigger(prev => prev + 1);
+                        // Also refresh global services state
+                        fetchAllServices(refreshedSession.user.id);
+                        console.log("Session refreshed and data refresh triggered on tab focus.");
+                    } else {
+                        // Session is truly gone — clear auth state
+                        console.warn("Session expired while tab was hidden. Clearing auth state.");
+                        setSession(null);
+                        setProfile(null);
+                        setLoadingAuth(false);
+                    }
+                } catch (err) {
+                    console.error("Unexpected error during visibility-change session refresh:", err);
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, []);
+
     // NEW AUTH EFFECT
     useEffect(() => {
-        console.log("App mounted. Starting checkAuth.");
+        console.log("App mounted. Starting checkAuth sequence.");
 
-        // FAIL-SAFE: Force loading screen to hide after 5 seconds no matter what
         const failSafeTimeout = setTimeout(() => {
-            console.warn("FAIL-SAFE: checkAuth is taking too long. Forcing loadingAuth to false.");
-            setLoadingAuth(false);
-        }, 5000);
-
-        const checkAuth = async () => {
-            console.log("checkAuth started...");
-            try {
-                const { data } = await supabase.auth.getSession();
-                const session = data?.session || null;
-                console.log("Session details:", session ? `User ID: ${session.user.id}` : "No session found");
-                setSession(session);
-                if (session) {
-                    // Fetch profile but don't let it block indefinitely
-                    console.log("Fetching profile...");
-                    await fetchProfile(session.user.id).catch(e => console.error("Profile fetch failed:", e));
-
-                    fetchCompanySettings(session.user.id);
-                    fetchSavedClients(session.user.id);
-                    fetchQuotations(session.user.id);
+            setLoadingAuth(loading => {
+                if (loading) {
+                    console.warn("FAIL-SAFE triggered: Force hiding loadingAuth.");
+                    return false;
                 }
-            } catch (err) {
-                console.error("Critical error in checkAuth:", err);
-            } finally {
-                console.log("checkAuth finished. Loading completed.");
+                return loading;
+            });
+        }, 12000); // Slightly longer for the more robust init
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Auth State Change:", event, session?.user?.id);
+            setSession(session);
+
+            // ONLY initialize data on SIGNED_IN or INITIAL_SESSION.
+            // TOKEN_REFRESHED and USER_UPDATED should just update the session state without re-fetching everything.
+            const shouldInitialize = event === 'SIGNED_IN' || event === 'INITIAL_SESSION';
+
+            if (shouldInitialize && session) {
+                await initializeAppData(session);
+                clearTimeout(failSafeTimeout);
+            } else if (event === 'SIGNED_OUT') {
+                setProfile(null);
+                setLoadingAuth(false);
+                clearTimeout(failSafeTimeout);
+                isInitializing.current = false;
+            } else if (session) {
+                // For other events with a session (like TOKEN_REFRESHED), just ensure loading is off
                 setLoadingAuth(false);
                 clearTimeout(failSafeTimeout);
             }
-        };
-        checkAuth();
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            setSession(session);
-            if (session) {
-                await fetchProfile(session.user.id);
-                fetchCompanySettings(session.user.id);
-                fetchSavedClients(session.user.id);
-                fetchQuotations(session.user.id);
-                fetchNextFolio(session.user.id);
-            }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+            clearTimeout(failSafeTimeout);
+        };
     }, []);
 
-    const fetchProfile = async (userId) => {
+    const fetchProfile = async (userId, currentSession = null) => {
         try {
+            console.log("Fetching profile for:", userId);
             let { data, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -7896,7 +7918,7 @@ const App = () => {
                     .from('profiles')
                     .upsert({
                         id: userId,
-                        email: session?.user?.email || '',
+                        email: currentSession?.user?.email || session?.user?.email || '',
                         trial_start: new Date().toISOString()
                     })
                     .select()
@@ -7907,8 +7929,10 @@ const App = () => {
             }
 
             setProfile(data);
+            return data;
         } catch (error) {
             console.error('Error fetching/creating profile:', error);
+            return null;
         }
     };
 
@@ -7916,34 +7940,47 @@ const App = () => {
     const isTrialExpired = () => {
         if (!profile) return false;
         if (profile.is_premium) return false;
+        if (!profile.trial_start) return false; // Safety check
 
-        const trialStart = new Date(profile.trial_start);
-        const sevenDaysLater = new Date(trialStart);
-        sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+        try {
+            const trialStart = new Date(profile.trial_start);
+            if (isNaN(trialStart.getTime())) return false; // Invalid date safety
 
-        return new Date() > sevenDaysLater;
+            const sevenDaysLater = new Date(trialStart);
+            sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
+            return new Date() > sevenDaysLater;
+        } catch (e) {
+            console.error("Error calculating trial expiration:", e);
+            return false;
+        }
     };
 
     const getTrialDaysRemaining = () => {
         if (!profile) return null;
         if (profile.is_premium) return null;
+        if (!profile.trial_start) return null;
 
-        const trialStart = new Date(profile.trial_start);
-        const sevenDaysLater = new Date(trialStart);
-        sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+        try {
+            const trialStart = new Date(profile.trial_start);
+            if (isNaN(trialStart.getTime())) return null;
 
-        const now = new Date();
-        const diffTime = sevenDaysLater - now;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const sevenDaysLater = new Date(trialStart);
+            sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
-        return diffDays > 0 ? diffDays : 0;
+            const now = new Date();
+            const diffTime = sevenDaysLater - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            return diffDays > 0 ? diffDays : 0;
+        } catch (e) {
+            console.error("Error calculating trial days remaining:", e);
+            return null;
+        }
     };
 
-    useEffect(() => {
-        if (session?.user && activeTab === 'cotizaciones-list') {
-            fetchQuotations(session.user.id);
-        }
-    }, [activeTab, session]);
+    // NOTE: Quotations are fetched once during initializeAppData.
+    // They are re-fetched after save/delete operations. No need to re-fetch on every tab change.
 
     // PHONE SERVICE FORM STATE & HANDLERS
     const [editingPhoneService, setEditingPhoneService] = useState(null); // null, 'new', or service object
@@ -8953,9 +8990,73 @@ const App = () => {
         }
     };
 
-    const saveQuotation = async () => {
-        if (!session?.user) return;
+    const fetchProductsInAppAlt = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('productos')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
 
+            if (data) setProducts(data);
+            if (error) console.error('Error fetching products:', error);
+        } catch (error) {
+            console.error('Fetch products error:', error);
+        }
+    };
+
+    const fetchAllServices = async (userId = session?.user?.id) => {
+        if (!userId) return;
+        try {
+            // Parallel Fetch all service types & photos lookup
+            const [
+                { data: cctvData },
+                { data: pcData },
+                { data: phoneData },
+                { data: printerData },
+                { data: networkData },
+                { data: photosData }
+            ] = await Promise.all([
+                supabase.from('servicios_cctv').select('*').eq('user_id', userId),
+                supabase.from('servicios_pc').select('*').eq('user_id', userId),
+                supabase.from('servicios_celulares').select('*').eq('user_id', userId),
+                supabase.from('servicios_impresoras').select('*').eq('user_id', userId),
+                supabase.from('servicios_redes').select('*').eq('user_id', userId),
+                supabase.from('servicio_fotos').select('servicio_id, tipo_servicio').eq('user_id', userId)
+            ]);
+
+            const photosLookup = new Set();
+            photosData?.forEach(p => photosLookup.add(`${p.tipo_servicio}-${p.servicio_id}`));
+
+            const parseDate = (d) => {
+                if (!d) return 0;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d + 'T00:00:00').getTime();
+                if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)) {
+                    const p = d.split('/');
+                    return new Date(`${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}T00:00:00`).getTime();
+                }
+                const date = new Date(d);
+                return isNaN(date.getTime()) ? 0 : date.getTime();
+            };
+
+            const unified = [
+                ...(cctvData || []).map(s => ({ ...s, original: s, type: 'CCTV', folio: s.servicio_numero, cliente: s.cliente_nombre, fecha: s.servicio_fecha || s.created_at, tableName: 'servicios_cctv', hasPhotos: photosLookup.has(`servicios_cctv-${s.id}`) })),
+                ...(pcData || []).map(s => ({ ...s, original: s, type: 'PC', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_pc', hasPhotos: photosLookup.has(`servicios_pc-${s.id}`) })),
+                ...(phoneData || []).map(s => ({ ...s, original: s, type: 'Celular', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_celulares', hasPhotos: photosLookup.has(`servicios_celulares-${s.id}`) })),
+                ...(printerData || []).map(s => ({ ...s, original: s, type: 'Impresora', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_impresoras', hasPhotos: photosLookup.has(`servicios_impresoras-${s.id}`) })),
+                ...(networkData || []).map(s => ({ ...s, original: s, type: 'Redes', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_redes', hasPhotos: photosLookup.has(`servicios_redes-${s.id}`) }))
+            ].sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha));
+
+            setServices(unified);
+        } catch (error) {
+            console.error('Error fetching global services:', error);
+        }
+    };
+
+    const saveQuotation = async () => {
+        if (!session?.user || isSavingQuotation) return;
+
+        setIsSavingQuotation(true);
         try {
             // Calculate total
             const subtotal = items.reduce((sum, item) => {
@@ -9013,32 +9114,61 @@ const App = () => {
             const { data, error } = result;
             if (error) throw error;
 
+            // Optimistic sync: Update local state without full re-fetch
+            if (data && data.length > 0) {
+                const savedItem = data[0];
+                setQuotations(prev => {
+                    const exists = prev.find(q => q.id === savedItem.id);
+                    if (exists) {
+                        return prev.map(q => q.id === savedItem.id ? savedItem : q);
+                    } else {
+                        return [savedItem, ...prev];
+                    }
+                });
+            }
+
             // Updated initial state to prevent unsaved changes warning
             setInitialState({
                 client: { ...client },
                 items: JSON.parse(JSON.stringify(items))
             });
 
-            await fetchQuotations(session.user.id);
-            alert(editingQuotationId ? 'Cotización actualizada' : 'Cotización guardada');
+            // CLEAR LOADING STATE HERE
+            setIsSavingQuotation(false);
+
+            const successMsg = editingQuotationId ? 'Cotización actualizada' : 'Cotización guardada';
+            const wasEditing = !!editingQuotationId;
+
             setEditingQuotationId(null);
 
-            // Redirect to list to prevent duplication if saved again
+            // Redirect to list
             setActiveTab('cotizaciones-list');
 
-            // Fetch next folio for new quotation
-            if (!editingQuotationId) {
-                await fetchNextFolio(session.user.id);
+            // Fetch next folio in background (non-blocking)
+            if (!wasEditing) {
+                fetchNextFolio(session.user.id);
             }
+
+            // Alert at the end (non-blocking for UI state cleanup)
+            setTimeout(() => {
+                alert(successMsg);
+            }, 100);
 
         } catch (error) {
             console.error('Error saving quotation:', error);
+            setIsSavingQuotation(false);
             alert('Error al guardar cotización: ' + error.message);
         }
     };
 
     const deleteQuotation = async (id) => {
+        // Store original for rollback
+        const originalQuotations = [...quotations];
+
         try {
+            // Optimistic Update: Remove from local state immediately
+            setQuotations(prev => prev.filter(q => q.id !== id));
+
             const { error } = await supabase
                 .from('cotizaciones')
                 .delete()
@@ -9046,8 +9176,12 @@ const App = () => {
 
             if (error) throw error;
 
-            await fetchQuotations(session.user.id);
+            // Optional: Fresh fetch in background to ensure sync, 
+            // but not strictly necessary if optimistic update is reliable
+            // await fetchQuotations(session.user.id);
         } catch (error) {
+            // Rollback state on error
+            setQuotations(originalQuotations);
             console.error('Error deleting quotation:', error);
             alert('Error al eliminar cotización: ' + error.message);
         }
@@ -9874,6 +10008,7 @@ const App = () => {
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     trialDaysLeft={getTrialDaysRemaining()}
+                    isPremium={profile?.is_premium}
                     onCreateNew={() => {
                         // Check unsaved changes before resetting for "New"
                         if (hasUnsavedChanges()) {
@@ -9976,15 +10111,16 @@ const App = () => {
                                                 </button>
                                                 <button
                                                     onClick={saveQuotation}
-                                                    className="flex-1 md:flex-none btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                                    disabled={isSavingQuotation}
+                                                    className={`flex-1 md:flex-none btn bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isSavingQuotation ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 >
                                                     <Download className="w-5 h-5" />
-                                                    {editingQuotationId ? 'Actualizar' : (
+                                                    {isSavingQuotation ? 'Guardando...' : (editingQuotationId ? 'Actualizar' : (
                                                         <>
                                                             <span className="md:hidden">Guardar</span>
                                                             <span className="hidden md:inline">Guardar</span>
                                                         </>
-                                                    )}
+                                                    ))}
                                                 </button>
                                                 <button
                                                     onClick={generatePDF}
@@ -10109,6 +10245,7 @@ const App = () => {
                                                 onUpdateItem={updateItem}
                                                 onMoveItem={moveItem}
                                                 darkMode={isDark}
+                                                session={session}
                                             />
 
                                             {/* Global IVA Switch */}
@@ -10127,7 +10264,7 @@ const App = () => {
                                     </div>
                                 )}
                                 {activeTab === 'clientes' && (
-                                    <ClientsList onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
+                                    <ClientsList clients={savedClients} user={session?.user} onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
                                 )}
                                 {activeTab === 'configuracion' && (
                                     <SettingsView
@@ -10140,17 +10277,17 @@ const App = () => {
                                     />
                                 )}
                                 {activeTab === 'products' && (
-                                    <Products darkMode={isDark} user={session?.user} />
+                                    <Products products={products} darkMode={isDark} user={session?.user} />
                                 )}
                                 {activeTab === 'informes' && (
-                                    <ReportsView darkMode={isDark} user={session?.user} />
+                                    <ReportsView darkMode={isDark} user={session?.user} services={services} />
                                 )}
                                 {activeTab === 'suscripcion' && (
                                     <SubscriptionView darkMode={isDark} />
                                 )}
                                 {activeTab === 'servicios' && (
-
                                     <ServiciosView
+                                        services={services}
                                         darkMode={isDark}
                                         onNavigate={setActiveTab}
                                         setSelectedService={setSelectedService}
@@ -10393,12 +10530,19 @@ const App = () => {
                                                             includeIva={includeIva}
                                                             template={selectedTemplate}
                                                         />
-
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                )}
+                                {activeTab === 'inventario' && (
+                                    <Products
+                                        darkMode={isDark}
+                                        user={session?.user}
+                                        products={products}
+                                        onRefresh={() => fetchProductsInAppAlt(session.user.id)}
+                                    />
                                 )}
 
                                 {/* Nota de Venta Preview Modal */}

@@ -3,9 +3,9 @@ import { supabase } from '../../utils/supabase';
 import { Search, Plus, Edit2, Trash2, Package, Image as ImageIcon, X, Save, Loader, AlertTriangle, DollarSign, Box, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 
-const Products = ({ darkMode, user }) => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+const Products = ({ darkMode, user, products: sharedProducts, onRefresh }) => {
+    const [products, setProducts] = useState(sharedProducts || []);
+    const [loading, setLoading] = useState(!sharedProducts);
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -28,10 +28,16 @@ const Products = ({ darkMode, user }) => {
     const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
-        if (user?.id) {
-            fetchProducts();
+        if (!sharedProducts || sharedProducts.length === 0) {
+            if (user?.id) {
+                fetchProducts();
+            }
+        } else {
+            console.log("DEBUG: Using sharedProducts from props");
+            setProducts(sharedProducts);
+            setLoading(false);
         }
-    }, [user?.id]);
+    }, [user?.id, sharedProducts]);
 
     const fetchProducts = async () => {
         console.log("DEBUG: fetchProducts started");
@@ -162,7 +168,11 @@ const Products = ({ darkMode, user }) => {
             }
 
             setShowModal(false);
-            fetchProducts();
+            if (onRefresh) {
+                onRefresh();
+            } else {
+                fetchProducts();
+            }
         } catch (error) {
             console.error('Error saving product:', error);
             alert('Error al guardar el producto: ' + error.message);
@@ -189,7 +199,11 @@ const Products = ({ darkMode, user }) => {
                 .eq('id', id);
 
             if (error) throw error;
-            fetchProducts();
+            if (onRefresh) {
+                onRefresh();
+            } else {
+                fetchProducts();
+            }
         } catch (error) {
             console.error('Error deleting product:', error);
             alert('Error al eliminar producto');
