@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown } from 'lucide-react';
+import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
 import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
+import PCServiceReport from './components/PCServiceReport';
 import ServiceReceipt from './components/ServiceReceipt';
 import PCServiceForm from './components/PCServiceForm';
 import PrinterServiceForm from './components/PrinterServiceForm';
@@ -18,6 +19,8 @@ import Products from './components/Products';
 import SubscriptionView from './components/SubscriptionView';
 import TrialExpiredView from './components/TrialExpiredView';
 import ProductAutocomplete from './components/ProductAutocomplete';
+import InicioView from './components/InicioView';
+import CitasView from './components/CitasView';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
@@ -175,6 +178,13 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
     const [deletingId, setDeletingId] = useState(null);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [currentPage, setCurrentPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState('Todas');
+
+    const statusCards = [
+        { id: 'Todas', label: 'Todas', filter: () => true },
+        { id: 'Aceptadas', label: 'Aceptadas', filter: (q) => q.aceptada_rechazada?.toLowerCase() === 'aceptada' },
+        { id: 'Rechazadas', label: 'Rechazadas', filter: (q) => q.aceptada_rechazada?.toLowerCase() === 'rechazada' }
+    ];
 
     const handleDeleteClick = (id) => {
         if (window.confirm('¿Estás seguro de eliminar esta cotización?')) {
@@ -188,12 +198,17 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
 
     const filteredQuotations = quotations.filter(q => {
         const search = searchTerm.toLowerCase();
-        return (
+        const matchesSearch = (
             q.folio?.toString().includes(search) ||
             q.nombre_cliente?.toLowerCase().includes(search) ||
             q.empresa_cliente?.toLowerCase().includes(search) ||
             q.numero_cliente?.toLowerCase().includes(search)
         );
+
+        const activeCard = statusCards.find(c => c.id === statusFilter);
+        const matchesStatus = activeCard ? activeCard.filter(q) : true;
+
+        return matchesSearch && matchesStatus;
     });
 
     // Pagination logic
@@ -209,31 +224,67 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
 
     return (
         <div className="w-full px-4 md:px-8 py-8">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                    Mis <span className="text-blue-600">Cotizaciones</span>
-                </h1>
-                <button
-                    onClick={onCreateNew}
-                    className="btn bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
-                >
-                    <Plus className="w-5 h-5" />
-                    Nueva Cotización
-                </button>
+            <div className={`mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <div className="flex flex-col">
+                    <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Cotizaciones
+                    </h1>
+                    <span className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Gestion de tus cotizaciones a clientes
+                    </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="relative w-full sm:w-64 flex-1">
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar cotizaciones..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={`w-full pl-10 pr-4 py-2 text-sm rounded-full border transition-all ${darkMode ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'} focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                        />
+                    </div>
+                    <button
+                        onClick={onCreateNew}
+                        className="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-full shadow-sm transition-all whitespace-nowrap flex items-center justify-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Agregar
+                    </button>
+                    <button
+                        className={`p-2 hidden sm:flex items-center justify-center rounded-full transition-all border opacity-0 pointer-events-none`}
+                        title="Actualizar lista"
+                    >
+                        {/* Hidden button to keep symmetric spacing if needed, Quotations doesnt seem to have a fetchAll like Services, kept here structurally equivalent to Services view without function */}
+                        <RefreshCw className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
-            {/* Search Bar and Pagination Controls */}
-            <div className="mb-6 flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${darkMode ? 'text-slate-400' : 'text-slate-400'}`} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por folio, nombre, empresa o teléfono..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm`}
-                    />
-                </div>
+            <div className="grid grid-cols-3 gap-4 pb-4 mb-6">
+                {statusCards.map(card => {
+                    const count = quotations.filter(card.filter).length;
+                    const isActive = statusFilter === card.id;
+
+                    return (
+                        <button
+                            key={card.id}
+                            onClick={() => setStatusFilter(card.id)}
+                            className={`flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                                ? (darkMode ? 'bg-blue-900/40 border-blue-500 scale-105' : 'bg-blue-50 border-blue-500 scale-105')
+                                : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
+                                }`}
+                        >
+                            <span className={`text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
+                            <span className={`text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Pagination Row */}
+            <div className="mb-4 flex flex-col sm:flex-row justify-end items-center gap-4">
                 <div className="flex items-center gap-2">
                     <span className={`text-sm font-medium whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Mostrar:</span>
                     <select
@@ -4013,6 +4064,20 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
     const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [currentPage, setCurrentPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState('Todas');
+    const [showActionsModal, setShowActionsModal] = useState(false);
+    const [selectedServiceForActions, setSelectedServiceForActions] = useState(null);
+    const [showPCReport, setShowPCReport] = useState(false);
+    const [selectedServiceForPCReport, setSelectedServiceForPCReport] = useState(null);
+
+    const statusCards = [
+        { id: 'Todas', label: 'Todas', filter: () => true },
+        { id: 'Pendientes', label: 'Pendientes', filter: (s) => !s.status || ['pendiente', 'recibido'].includes(s.status?.toLowerCase()) },
+        { id: 'En Proceso', label: 'En Proceso', filter: (s) => ['diagnosticado', 'en_proceso', 'en_revision', 'en_reparacion'].includes(s.status?.toLowerCase()) },
+        { id: 'P. de Entrega', label: 'P. de Entrega', filter: (s) => ['listo_para_entregar', 'listo', 'reparado'].includes(s.status?.toLowerCase()) },
+        { id: 'Completadas', label: 'Completadas', filter: (s) => ['entregado', 'completado', 'aceptada'].includes(s.status?.toLowerCase()) },
+        { id: 'Canceladas', label: 'Canceladas', filter: (s) => ['no_reparable', 'cancelado', 'rechazada'].includes(s.status?.toLowerCase()) }
+    ];
 
     const serviceCategories = [
         { id: 'cctv', title: 'CCTV', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10', implemented: true, table: 'servicios_cctv' },
@@ -4133,11 +4198,16 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
         return sortableItems;
     }, [unifiedServices, sortConfig]);
 
-    const filteredServices = sortedServices.filter(s =>
-        s.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.folio?.toString().includes(searchTerm) ||
-        s.type.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredServices = sortedServices.filter(s => {
+        const matchesSearch = s.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.folio?.toString().includes(searchTerm) ||
+            s.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const activeCard = statusCards.find(c => c.id === statusFilter);
+        const matchesStatus = activeCard ? activeCard.filter(s) : true;
+
+        return matchesSearch && matchesStatus;
+    });
 
     // Pagination logic
     const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(filteredServices.length / itemsPerPage);
@@ -4253,47 +4323,82 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
 
     return (
         <div className="w-full px-4 md:px-8 py-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div className="flex items-center gap-4">
-                    <h1 className={`text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                        Gestión de <span className="text-blue-600">Servicios</span>
+            <div className={`mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <div className="flex flex-col">
+                    <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                        Órdenes de Trabajo
                     </h1>
+                    <span className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Gestion de órdenes de trabajo y servicios
+                    </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="relative w-full sm:w-64 flex-1">
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar órdenes..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={`w-full pl-10 pr-4 py-2 text-sm rounded-full border transition-all ${darkMode ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'} focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowNewServiceModal(true)}
+                        className="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-full shadow-sm transition-all whitespace-nowrap"
+                    >
+                        Agregar
+                    </button>
                     <button
                         onClick={fetchAllServices}
-                        className={`p-2 rounded-full transition-all hover:scale-110 ${darkMode ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
+                        className={`p-2 hidden sm:flex items-center justify-center rounded-full transition-all border ${darkMode ? 'border-slate-700 bg-slate-900 hover:bg-slate-700 text-slate-400 hover:text-white' : 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800'}`}
                         title="Actualizar lista"
                     >
                         <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
                     </button>
                 </div>
-
-                <button
-                    onClick={() => setShowNewServiceModal(true)}
-                    className="w-full md:w-auto btn bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 transform hover:-translate-y-1 px-8 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 text-lg"
-                >
-                    <Plus className="w-6 h-6 stroke-[3]" />
-                    NUEVO SERVICIO
-                </button>
             </div>
 
-            {/* Search Bar and Pagination Controls */}
-            <div className="mb-6 flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por cliente, folio o tipo..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`w-full pl-12 pr-4 py-4 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 focus:border-blue-500' : 'bg-white border-slate-200 text-slate-900 focus:border-blue-500'} focus:outline-none focus:ring-4 focus:ring-blue-500/10 shadow-sm`}
-                    />
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 pb-4 mb-6">
+                {statusCards.map(card => {
+                    const count = sortedServices.filter(card.filter).length;
+                    const isActive = statusFilter === card.id;
+
+                    return (
+                        <button
+                            key={card.id}
+                            onClick={() => setStatusFilter(card.id)}
+                            className={`flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                                ? (darkMode ? 'bg-blue-900/40 border-blue-500' : 'bg-blue-50 border-blue-500 scale-105')
+                                : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
+                                }`}
+                        >
+                            <span className={`text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
+                            <span className={`text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <style>{`
+            .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .hide-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            `}</style>
+
+            {/* Pagination Controls Row */}
+            <div className="mb-4 flex flex-col sm:flex-row justify-end items-center gap-4">
                 <div className="flex items-center gap-2">
                     <span className={`text-sm font-medium whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Mostrar:</span>
                     <select
                         value={itemsPerPage}
                         onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                        className={`px-4 py-4 rounded-2xl border transition-all font-medium ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 hover:border-slate-600 hover:bg-slate-750' : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50'} focus:outline-none focus:border-blue-500 focus:ring-0 shadow-sm cursor-pointer`}
+                        className={`px-3 py-2 text-sm rounded-xl border transition-all font-medium ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-100 hover:border-slate-600 hover:bg-slate-750' : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50'} focus:outline-none focus:border-blue-500 focus:ring-0 shadow-sm cursor-pointer`}
                     >
                         <option value={10}>10</option>
                         <option value={20}>20</option>
@@ -4393,31 +4498,6 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    {service.type !== 'CCTV' && service.type !== 'Redes' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleShowQR(service)}
-                                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                                                title="Ver Ticket QR"
-                                                            >
-                                                                <QrCode className="w-5 h-5" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleShowReceipt(service)}
-                                                                className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                                                                title="Imprimir Ticket"
-                                                            >
-                                                                <ScrollText className="w-5 h-5" />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                    <button
-                                                        onClick={() => onShowNotaVenta(service)}
-                                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Generar Nota de Venta"
-                                                    >
-                                                        <FileText className="w-5 h-5" />
-                                                    </button>
                                                     <button
                                                         onClick={() => handleViewServiceUnified(service)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -4438,6 +4518,16 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                         title="Eliminar Servicio"
                                                     >
                                                         <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedServiceForActions(service);
+                                                            setShowActionsModal(true);
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                                                        title="Más acciones"
+                                                    >
+                                                        <MoreVertical className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                             </td>
@@ -4528,31 +4618,6 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            {service.type !== 'CCTV' && service.type !== 'Redes' && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleShowQR(service)}
-                                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                                        title="Ver Ticket QR"
-                                                    >
-                                                        <QrCode className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleShowReceipt(service)}
-                                                        className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                                                        title="Imprimir Ticket"
-                                                    >
-                                                        <ScrollText className="w-5 h-5" />
-                                                    </button>
-                                                </>
-                                            )}
-                                            <button
-                                                onClick={() => onShowNotaVenta(service)}
-                                                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Generar Nota de Venta"
-                                            >
-                                                <FileText className="w-5 h-5" />
-                                            </button>
                                             <button
                                                 onClick={() => handleViewServiceUnified(service)}
                                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -4573,6 +4638,16 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                                                 title="Eliminar Servicio"
                                             >
                                                 <Trash2 className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedServiceForActions(service);
+                                                    setShowActionsModal(true);
+                                                }}
+                                                className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                                                title="Más acciones"
+                                            >
+                                                <MoreVertical className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </div>
@@ -4665,66 +4740,69 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
             </div>
 
             {/* Modal de Nuevo Servicio */}
-            {showNewServiceModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className={`w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
-                        <div className="p-6 md:p-12">
-                            <div className="flex justify-between items-start md:items-center mb-8 md:mb-12 gap-4">
-                                <div>
-                                    <h2 className={`text-2xl md:text-4xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Nuevo Servicio</h2>
-                                    <p className={`text-sm md:text-lg font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona la categoría del servicio a registrar</p>
-                                </div>
-                                <button
-                                    onClick={() => setShowNewServiceModal(false)}
-                                    className={`p-4 rounded-full transition-all hover:rotate-90 ${darkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'}`}
-                                >
-                                    <X className="w-8 h-8" />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {serviceCategories.map((category) => (
+            {
+                showNewServiceModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                        <div className={`w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+                            <div className="p-6 md:p-12">
+                                <div className="flex justify-between items-start md:items-center mb-8 md:mb-12 gap-4">
+                                    <div>
+                                        <h2 className={`text-2xl md:text-4xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Nuevo Servicio</h2>
+                                        <p className={`text-sm md:text-lg font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona la categoría del servicio a registrar</p>
+                                    </div>
                                     <button
-                                        key={category.id}
-                                        onClick={() => handleServiceSelect(category)}
-                                        className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
-                                            ? 'opacity-60 cursor-not-allowed border-dashed grayscale bg-slate-50 border-slate-200'
-                                            : darkMode
-                                                ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
-                                                : 'bg-white border-slate-100 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
-                                            }`}
+                                        onClick={() => setShowNewServiceModal(false)}
+                                        className={`p-4 rounded-full transition-all hover:rotate-90 ${darkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'}`}
                                     >
-                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${category.bg} ${category.color}`}>
-                                            <category.icon className="w-9 h-9 stroke-[2.5]" />
-                                        </div>
-                                        <div>
-                                            <h3 className={`text-xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-900'}`}>{category.title}</h3>
-                                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                                {category.implemented ? `Registrar servicio de ${category.title.toLowerCase()}` : 'Próximamente...'}
-                                            </p>
-                                        </div>
-                                        {!category.implemented && (
-                                            <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest border border-amber-200">
-                                                Pendiente
-                                            </div>
-                                        )}
-                                        {category.implemented && (
-                                            <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-                                                <ArrowUpRight className="w-6 h-6 text-blue-500 stroke-[3]" />
-                                            </div>
-                                        )}
+                                        <X className="w-8 h-8" />
                                     </button>
-                                ))}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {serviceCategories.map((category) => (
+                                        <button
+                                            key={category.id}
+                                            onClick={() => handleServiceSelect(category)}
+                                            className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
+                                                ? 'opacity-60 cursor-not-allowed border-dashed grayscale bg-slate-50 border-slate-200'
+                                                : darkMode
+                                                    ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
+                                                    : 'bg-white border-slate-100 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
+                                                }`}
+                                        >
+                                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${category.bg} ${category.color}`}>
+                                                <category.icon className="w-9 h-9 stroke-[2.5]" />
+                                            </div>
+                                            <div>
+                                                <h3 className={`text-xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-900'}`}>{category.title}</h3>
+                                                <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                    {category.implemented ? `Registrar servicio de ${category.title.toLowerCase()}` : 'Próximamente...'}
+                                                </p>
+                                            </div>
+                                            {!category.implemented && (
+                                                <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest border border-amber-200">
+                                                    Pendiente
+                                                </div>
+                                            )}
+                                            {category.implemented && (
+                                                <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                                                    <ArrowUpRight className="w-6 h-6 text-blue-500 stroke-[3]" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* QR Ticket Modal */}
             {
                 showQRTicket && selectedServiceForQR && (
                     <QRServiceTicket
+                        user={user}
                         service={selectedServiceForQR}
                         onClose={() => {
                             setShowQRTicket(false);
@@ -4748,7 +4826,106 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     />
                 )
             }
-        </div>
+
+            {/* PC Report Modal */}
+            {
+                showPCReport && selectedServiceForPCReport && (
+                    <PCServiceReport
+                        service={selectedServiceForPCReport}
+                        user={user}
+                        onClose={() => {
+                            setShowPCReport(false);
+                            setSelectedServiceForPCReport(null);
+                        }}
+                        darkMode={darkMode}
+                    />
+                )
+            }
+
+            {/* Modal de Acciones de Orden */}
+            {showActionsModal && selectedServiceForActions && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className={`w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+                        <div className="p-8 flex flex-col items-center text-center">
+                            <h2 className={`text-2xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Acciones de Orden</h2>
+                            <p className={`text-sm font-medium mb-8 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                Selecciona una acción para la orden <span className="text-blue-600 font-bold">#{selectedServiceForActions.folio}</span>
+                            </p>
+
+                            <div className="w-full space-y-3 mb-8">
+                                {selectedServiceForActions.type !== 'CCTV' && selectedServiceForActions.type !== 'Redes' && (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedServiceForQR(selectedServiceForActions);
+                                                setShowQRTicket(true);
+                                                setShowActionsModal(false);
+                                            }}
+                                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-blue-500 hover:bg-white'}`}
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                                                <QrCode className="w-5 h-5" />
+                                            </div>
+                                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Ver Ticket QR</span>
+                                        </button>
+
+                                        {selectedServiceForActions.type === 'PC' && (
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedServiceForPCReport(selectedServiceForActions);
+                                                    setShowPCReport(true);
+                                                    setShowActionsModal(false);
+                                                }}
+                                                className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-indigo-500 hover:bg-white'}`}
+                                            >
+                                                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                                    <FileText className="w-5 h-5" />
+                                                </div>
+                                                <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Reporte Técnico PC</span>
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={() => {
+                                                setSelectedServiceForReceipt(selectedServiceForActions);
+                                                setShowReceipt(true);
+                                                setShowActionsModal(false);
+                                            }}
+                                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-blue-500 hover:bg-white'}`}
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-700">
+                                                <ScrollText className="w-5 h-5" />
+                                            </div>
+                                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Ticket Térmico</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                <button
+                                    onClick={() => {
+                                        onShowNotaVenta(selectedServiceForActions);
+                                        setShowActionsModal(false);
+                                    }}
+                                    className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-blue-500 hover:bg-white'}`}
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Nota de Venta</span>
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setShowActionsModal(false)}
+                                className={`self-end px-8 py-3 rounded-full font-bold transition-all ${darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div >
     );
 };
 
@@ -5491,6 +5668,19 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                     <div>
                         <h3 className={`text-[10px] font-bold tracking-widest mb-4 uppercase ${textMuted}`}>Menú</h3>
                         <ul className="space-y-1">
+                            {/* Inicio */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('inicio')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'inicio' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Home className="w-4 h-4" />
+                                        <span>Inicio</span>
+                                    </div>
+                                </button>
+                            </li>
+
                             {/* Cotizaciones Dropdown */}
                             <li>
                                 <div className="space-y-1">
@@ -5506,6 +5696,19 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
 
                                 </div>
+                            </li>
+
+                            {/* Citas */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('citas')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'citas' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Calendar className="w-4 h-4" />
+                                        <span>Citas</span>
+                                    </div>
+                                </button>
                             </li>
 
                             {/* Clients */}
@@ -7656,8 +7859,8 @@ const App = () => {
     const [includeIva, setIncludeIva] = useState(false);
     // Saved Clients for Selector
     const [savedClients, setSavedClients] = useState([]);
-    // Quotations from DB
     const [quotations, setQuotations] = useState([]);
+    const [citas, setCitas] = useState([]); // New global Citas state
     const [services, setServices] = useState([]); // Hoisted state
     const [servicesRefreshTrigger, setServicesRefreshTrigger] = useState(0);
     const [editingQuotationId, setEditingQuotationId] = useState(null);
@@ -7807,6 +8010,7 @@ const App = () => {
                 withTimeout(fetchCompanySettings(currentSession.user.id), 5000, 'CompanySettings'),
                 withTimeout(fetchSavedClients(currentSession.user.id), 5000, 'SavedClients'),
                 withTimeout(fetchQuotations(currentSession.user.id), 5000, 'Quotations'),
+                withTimeout(fetchCitas(currentSession.user.id), 5000, 'Citas'),
                 withTimeout(fetchNextFolio(currentSession.user.id), 5000, 'NextFolio'),
                 withTimeout(fetchProductsInAppAlt(currentSession.user.id), 5000, 'Products'),
                 withTimeout(fetchAllServices(currentSession.user.id), 5000, 'Services')
@@ -8987,6 +9191,21 @@ const App = () => {
             if (error) console.error('Error fetching quotations:', error);
         } catch (error) {
             console.error('Fetch quotations error:', error);
+        }
+    };
+
+    const fetchCitas = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('citas')
+                .select('*')
+                .eq('user_id', userId)
+                .order('fecha', { ascending: false });
+
+            if (data) setCitas(data);
+            if (error) console.error('Error fetching citas:', error);
+        } catch (error) {
+            console.error('Fetch citas error:', error);
         }
     };
 
@@ -10266,6 +10485,14 @@ const App = () => {
                                 {activeTab === 'clientes' && (
                                     <ClientsList clients={savedClients} user={session?.user} onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
                                 )}
+                                {activeTab === 'citas' && (
+                                    <CitasView
+                                        citas={citas}
+                                        fetchCitas={() => fetchCitas(session?.user?.id)}
+                                        user={session?.user}
+                                        darkMode={isDark}
+                                    />
+                                )}
                                 {activeTab === 'configuracion' && (
                                     <SettingsView
                                         companyData={company}
@@ -10274,6 +10501,15 @@ const App = () => {
                                         darkMode={isDark}
                                         selectedTemplate={selectedTemplate}
                                         onTemplateChange={handleTemplateChange}
+                                    />
+                                )}
+                                {activeTab === 'inicio' && (
+                                    <InicioView
+                                        services={services}
+                                        savedClients={savedClients}
+                                        quotations={quotations}
+                                        products={products}
+                                        darkMode={isDark}
                                     />
                                 )}
                                 {activeTab === 'products' && (
