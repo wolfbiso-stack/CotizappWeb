@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Servicio Técnico</title>
+    <!-- Importamos Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importamos la fuente "Inter" para un look moderno -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Aplicamos la fuente Inter como predeterminada */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilos para la impresión */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact; /* Para Chrome/Safari */
+                print-color-adjust: exact; /* Para Firefox */
+            }
+            .no-print {
+                display: none; /* Oculta elementos que no queremos imprimir */
+            }
+            /* Evitamos que la tarjeta principal se corte entre páginas */
+            .print-card {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+                page-break-inside: avoid;
+            }
+            /* Aseguramos que las secciones no se corten */
+            .print-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-10">
+
+    <!-- Contenedor principal del reporte -->
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden print-card">
+        
+        <!-- 1. Encabezado e Información General -->
+        <header class="p-6 md:p-10 bg-indigo-50">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <!-- Logo y Nombre de la Empresa -->
+                <div class="flex items-center mb-4 md:mb-0">
+                    <!-- Icono SVG de herramientas (puedes cambiarlo por tu logo) -->
+                    <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-indigo-800">Tu Empresa Tech</h1>
+                        <p class="text-sm text-gray-500">Soluciones Informáticas</p>
+                    </div>
+                </div>
+                
+                <!-- Info del Reporte -->
+                <div class="text-left md:text-right">
+                    <h2 class="text-3xl font-extrabold text-indigo-700">Reporte de Servicio</h2>
+                    <p class="text-gray-600 font-medium">Orden N°: <span class="font-normal">S-2025-00123</span></p>
+                    <p class="text-gray-600 font-medium">Fecha: <span id="current-date" class="font-normal"></span></p>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-6 md:p-10">
+
+            <!-- 2. Información Cliente y Técnico -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-8 print-section">
+                <!-- Columna Cliente -->
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Información del Cliente</h3>
+                    <div class="space-y-2 text-gray-700">
+                        <p><strong>Nombre:</strong> Ana María López</p>
+                        <p><strong>Teléfono:</strong> +52 55 1234 5678</p>
+                        <p><strong>Correo:</strong> ana.lopez@email.com</p>
+                    </div>
+                </div>
+                <!-- Columna Técnico -->
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Información del Técnico</h3>
+                    <div class="space-y-2 text-gray-700">
+                        <p><strong>Técnico Asignado:</strong> Carlos Mendoza</p>
+                        <p><strong>Teléfono:</strong> +52 55 8765 4321</p>
+                        <p><strong>Correo:</strong> carlos.m@tuempresatech.com</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Detalles del Equipo -->
+            <section class="mt-10 print-section">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Detalles del Equipo</h3>
+                <div class="bg-gray-50 rounded-lg p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <span class="text-sm text-gray-500 block">Tipo de Equipo</span>
+                        <strong class="text-gray-900">Laptop</strong>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500 block">Marca y Modelo</span>
+                        <strong class="text-gray-900">Dell Inspiron 15 5000</strong>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500 block">Número de Serie</span>
+                        <strong class="text-gray-900">JHFG89K</strong>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500 block">Contraseña</span>
+                        <strong class="text-gray-900">proporcionada</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Problema Reportado y Diagnóstico -->
+            <section class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 print-section">
+                <!-- Problema Reportado -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-5 rounded-r-lg">
+                    <h3 class="text-lg font-bold text-blue-800 mb-2">Problema Reportado por el Cliente</h3>
+                    <p class="text-gray-700 italic">"Mi computadora está exageradamente lenta. Tarda mucho en prender y a veces se traba al abrir programas como Word o el navegador."</p>
+                </div>
+                <!-- Diagnóstico Técnico -->
+                <div class="bg-green-50 border-l-4 border-green-400 p-5 rounded-r-lg">
+                    <h3 class="text-lg font-bold text-green-800 mb-2">Diagnóstico Técnico</h3>
+                    <p class="text-gray-700">Se confirma lentitud general del sistema. Pruebas de hardware revelan que el disco duro mecánico (HDD) presenta sectores defectuosos y una velocidad de lectura/escritura muy baja. La memoria RAM y el procesador operan con normalidad. El sistema operativo muestra archivos corruptos.</p>
+                </div>
+            </section>
+
+            <!-- 5. Trabajo Realizado -->
+            <section class="mt-10 print-section">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Trabajo Realizado y Solución</h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700">Respaldo completo de la información del cliente (Documentos, Imágenes, Escritorio).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700">Reemplazo físico del disco duro mecánico (HDD) por una Unidad de Estado Sólido (SSD) de 480GB.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700">Instalación limpia del sistema operativo Windows 11 y activación con licencia digital.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700">Instalación de controladores (drivers) y software básico (Navegador, Antivirus, Lector PDF).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-700">Restauración del respaldo de información del cliente.</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- 6. Repuestos y Costos -->
+            <section class="mt-10 grid grid-cols-1 md:grid-cols-5 gap-8 print-section">
+                
+                <!-- Repuestos Utilizados (Tabla) -->
+                <div class="md:col-span-3">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Repuestos Utilizados</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3 font-semibold text-gray-700">Cant.</th>
+                                    <th class="p-3 font-semibold text-gray-700">Descripción</th>
+                                    <th class="p-3 font-semibold text-gray-700">Costo Unit.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="p-3 text-gray-700">1</td>
+                                    <td class="p-3 text-gray-700">SSD Kingston A400 480GB</td>
+                                    <td class="p-3 text-gray-700">$ 750.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-gray-700">&nbsp;</td>
+                                    <td class="p-3 text-gray-700"></td>
+                                    <td class="p-3 text-gray-700"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Desglose de Costos -->
+                <div class="md:col-span-2">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Resumen de Costos</h3>
+                    <div class="bg-indigo-50 rounded-lg p-5 space-y-3">
+                        <div class="flex justify-between text-gray-700">
+                            <span>Mano de Obra (Formateo y Respaldo)</span>
+                            <span class="font-medium">$ 600.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>Total Repuestos</span>
+                            <span class="font-medium">$ 750.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>Subtotal</span>
+                            <span class="font-medium">$ 1,350.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>IVA (16%)</span>
+                            <span class="font-medium">$ 216.00</span>
+                        </div>
+                        <div class="border-t border-indigo-200 pt-3 mt-3">
+                            <div class="flex justify-between text-indigo-800">
+                                <span class="font-bold text-xl">TOTAL A PAGAR (MXN)</span>
+                                <span class="font-bold text-xl">$ 1,566.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 7. Observaciones y Recomendaciones -->
+            <section class="mt-10 print-section">
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-lg">
+                    <h3 class="text-lg font-bold text-yellow-800 mb-2">Observaciones y Recomendaciones</h3>
+                    <p class="text-gray-700">El equipo ahora inicia en menos de 15 segundos y opera con fluidez. Se recomienda realizar una limpieza física interna cada 12 meses para evitar sobrecalentamiento.</p>
+                </div>
+            </section>
+
+            <!-- 8. Garantía y Cierre -->
+            <footer class="mt-12 pt-6 border-t border-gray-200 text-sm text-gray-500 print-section">
+                <p class="mb-2"><strong>Garantía:</strong> El servicio de mano de obra cuenta con 30 días de garantía. El SSD cuenta con 1 año de garantía directamente con el fabricante.</p>
+                
+                <div class="flex flex-col md:flex-row justify-between items-center mt-10 gap-8">
+                    <div class="w-full md:w-1/2">
+                        <p class="text-center">Recibí de conformidad</p>
+                        <div class="border-b-2 border-dotted border-gray-400 mt-16"></div>
+                        <p class="text-center font-medium text-gray-700 mt-2">Ana María López (Cliente)</p>
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        <p class="text-center">Entregado por</p>
+                        <div class="border-b-2 border-dotted border-gray-400 mt-16"></div>
+                        <p class="text-center font-medium text-gray-700 mt-2">Carlos Mendoza (Técnico)</p>
+                    </div>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- Botón para Imprimir / Guardar PDF -->
+    <div class="max-w-4xl mx-auto text-center mt-8 mb-4 no-print">
+        <button onclick="window.print()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
+            Imprimir / Guardar como PDF
+        </button>
+    </div>
+
+    <script>
+        // Script simple para poner la fecha actual
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                const today = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                dateElement.textContent = today.toLocaleDateString('es-ES', options);
+            }
+        });
+    </script>
+
+</body>
+</html>
