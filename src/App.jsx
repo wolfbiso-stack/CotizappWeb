@@ -4051,7 +4051,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices }) => {
+const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices }) => {
     const [unifiedServices, setUnifiedServices] = useState(sharedServices || []);
     const [loading, setLoading] = useState(!sharedServices);
     const [refreshing, setRefreshing] = useState(false);
@@ -4804,6 +4804,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     <QRServiceTicket
                         user={user}
                         service={selectedServiceForQR}
+                        company={company}
                         onClose={() => {
                             setShowQRTicket(false);
                             setSelectedServiceForQR(null);
@@ -4818,6 +4819,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                 showReceipt && selectedServiceForReceipt && (
                     <ServiceReceipt
                         service={selectedServiceForReceipt}
+                        company={company}
                         onClose={() => {
                             setShowReceipt(false);
                             setSelectedServiceForReceipt(null);
@@ -4833,6 +4835,7 @@ const ServiciosView = ({ darkMode, onNavigate, setSelectedService, setEditingCCT
                     <PCServiceReport
                         service={selectedServiceForPCReport}
                         user={user}
+                        company={company}
                         onClose={() => {
                             setShowPCReport(false);
                             setSelectedServiceForPCReport(null);
@@ -7991,37 +7994,34 @@ const App = () => {
             isInitializing.current = true;
             console.log("Initializing app data for user:", currentSession.user.id);
 
-            // 1. Fetch Profile First (required for many UI checks like Trial/Premium)
-            const profileData = await withTimeout(
-                fetchProfile(currentSession.user.id, currentSession),
-                8000,
-                'Profile Fetch'
-            ).catch(err => {
-                console.error("Initialization: Profile fetch failed or timed out:", err);
-                return null;
+            // 0. UNBLOCK THE UI IMMEDIATELY
+            setLoadingAuth(false);
+
+            // 1. Fetch Profile and Company Settings (Crucial UI)
+            Promise.allSettled([
+                withTimeout(fetchProfile(currentSession.user.id, currentSession), 8000, 'Profile Fetch'),
+                withTimeout(fetchCompanySettings(currentSession.user.id), 5000, 'CompanySettings')
+            ]).then(() => {
+                // 2. Fetch all other heavy dependencies in the background
+                Promise.allSettled([
+                    withTimeout(fetchSavedClients(currentSession.user.id), 15000, 'SavedClients'),
+                    withTimeout(fetchQuotations(currentSession.user.id), 15000, 'Quotations'),
+                    withTimeout(fetchCitas(currentSession.user.id), 15000, 'Citas'),
+                    withTimeout(fetchNextFolio(currentSession.user.id), 10000, 'NextFolio'),
+                    withTimeout(fetchProductsInAppAlt(currentSession.user.id), 15000, 'Products'),
+                    withTimeout(fetchAllServices(currentSession.user.id), 15000, 'Services')
+                ]).then(() => {
+                    console.log("Background app data initialization complete.");
+                }).catch(error => {
+                    console.error("Error during background app data initialization:", error);
+                }).finally(() => {
+                    isInitializing.current = false;
+                });
             });
 
-            if (!profileData) {
-                console.warn("Initialization: Profile fetch returned null, UI may show stale data.");
-            }
-
-            // 2. Fetch all other dependencies in parallel (always fetch fresh data on init)
-            await Promise.allSettled([
-                withTimeout(fetchCompanySettings(currentSession.user.id), 5000, 'CompanySettings'),
-                withTimeout(fetchSavedClients(currentSession.user.id), 5000, 'SavedClients'),
-                withTimeout(fetchQuotations(currentSession.user.id), 5000, 'Quotations'),
-                withTimeout(fetchCitas(currentSession.user.id), 5000, 'Citas'),
-                withTimeout(fetchNextFolio(currentSession.user.id), 5000, 'NextFolio'),
-                withTimeout(fetchProductsInAppAlt(currentSession.user.id), 5000, 'Products'),
-                withTimeout(fetchAllServices(currentSession.user.id), 5000, 'Services')
-            ]);
-
-            console.log("App data initialization complete.");
         } catch (error) {
-            console.error("Error during app initialization:", error);
-        } finally {
+            console.error("Error during app initialization trigger:", error);
             isInitializing.current = false;
-            setLoadingAuth(false);
         }
     };
 
@@ -10524,6 +10524,7 @@ const App = () => {
                                 {activeTab === 'servicios' && (
                                     <ServiciosView
                                         services={services}
+                                        company={company}
                                         darkMode={isDark}
                                         onNavigate={setActiveTab}
                                         setSelectedService={setSelectedService}

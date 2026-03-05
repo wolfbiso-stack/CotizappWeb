@@ -270,8 +270,8 @@ const PCServiceReport = ({ service, user, company: companyProp, onClose, darkMod
                                         <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Información del Cliente</h3>
                                         <div className="space-y-2 text-gray-700">
                                             <p><strong>Nombre:</strong> {service.cliente_nombre}</p>
-                                            <p><strong>Teléfono:</strong> {service.cliente_telefono || 'N/A'}</p>
-                                            <p><strong>Correo:</strong> {service.cliente_correo || 'N/A'}</p>
+                                            {service.cliente_telefono && <p><strong>Teléfono:</strong> {service.cliente_telefono}</p>}
+                                            {service.cliente_correo && <p><strong>Correo:</strong> {service.cliente_correo}</p>}
                                         </div>
                                     </div>
                                     <div>
@@ -324,7 +324,7 @@ const PCServiceReport = ({ service, user, company: companyProp, onClose, darkMod
                                     <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Trabajo Realizado y Solución</h3>
                                     <div className="space-y-3">
                                         {service.trabajo_realizado ? (
-                                            service.trabajo_realizado.split('\n').filter(line => line.trim() !== '').map((line, idx) => (
+                                            String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '').map((line, idx) => (
                                                 <div key={idx} className="flex items-center gap-3">
                                                     <CheckCircle2 className="w-5 h-5 text-green-500 flex-none fill-green-500/20" strokeWidth={2.5} />
                                                     <p className="text-gray-700 leading-relaxed font-medium">{line.trim()}</p>
@@ -390,10 +390,12 @@ const PCServiceReport = ({ service, user, company: companyProp, onClose, darkMod
                                                 <span>Subtotal</span>
                                                 <span className="font-medium">$ {formatCurrency(subtotal)}</span>
                                             </div>
-                                            <div className="flex justify-between text-gray-700">
-                                                <span>IVA (16%)</span>
-                                                <span className="font-medium">$ {formatCurrency(ivaValue)}</span>
-                                            </div>
+                                            {ivaValue > 0 && (
+                                                <div className="flex justify-between text-gray-700">
+                                                    <span>IVA (16%)</span>
+                                                    <span className="font-medium">$ {formatCurrency(ivaValue)}</span>
+                                                </div>
+                                            )}
                                             <div className="border-t border-indigo-200 pt-3 mt-3">
                                                 <div className="flex justify-between text-indigo-800">
                                                     <span className="font-bold text-xl uppercase italic">Total a Pagar</span>
