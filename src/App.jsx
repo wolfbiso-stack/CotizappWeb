@@ -148,7 +148,7 @@ const QuotationStatusToggle = ({ quotation, onStatusChange, darkMode }) => {
     };
 
     return (
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg w-fit">
+        <div className={`flex items-center gap-1 p-1 rounded-lg w-fit ${darkMode ? 'bg-slate-700' : 'bg-slate-100'}`}>
             <button
                 disabled={loading}
                 onClick={() => handleStatusChange(status === 'aceptada' ? 'pendiente' : 'aceptada')}
@@ -225,7 +225,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
 
     return (
         <div className="w-full px-4 md:px-8 py-8">
-            <div className={isMinimalista ? `mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6` : `mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className={isMinimalista ? `mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : `mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                 <div className="flex flex-col">
                     <h1 className={isMinimalista ? `text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-800'}` : `text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                         Cotizaciones
@@ -272,13 +272,13 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                         <button
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
-                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : ''}` : `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                            className={isMinimalista ? `flex flex-col w-full p-4 rounded-xl border shadow-sm text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} ${isActive ? 'border-l-4 border-l-blue-500' : ''}` : `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
                                 ? (darkMode ? 'bg-blue-900/40 border-blue-500 scale-105' : 'bg-blue-50 border-blue-500 scale-105')
                                 : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
                         >
-                            <span className={isMinimalista ? `text-xs font-semibold text-slate-400 uppercase tracking-widest` : `text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
-                            <span className={isMinimalista ? `text-3xl font-bold text-slate-800 mt-1` : `text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
+                            <span className={isMinimalista ? `text-xs font-semibold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-400'}` : `text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
+                            <span className={isMinimalista ? `text-3xl font-bold mt-1 ${darkMode ? 'text-slate-100' : 'text-slate-800'}` : `text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
                         </button>
                     );
                 })}
@@ -302,7 +302,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
             </div>
 
             {filteredQuotations.length === 0 ? (
-                <div className={`rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <div className={isMinimalista ? `rounded-xl shadow-sm border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : `rounded-xl shadow-lg border p-12 text-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-slate-600 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
                         <FileText className="w-10 h-10" />
                     </div>
@@ -320,26 +320,26 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
             ) : (
                 <>
                     {/* Desktop Table View */}
-                    <div className={isMinimalista ? `hidden md:block bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm` : `hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    <div className={isMinimalista ? `hidden md:block rounded-xl border overflow-hidden shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : `hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                         <table className="w-full">
-                            <thead className={isMinimalista ? `bg-slate-50 border-b border-slate-200` : `border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                            <thead className={isMinimalista ? `border-b ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200'}` : `border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className={isMinimalista ? `divide-y divide-slate-100` : `divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                            <tbody className={isMinimalista ? `divide-y ${darkMode ? 'divide-slate-700/50' : 'divide-slate-100'}` : `divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
                                 {paginatedQuotations.map((quotation) => (
                                     <tr
                                         key={quotation.id}
-                                        className={`transition-all duration-500 ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
+                                        className={`transition-all duration-500 ${isMinimalista ? (darkMode ? 'hover:bg-slate-700/30' : 'hover:bg-slate-50') : (darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30')} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-blue-600">#{quotation.folio}</span>
+                                            <span className={`text-sm font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>#{quotation.folio}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{quotation.nombre_cliente}</span>
@@ -361,33 +361,33 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => onView(quotation)}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className={`p-2 rounded-xl transition-all font-medium border ${darkMode ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50 border-blue-800/50' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100/50'}`}
                                                     title="Ver cotización"
                                                 >
-                                                    <Eye className="w-5 h-5" />
+                                                    <Eye className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => onEdit(quotation)}
-                                                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    className={`p-2 rounded-xl transition-all font-medium border ${darkMode ? 'bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 border-emerald-800/50' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-100/50'}`}
                                                     title="Editar cotización"
                                                 >
-                                                    <Edit2 className="w-5 h-5" />
+                                                    <Edit2 className="w-4 h-4" />
                                                 </button>
 
                                                 <button
                                                     onClick={() => onDuplicate(quotation)}
-                                                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                    className={`p-2 rounded-xl transition-all font-medium border ${darkMode ? 'bg-purple-900/30 text-purple-400 hover:bg-purple-900/50 border-purple-800/50' : 'bg-purple-50 text-purple-600 hover:bg-purple-100 border-purple-100/50'}`}
                                                     title="Duplicar cotización"
                                                 >
-                                                    <Copy className="w-5 h-5" />
+                                                    <Copy className="w-4 h-4" />
                                                 </button>
 
                                                 <button
                                                     onClick={() => handleDeleteClick(quotation.id)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    className={`p-2 rounded-xl transition-all font-medium border ${darkMode ? 'bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 border-rose-800/50' : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-100/50'}`}
                                                     title="Eliminar cotización"
                                                 >
-                                                    <Trash2 className="w-5 h-5" />
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>
@@ -4491,7 +4491,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 </div>
             </div>
 
-            <div className={isMinimalista ? `bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm min-h-[600px] flex flex-col` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
+            <div className={isMinimalista ? `rounded-xl border overflow-hidden shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {loading && !refreshing ? (
                     <div className="p-20 flex flex-col items-center justify-center gap-4">
                         <Loader className="w-10 h-10 animate-spin text-blue-600" />
@@ -4509,7 +4509,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                         <div className="hidden md:block">
                             <table className="w-full text-left border-collapse">
                                 {isMinimalista ? (
-                                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold tracking-widest">
+                                    <thead className={`border-b uppercase text-[10px] font-bold tracking-widest ${darkMode ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                         <tr>
                                             <th className="px-6 py-4">Folio</th>
                                             <th onClick={() => requestSort('cliente')} className="px-6 py-4 cursor-pointer hover:bg-slate-200/50 transition-colors select-none">
@@ -4561,23 +4561,23 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                         </tr>
                                     </thead>
                                 )}
-                                <tbody className={isMinimalista ? `divide-y divide-slate-100` : `divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
+                                <tbody className={isMinimalista ? `divide-y ${darkMode ? 'divide-slate-700/50' : 'divide-slate-100'}` : `divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
                                     {paginatedServices.map((service) => {
                                         return isMinimalista ? (
-                                            <tr key={`${service.tableName}-${service.id || service.folio}`} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-6 py-4 font-mono text-sm text-blue-600 font-medium whitespace-nowrap">
+                                            <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/30' : 'hover:bg-slate-50'}`}>
+                                                <td className={`px-6 py-4 font-mono text-sm font-medium whitespace-nowrap ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                                                     #{service.folio}
                                                     {service.hasPhotos && <span className="ml-2 font-sans" title="Fotos adjuntas">📸</span>}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm font-semibold text-slate-700">{service.cliente}</td>
+                                                <td className={`px-6 py-4 text-sm font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>{service.cliente}</td>
                                                 <td className="px-6 py-4 text-sm text-slate-500">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-xl flex items-center justify-center ${service.type === 'CCTV' ? 'bg-indigo-100 text-indigo-600' :
-                                                            service.type === 'PC' ? 'bg-blue-100 text-blue-600' :
-                                                                service.type === 'Celular' ? 'bg-rose-100 text-rose-600' :
-                                                                    service.type === 'Impresora' ? 'bg-purple-100 text-purple-600' :
-                                                                        service.type === 'Redes' ? 'bg-cyan-100 text-cyan-600' :
-                                                                            'bg-slate-100 text-slate-600'
+                                                        <div className={`p-2 rounded-xl flex items-center justify-center ${service.type === 'CCTV' ? (darkMode ? 'bg-indigo-900/30 text-indigo-400' : 'bg-indigo-100 text-indigo-600') :
+                                                            service.type === 'PC' ? (darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600') :
+                                                                service.type === 'Celular' ? (darkMode ? 'bg-rose-900/30 text-rose-400' : 'bg-rose-100 text-rose-600') :
+                                                                    service.type === 'Impresora' ? (darkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600') :
+                                                                        service.type === 'Redes' ? (darkMode ? 'bg-cyan-900/30 text-cyan-400' : 'bg-cyan-100 text-cyan-600') :
+                                                                            (darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600')
                                                             }`}>
                                                             {service.type === 'CCTV' ? <Video className="w-4 h-4" /> :
                                                                 service.type === 'PC' ? <Monitor className="w-4 h-4" /> :
@@ -4586,7 +4586,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                                                             service.type === 'Redes' ? <Globe className="w-4 h-4" /> :
                                                                                 <Settings className="w-4 h-4" />}
                                                         </div>
-                                                        <span className="font-medium text-slate-700">{service.type === 'PC' ? 'Computadora' : service.type}</span>
+                                                        <span className={`font-medium ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{service.type === 'PC' ? 'Computadora' : service.type}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -4598,16 +4598,16 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                                         pageStyle={pageStyle}
                                                     />
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{formatServiceDate(service.fecha)}</td>
-                                                <td className="px-6 py-4 text-sm font-bold text-slate-800">${formatCurrency(service.total)}</td>
+                                                <td className={`px-6 py-4 text-sm whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{formatServiceDate(service.fecha)}</td>
+                                                <td className={`px-6 py-4 text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>${formatCurrency(service.total)}</td>
                                                 <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                                                    <button onClick={() => handleViewServiceUnified(service)} className="p-2 inline-flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all font-medium border border-blue-100/50" title="Ver Servicio">
+                                                    <button onClick={() => handleViewServiceUnified(service)} className={`p-2 inline-flex items-center justify-center rounded-xl transition-all font-medium border ${darkMode ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50 border-blue-800/50' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100/50'}`} title="Ver Servicio">
                                                         <Eye className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleEditServiceUnifiedLocal(service)} className="p-2 inline-flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-medium border border-emerald-100/50" title="Editar Servicio">
+                                                    <button onClick={() => handleEditServiceUnifiedLocal(service)} className={`p-2 inline-flex items-center justify-center rounded-xl transition-all font-medium border ${darkMode ? 'bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 border-emerald-800/50' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-100/50'}`} title="Editar Servicio">
                                                         <Edit2 className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDelete(service)} className="p-2 inline-flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all font-medium border border-rose-100/50" title="Eliminar Servicio">
+                                                    <button onClick={() => handleDelete(service)} className={`p-2 inline-flex items-center justify-center rounded-xl transition-all font-medium border ${darkMode ? 'bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 border-rose-800/50' : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-100/50'}`} title="Eliminar Servicio">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                     <button
@@ -4615,7 +4615,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                                             setSelectedServiceForActions(service);
                                                             setShowActionsModal(true);
                                                         }}
-                                                        className="p-2 inline-flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all font-medium border border-slate-200/50"
+                                                        className={`p-2 inline-flex items-center justify-center rounded-xl transition-all font-medium border ${darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-700' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200/50'}`}
                                                         title="Más acciones"
                                                     >
                                                         <MoreVertical className="w-4 h-4" />
@@ -5778,13 +5778,13 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
     const isMinimalista = pageStyle === 'Minimalista';
 
     const sidebarClasses = mobileMode
-        ? `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-slate-900 border-r border-slate-800' : (isMinimalista ? 'bg-white border-r border-slate-200' : 'bg-blue-600')} ${isGlass ? 'text-amber-900' : (isMinimalista ? 'text-slate-800' : 'text-white')} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
-        : `fixed inset-y-0 left-0 z-20 ${isMinimalista ? 'w-64' : 'w-72'} ${isGlass ? 'text-amber-900' : (isMinimalista ? 'text-slate-800' : 'text-white')} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : (isMinimalista ? 'bg-white border-r border-slate-200' : 'bg-transparent')} no-print`;
+        ? `fixed inset-y-0 left-0 z-50 w-64 ${!isMinimalista ? (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600') : (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-white border-r border-slate-200')} ${isGlass ? 'text-amber-900' : (isMinimalista ? (isDark ? 'text-slate-200' : 'text-slate-800') : 'text-white')} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
+        : `fixed inset-y-0 left-0 z-20 ${isMinimalista ? 'w-64' : 'w-72'} ${isGlass ? 'text-amber-900' : (isMinimalista ? (isDark ? 'text-slate-200' : 'text-slate-800') : 'text-white')} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : (isMinimalista ? (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-white border-r border-slate-200') : 'bg-transparent')} no-print`;
 
-    const textMuted = isGlass ? 'text-amber-700/70' : (isMinimalista ? 'text-slate-400' : 'text-blue-200');
-    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : (isMinimalista ? 'hover:bg-slate-100/50 rounded-md transition-colors' : 'hover:text-white hover:bg-white/10 rounded-xl');
-    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : (isMinimalista ? 'font-medium text-blue-600 bg-slate-100 rounded-md' : 'font-bold text-white bg-white/20 rounded-xl shadow-sm');
-    const inactiveClass = isGlass ? 'text-amber-800' : (isMinimalista ? 'text-slate-600' : 'text-blue-100');
+    const textMuted = isGlass ? 'text-amber-700/70' : (isMinimalista ? (isDark ? 'text-slate-400' : 'text-slate-400') : 'text-blue-200');
+    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : (isMinimalista ? (isDark ? 'hover:bg-slate-800/50 rounded-md transition-colors' : 'hover:bg-slate-100/50 rounded-md transition-colors') : 'hover:text-white hover:bg-white/10 rounded-xl');
+    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : (isMinimalista ? (isDark ? 'font-medium text-blue-400 bg-slate-800 rounded-md' : 'font-medium text-blue-600 bg-slate-100 rounded-md') : 'font-bold text-white bg-white/20 rounded-xl shadow-sm');
+    const inactiveClass = isGlass ? 'text-amber-800' : (isMinimalista ? (isDark ? 'text-slate-400' : 'text-slate-600') : 'text-blue-100');
 
     return (
         <>
@@ -5806,8 +5806,8 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 )}
                             </div>
                         ) : (
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm relative ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : 'bg-white/20 text-white'}`}>
-                                <span className="font-bold text-xl">{companyName?.[0] || 'C'}</span>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm relative ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : (isMinimalista && isDark ? 'bg-slate-800 text-slate-200 shadow-sm border border-slate-700' : 'bg-white/20 text-white')}`}>
+                                <span className={`font-bold text-xl ${isMinimalista && !isDark && !isGlass ? 'text-slate-700' : ''}`}>{companyName?.[0] || 'C'}</span>
                                 {isPremium && (
                                     <div className="absolute -top-1 -right-1 bg-yellow-400 text-slate-900 rounded-full p-0.5 shadow-lg border border-white">
                                         <Crown className="w-2.5 h-2.5 fill-current" />
@@ -6003,7 +6003,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                         <button onClick={() => setActiveTab('changelog')} className={`${textHover} transition-colors`}>Changelog</button>
                     </div>
 
-                    {pageStyle === 'Redondeados' && (
+                    {pageStyle === 'Redondeados' ? (
                         <div className="bg-white/10 backdrop-blur-md rounded-full p-1 flex items-center w-max">
                             <button
                                 onClick={() => setTheme('blue')}
@@ -6024,6 +6024,23 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'dark' ? 'bg-slate-700 text-white shadow-sm' : 'text-blue-200 hover:text-white'}`}
                             >
                                 <Moon className={`w-3 h-3 ${currentTheme === 'dark' ? 'text-slate-300' : ''}`} />
+                                Oscuro
+                            </button>
+                        </div>
+                    ) : (
+                        <div className={`flex bg-slate-100 ${isDark ? 'bg-slate-800' : 'bg-slate-100'} p-1 rounded-xl w-max border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                            <button
+                                onClick={() => setTheme('blue')} // We can treat 'blue' as light mode for Minimalista
+                                className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${!isDark ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-400 hover:text-slate-300'}`}
+                            >
+                                <Sun className="w-3.5 h-3.5" />
+                                Claro
+                            </button>
+                            <button
+                                onClick={() => setTheme('dark')}
+                                className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${isDark ? 'bg-slate-700 text-white shadow-sm border border-slate-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                <Moon className="w-3.5 h-3.5" />
                                 Oscuro
                             </button>
                         </div>
@@ -10372,7 +10389,9 @@ const App = () => {
 
     // Determine background class based on theme
     const getBackgroundClass = () => {
-        if (pageStyle === 'Minimalista' && currentTheme !== 'dark') return 'bg-slate-50'; // Minimalist fallback to #f8fafc (slate-50)
+        if (pageStyle === 'Minimalista') {
+            return currentTheme === 'dark' ? 'bg-[#0f172a]' : 'bg-slate-50'; // Slate 900+ for dark, Slate 50 for light
+        }
         switch (currentTheme) {
             case 'dark': return 'bg-slate-900';
             case 'glass': return 'bg-gradient-to-br from-orange-200 via-rose-200 to-amber-100';
@@ -10456,7 +10475,6 @@ const App = () => {
                 )}
 
                 <main className={`flex-1 transition-all duration-300 md:p-8 p-3 ${mobileMode ? 'h-[calc(100vh-60px)]' : 'h-screen'} overflow-hidden ${mobileMode ? '' : (pageStyle === 'Minimalista' ? 'ml-64' : 'ml-72')} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
-                    {/* Trial Blocking UI */}
                     {isTrialExpired() && activeTab !== 'suscripcion' ? (
                         <div className="w-full h-full flex items-center justify-center p-4">
                             <TrialExpiredView
@@ -10465,7 +10483,7 @@ const App = () => {
                             />
                         </div>
                     ) : (
-                        <div className={`w-full h-full ${pageStyle === 'Minimalista' ? 'flex flex-col' : 'md:rounded-[2.5rem] rounded-3xl shadow-2xl'} overflow-hidden ${isDark ? 'bg-slate-800' : (pageStyle === 'Minimalista' ? 'bg-transparent' : 'bg-white')} print:bg-white print:rounded-none print:shadow-none`}>
+                        <div className={`w-full h-full ${pageStyle === 'Minimalista' ? 'flex flex-col' : 'md:rounded-[2.5rem] rounded-3xl shadow-2xl'} overflow-hidden ${pageStyle === 'Minimalista' ? 'bg-transparent' : (isDark ? 'bg-slate-800' : 'bg-white')} print:bg-white print:rounded-none print:shadow-none`}>
                             <div ref={contentRef} className={`w-full h-full overflow-y-auto ${pageStyle === 'Minimalista' ? '' : 'md:px-8 px-4 md:py-10 py-6'} ${currentTheme === 'glass' && !isDark ? 'bg-orange-50/40 backdrop-blur-sm' : ''} print:p-0 print:h-auto print:overflow-visible`}>
 
                                 {activeTab === 'cotizaciones-list' && (
