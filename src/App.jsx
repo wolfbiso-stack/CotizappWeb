@@ -173,7 +173,8 @@ const QuotationStatusToggle = ({ quotation, onStatusChange, darkMode }) => {
     );
 };
 
-const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode, onStatusChange }) => {
+const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode, onStatusChange, pageStyle = 'Redondeados' }) => {
+    const isMinimalista = pageStyle === 'Minimalista';
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -224,9 +225,9 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
 
     return (
         <div className="w-full px-4 md:px-8 py-8">
-            <div className={`mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className={isMinimalista ? `mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6` : `mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                 <div className="flex flex-col">
-                    <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                    <h1 className={isMinimalista ? `text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-800'}` : `text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                         Cotizaciones
                     </h1>
                     <span className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -271,13 +272,13 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                         <button
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
-                            className={`flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : ''}` : `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
                                 ? (darkMode ? 'bg-blue-900/40 border-blue-500 scale-105' : 'bg-blue-50 border-blue-500 scale-105')
                                 : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
                         >
-                            <span className={`text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
-                            <span className={`text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
+                            <span className={isMinimalista ? `text-xs font-semibold text-slate-400 uppercase tracking-widest` : `text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
+                            <span className={isMinimalista ? `text-3xl font-bold text-slate-800 mt-1` : `text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
                         </button>
                     );
                 })}
@@ -319,19 +320,19 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
             ) : (
                 <>
                     {/* Desktop Table View */}
-                    <div className={`hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    <div className={isMinimalista ? `hidden md:block bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm` : `hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                         <table className="w-full">
-                            <thead className={`border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                            <thead className={isMinimalista ? `bg-slate-50 border-b border-slate-200` : `border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
                                 <tr>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
-                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
-                                    <th className={`px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider` : `px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                            <tbody className={isMinimalista ? `divide-y divide-slate-100` : `divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
                                 {paginatedQuotations.map((quotation) => (
                                     <tr
                                         key={quotation.id}
@@ -571,7 +572,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
 };
 
 
-const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selectedTemplate, onTemplateChange }) => {
+const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selectedTemplate, onTemplateChange, pageStyle, onPageStyleChange }) => {
     const [activeSubTab, setActiveSubTab] = useState('company');
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -587,6 +588,13 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
     const menuItems = [
         { id: 'company', label: 'Configuración de la empresa' },
         { id: 'templates', label: 'Plantillas de facturas' },
+        { id: 'pageStyle', label: 'Estilo de la página' },
+    ];
+
+    const PAGE_STYLES = [
+        { id: 'Redondeados', name: 'Redondeados', description: 'Diseños de panel de control atractivos basados en bloques individuales, temas de color dinámico.' },
+        { id: 'Minimalista', name: 'Minimalista', description: 'Líneas limpias, poco espaciado (próximamente)' },
+        { id: 'Moderno', name: 'Moderno', description: 'Diseño vanguardista clásico oscuro puro (próximamente)' }
     ];
 
     const TEMPLATES = [
@@ -785,6 +793,67 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
                                     <div className={`p-4 text-center transition-colors ${selectedTemplate === template.id ? 'bg-blue-50/50' : 'bg-transparent'}`}>
                                         <h3 className={`font-bold ${selectedTemplate === template.id ? 'text-blue-700' : 'text-slate-800'}`}>{template.name}</h3>
                                         <p className="text-xs text-slate-500 mt-1">{template.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {activeSubTab === 'pageStyle' && (
+                    <div className="max-w-3xl">
+                        <div className="mb-8">
+                            <h2 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>Estilo de la página</h2>
+                            <p className={`${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona el diseño predeterminado para tu entorno de trabajo.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {PAGE_STYLES.map(style => (
+                                <div
+                                    key={style.id}
+                                    onClick={() => onPageStyleChange(style.id)}
+                                    className={`border-2 rounded-xl overflow-hidden relative shadow-md group cursor-pointer transition-all ${pageStyle === style.id ? 'border-blue-600 ring-4 ring-blue-100 shadow-xl scale-[1.02]' : 'border-slate-200 hover:border-blue-400 hover:shadow-lg'} ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
+                                >
+                                    {pageStyle === style.id && (
+                                        <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md flex items-center gap-1">
+                                            <Check className="w-3 h-3" /> Activo
+                                        </div>
+                                    )}
+
+                                    {pageStyle !== style.id && (
+                                        <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                            <span className="bg-white/90 backdrop-blur text-slate-800 font-bold px-4 py-2 rounded-lg shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                                Seleccionar
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-slate-50/50 aspect-video border-b border-slate-200 overflow-hidden relative group flex items-center justify-center p-4">
+                                        {style.id === 'Redondeados' && (
+                                            <div className="w-full h-full bg-blue-50/50 rounded-2xl border border-blue-100 p-2 flex flex-col gap-2 shadow-inner">
+                                                <div className="flex gap-2 mb-1 pl-1">
+                                                    <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm border border-blue-600"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-white shadow-sm border border-slate-200"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-slate-800 shadow-sm border border-slate-900"></div>
+                                                </div>
+                                                <div className="grow bg-white rounded-xl shadow-sm border border-white/50"></div>
+                                            </div>
+                                        )}
+                                        {style.id === 'Minimalista' && (
+                                            <div className="w-full h-full bg-slate-50 border-4 border-slate-100 p-3 flex flex-col gap-2">
+                                                <div className="grow border border-slate-300 bg-white shadow-sm"></div>
+                                            </div>
+                                        )}
+                                        {style.id === 'Moderno' && (
+                                            <div className="w-full h-full bg-slate-900 rounded-sm p-3 flex gap-2">
+                                                <div className="w-1/4 bg-slate-800 rounded shadow-inner"></div>
+                                                <div className="grow bg-slate-800 rounded border-l-4 border-blue-500 shadow-inner"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className={`p-4 text-center transition-colors ${pageStyle === style.id ? 'bg-blue-50/50' : 'bg-transparent'}`}>
+                                        <h3 className={`font-bold ${pageStyle === style.id ? 'text-blue-700' : 'text-slate-800'} ${darkMode ? 'text-slate-100' : ''}`}>{style.name}</h3>
+                                        <p className="text-xs text-slate-500 mt-1">{style.description}</p>
                                     </div>
                                 </div>
                             ))}
@@ -3146,7 +3215,8 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 // Status Dropdown Component
-const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servicios_pc' }) => {
+const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servicios_pc', pageStyle = 'Redondeados' }) => {
+    const isMinimalista = pageStyle === 'Minimalista';
     const [isOpen, setIsOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
     const [openUpward, setOpenUpward] = useState(false);
@@ -3206,6 +3276,18 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     };
 
     const getStatusColorClass = (colorName) => {
+        if (isMinimalista) {
+            const minColors = {
+                black: 'bg-slate-100 text-slate-700',
+                yellow: 'bg-yellow-100 text-yellow-700',
+                blue: 'bg-blue-100 text-blue-700',
+                green: 'bg-green-100 text-green-700',
+                red: 'bg-red-100 text-red-700',
+                gray: 'bg-slate-100 text-slate-700'
+            };
+            return minColors[colorName] || minColors.gray;
+        }
+
         const colors = {
             black: 'bg-slate-900 text-white ring-slate-900/20 shadow-lg shadow-slate-900/10',
             yellow: 'bg-amber-400 text-amber-950 ring-amber-400/20 shadow-lg shadow-amber-400/10',
@@ -3235,20 +3317,20 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                     setIsOpen(!isOpen);
                 }}
                 disabled={updating}
-                className={`w-full px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-between gap-3 group relative overflow-hidden ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95 cursor-pointer shadow-md hover:shadow-xl'} ring-1`}
+                className={isMinimalista ? `px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}` : `w-full px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-between gap-3 group relative overflow-hidden ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95 cursor-pointer shadow-md hover:shadow-xl'} ring-1`}
             >
                 {updating ? (
                     <div className="flex items-center gap-2 justify-center w-full">
-                        <Loader className="w-4 h-4 animate-spin" />
+                        <Loader className={isMinimalista ? "w-3 h-3 animate-spin" : "w-4 h-4 animate-spin"} />
                         <span>Espere...</span>
                     </div>
                 ) : (
                     <>
                         <div className="flex items-center gap-2.5 overflow-hidden">
-                            <div className={`w-1.5 h-1.5 rounded-full bg-white opacity-50 group-hover:opacity-100 transition-opacity animate-pulse`}></div>
+                            {!isMinimalista && <div className={`w-1.5 h-1.5 rounded-full bg-white opacity-50 group-hover:opacity-100 transition-opacity animate-pulse`}></div>}
                             <span className="truncate">{displayLabel}</span>
                         </div>
-                        <ChevronDown className={`w-4 h-4 opacity-70 group-hover:opacity-100 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                        {!isMinimalista && <ChevronDown className={`w-4 h-4 opacity-70 group-hover:opacity-100 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />}
                     </>
                 )}
             </button>
@@ -4051,7 +4133,8 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices }) => {
+const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices, pageStyle = 'Redondeados' }) => {
+    const isMinimalista = pageStyle === 'Minimalista';
     const [unifiedServices, setUnifiedServices] = useState(sharedServices || []);
     const [loading, setLoading] = useState(!sharedServices);
     const [refreshing, setRefreshing] = useState(false);
@@ -4323,9 +4406,9 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
 
     return (
         <div className="w-full px-4 md:px-8 py-8">
-            <div className={`mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className={isMinimalista ? `mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6` : `mb-8 p-6 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                 <div className="flex flex-col">
-                    <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                    <h1 className={isMinimalista ? `text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-800'}` : `text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                         Órdenes de Trabajo
                     </h1>
                     <span className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -4369,13 +4452,13 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                         <button
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
-                            className={`flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : (card.id === 'Pendientes' && count > 0 ? 'border-l-4 border-l-yellow-500' : card.id === 'En Proceso' && count > 0 ? 'border-l-4 border-l-blue-500' : card.id === 'Completadas' && count > 0 ? 'border-l-4 border-l-green-500' : '')}` : `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
                                 ? (darkMode ? 'bg-blue-900/40 border-blue-500' : 'bg-blue-50 border-blue-500 scale-105')
                                 : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
                         >
-                            <span className={`text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
-                            <span className={`text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
+                            <span className={isMinimalista ? `text-xs font-semibold text-slate-400 uppercase tracking-widest` : `text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
+                            <span className={isMinimalista ? `text-3xl font-bold text-slate-800 mt-1` : `text-2xl font-bold ${isActive ? 'text-blue-600' : (darkMode ? 'text-slate-100' : 'text-slate-800')}`}>{count}</span>
                         </button>
                     );
                 })}
@@ -4408,7 +4491,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 </div>
             </div>
 
-            <div className={`md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
+            <div className={isMinimalista ? `bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm min-h-[600px] flex flex-col` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {loading && !refreshing ? (
                     <div className="p-20 flex flex-col items-center justify-center gap-4">
                         <Loader className="w-10 h-10 animate-spin text-blue-600" />
@@ -4425,114 +4508,197 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                     <>
                         <div className="hidden md:block">
                             <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
-                                        <th onClick={() => requestSort('type')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
-                                            <div className="flex items-center gap-1">
-                                                Tipo
-                                                {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                            </div>
-                                        </th>
-                                        <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Folio</th>
-                                        <th onClick={() => requestSort('cliente')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
-                                            <div className="flex items-center gap-1">
-                                                Cliente
-                                                {sortConfig.key === 'cliente' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                            </div>
-                                        </th>
-                                        <th onClick={() => requestSort('fecha')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
-                                            <div className="flex items-center gap-1">
-                                                Fecha
-                                                {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                            </div>
-                                        </th>
-                                        <th onClick={() => requestSort('total')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
-                                            <div className="flex items-center gap-1">
-                                                Total
-                                                {sortConfig.key === 'total' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                                            </div>
-                                        </th>
-                                        <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Estado</th>
-                                        <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className={`divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
-                                    {paginatedServices.map((service) => (
-                                        <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' :
-                                                    service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' :
-                                                        service.type === 'Impresora' ? 'bg-purple-100 text-purple-800' :
-                                                            service.type === 'Redes' ? 'bg-cyan-100 text-cyan-800' :
-                                                                'bg-rose-100 text-rose-800'
-                                                    }`}>
-                                                    {service.type}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-blue-600">#{service.folio}</span>
-                                                    {service.hasPhotos && (
-                                                        <div className="bg-blue-100 p-1 rounded-full" title="Tiene evidencia fotográfica">
-                                                            <Image className="w-3 h-3 text-blue-600" />
-                                                        </div>
-                                                    )}
+                                {isMinimalista ? (
+                                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold tracking-widest">
+                                        <tr>
+                                            <th className="px-6 py-4">Folio</th>
+                                            <th onClick={() => requestSort('cliente')} className="px-6 py-4 cursor-pointer hover:bg-slate-200/50 transition-colors select-none">
+                                                <div className="flex items-center gap-1">Cliente {sortConfig.key === 'cliente' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}</div>
+                                            </th>
+                                            <th onClick={() => requestSort('type')} className="px-6 py-4 cursor-pointer hover:bg-slate-200/50 transition-colors select-none">
+                                                <div className="flex items-center gap-1">Tipo {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}</div>
+                                            </th>
+                                            <th className="px-6 py-4">Estado</th>
+                                            <th onClick={() => requestSort('fecha')} className="px-6 py-4 cursor-pointer hover:bg-slate-200/50 transition-colors select-none">
+                                                <div className="flex items-center gap-1">Fecha {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}</div>
+                                            </th>
+                                            <th onClick={() => requestSort('total')} className="px-6 py-4 cursor-pointer hover:bg-slate-200/50 transition-colors select-none">
+                                                <div className="flex items-center gap-1">Total {sortConfig.key === 'total' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}</div>
+                                            </th>
+                                            <th className="px-6 py-4 text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                ) : (
+                                    <thead>
+                                        <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                                            <th onClick={() => requestSort('type')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                                <div className="flex items-center gap-1">
+                                                    Tipo
+                                                    {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente}</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <StatusDropdown
-                                                    service={service}
-                                                    darkMode={darkMode}
-                                                    onStatusChange={fetchAllServices}
-                                                    tableName={service.tableName}
-                                                />
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() => handleViewServiceUnified(service)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Ver Servicio"
-                                                    >
-                                                        <Eye className="w-5 h-5" />
+                                            </th>
+                                            <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Folio</th>
+                                            <th onClick={() => requestSort('cliente')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                                <div className="flex items-center gap-1">
+                                                    Cliente
+                                                    {sortConfig.key === 'cliente' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                                </div>
+                                            </th>
+                                            <th onClick={() => requestSort('fecha')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                                <div className="flex items-center gap-1">
+                                                    Fecha
+                                                    {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                                </div>
+                                            </th>
+                                            <th onClick={() => requestSort('total')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                                <div className="flex items-center gap-1">
+                                                    Total
+                                                    {sortConfig.key === 'total' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                                                </div>
+                                            </th>
+                                            <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Estado</th>
+                                            <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                )}
+                                <tbody className={isMinimalista ? `divide-y divide-slate-100` : `divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
+                                    {paginatedServices.map((service) => {
+                                        return isMinimalista ? (
+                                            <tr key={`${service.tableName}-${service.id || service.folio}`} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4 font-mono text-sm text-blue-600 font-medium whitespace-nowrap">
+                                                    #{service.folio}
+                                                    {service.hasPhotos && <span className="ml-2 font-sans" title="Fotos adjuntas">📸</span>}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm font-semibold text-slate-700">{service.cliente}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-500">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-xl flex items-center justify-center ${service.type === 'CCTV' ? 'bg-indigo-100 text-indigo-600' :
+                                                            service.type === 'PC' ? 'bg-blue-100 text-blue-600' :
+                                                                service.type === 'Celular' ? 'bg-rose-100 text-rose-600' :
+                                                                    service.type === 'Impresora' ? 'bg-purple-100 text-purple-600' :
+                                                                        service.type === 'Redes' ? 'bg-cyan-100 text-cyan-600' :
+                                                                            'bg-slate-100 text-slate-600'
+                                                            }`}>
+                                                            {service.type === 'CCTV' ? <Video className="w-4 h-4" /> :
+                                                                service.type === 'PC' ? <Monitor className="w-4 h-4" /> :
+                                                                    service.type === 'Celular' ? <Smartphone className="w-4 h-4" /> :
+                                                                        service.type === 'Impresora' ? <Printer className="w-4 h-4" /> :
+                                                                            service.type === 'Redes' ? <Globe className="w-4 h-4" /> :
+                                                                                <Settings className="w-4 h-4" />}
+                                                        </div>
+                                                        <span className="font-medium text-slate-700">{service.type === 'PC' ? 'Computadora' : service.type}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <StatusDropdown
+                                                        service={service}
+                                                        darkMode={darkMode}
+                                                        onStatusChange={fetchAllServices}
+                                                        tableName={service.tableName}
+                                                        pageStyle={pageStyle}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{formatServiceDate(service.fecha)}</td>
+                                                <td className="px-6 py-4 text-sm font-bold text-slate-800">${formatCurrency(service.total)}</td>
+                                                <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                                                    <button onClick={() => handleViewServiceUnified(service)} className="p-2 inline-flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all font-medium border border-blue-100/50" title="Ver Servicio">
+                                                        <Eye className="w-4 h-4" />
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleEditServiceUnifiedLocal(service)}
-                                                        className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                                        title="Editar Servicio"
-                                                    >
-                                                        <Edit2 className="w-5 h-5" />
+                                                    <button onClick={() => handleEditServiceUnifiedLocal(service)} className="p-2 inline-flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-medium border border-emerald-100/50" title="Editar Servicio">
+                                                        <Edit2 className="w-4 h-4" />
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleDelete(service)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Eliminar Servicio"
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
+                                                    <button onClick={() => handleDelete(service)} className="p-2 inline-flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all font-medium border border-rose-100/50" title="Eliminar Servicio">
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedServiceForActions(service);
                                                             setShowActionsModal(true);
                                                         }}
-                                                        className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                                                        className="p-2 inline-flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all font-medium border border-slate-200/50"
                                                         title="Más acciones"
                                                     >
-                                                        <MoreVertical className="w-5 h-5" />
+                                                        <MoreVertical className="w-4 h-4" />
                                                     </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' :
+                                                        service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' :
+                                                            service.type === 'Impresora' ? 'bg-purple-100 text-purple-800' :
+                                                                service.type === 'Redes' ? 'bg-cyan-100 text-cyan-800' :
+                                                                    'bg-rose-100 text-rose-800'
+                                                        }`}>
+                                                        {service.type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold text-blue-600">#{service.folio}</span>
+                                                        {service.hasPhotos && (
+                                                            <div className="bg-blue-100 p-1 rounded-full" title="Tiene evidencia fotográfica">
+                                                                <Image className="w-3 h-3 text-blue-600" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{service.cliente}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <StatusDropdown
+                                                        service={service}
+                                                        darkMode={darkMode}
+                                                        onStatusChange={fetchAllServices}
+                                                        tableName={service.tableName}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleViewServiceUnified(service)}
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            title="Ver Servicio"
+                                                        >
+                                                            <Eye className="w-5 h-5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEditServiceUnifiedLocal(service)}
+                                                            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                            title="Editar Servicio"
+                                                        >
+                                                            <Edit2 className="w-5 h-5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(service)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Eliminar Servicio"
+                                                        >
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedServiceForActions(service);
+                                                                setShowActionsModal(true);
+                                                            }}
+                                                            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                                                            title="Más acciones"
+                                                        >
+                                                            <MoreVertical className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
 
@@ -5601,7 +5767,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
 // --- SIDEBAR COMPONENT ---
 
-const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName, trialDaysLeft, isPremium }) => {
+const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail, currentTheme, setTheme, mobileMode, toggleMobileMode, isOpen, onClose, companyLogo, companyName, trialDaysLeft, isPremium, pageStyle }) => {
     const setActiveTab = (tab) => {
         setTabOriginal(tab);
         if (mobileMode && onClose) onClose();
@@ -5609,15 +5775,16 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
     const isGlass = currentTheme === 'glass';
     const isDark = currentTheme === 'dark';
+    const isMinimalista = pageStyle === 'Minimalista';
 
     const sidebarClasses = mobileMode
-        ? `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600'} ${isGlass ? 'text-amber-900' : 'text-white'} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
-        : `fixed inset-y-0 left-0 z-20 w-72 ${isGlass ? 'text-amber-900' : 'text-white'} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : 'bg-transparent'} no-print`;
+        ? `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-slate-900 border-r border-slate-800' : (isMinimalista ? 'bg-white border-r border-slate-200' : 'bg-blue-600')} ${isGlass ? 'text-amber-900' : (isMinimalista ? 'text-slate-800' : 'text-white')} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
+        : `fixed inset-y-0 left-0 z-20 ${isMinimalista ? 'w-64' : 'w-72'} ${isGlass ? 'text-amber-900' : (isMinimalista ? 'text-slate-800' : 'text-white')} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : (isMinimalista ? 'bg-white border-r border-slate-200' : 'bg-transparent')} no-print`;
 
-    const textMuted = isGlass ? 'text-amber-700/70' : 'text-blue-200';
-    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : 'hover:text-white hover:bg-white/10 rounded-xl';
-    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : 'font-bold text-white bg-white/20 rounded-xl shadow-sm';
-    const inactiveClass = isGlass ? 'text-amber-800' : 'text-blue-100';
+    const textMuted = isGlass ? 'text-amber-700/70' : (isMinimalista ? 'text-slate-400' : 'text-blue-200');
+    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : (isMinimalista ? 'hover:bg-slate-100/50 rounded-md transition-colors' : 'hover:text-white hover:bg-white/10 rounded-xl');
+    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : (isMinimalista ? 'font-medium text-blue-600 bg-slate-100 rounded-md' : 'font-bold text-white bg-white/20 rounded-xl shadow-sm');
+    const inactiveClass = isGlass ? 'text-amber-800' : (isMinimalista ? 'text-slate-600' : 'text-blue-100');
 
     return (
         <>
@@ -5669,7 +5836,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                 <div className="flex-1 overflow-y-auto px-8 py-4 space-y-8 scrollbar-hide">
                     {/* Section: MAIN MENU */}
                     <div>
-                        <h3 className={`text-[10px] font-bold tracking-widest mb-4 uppercase ${textMuted}`}>Menú</h3>
+                        <h3 className={isMinimalista ? `text-xs font-semibold uppercase tracking-wider mb-2 px-2 ${textMuted}` : `text-[10px] font-bold tracking-widest mb-4 uppercase ${textMuted}`}>Menú</h3>
                         <ul className="space-y-1">
                             {/* Inicio */}
                             <li>
@@ -5836,29 +6003,31 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                         <button onClick={() => setActiveTab('changelog')} className={`${textHover} transition-colors`}>Changelog</button>
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-md rounded-full p-1 flex items-center w-max">
-                        <button
-                            onClick={() => setTheme('blue')}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'blue' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
-                        >
-                            <span className={`w-2 h-2 rounded-full ${currentTheme === 'blue' ? 'bg-blue-600' : 'bg-transparent border border-blue-300'}`}></span>
-                            Azul
-                        </button>
-                        <button
-                            onClick={() => setTheme('glass')}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'glass' ? 'bg-white text-amber-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
-                        >
-                            <Sun className={`w-3 h-3 ${currentTheme === 'glass' ? 'text-amber-600' : ''}`} />
-                            Claro
-                        </button>
-                        <button
-                            onClick={() => setTheme('dark')}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'dark' ? 'bg-slate-700 text-white shadow-sm' : 'text-blue-200 hover:text-white'}`}
-                        >
-                            <Moon className={`w-3 h-3 ${currentTheme === 'dark' ? 'text-slate-300' : ''}`} />
-                            Oscuro
-                        </button>
-                    </div>
+                    {pageStyle === 'Redondeados' && (
+                        <div className="bg-white/10 backdrop-blur-md rounded-full p-1 flex items-center w-max">
+                            <button
+                                onClick={() => setTheme('blue')}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'blue' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                            >
+                                <span className={`w-2 h-2 rounded-full ${currentTheme === 'blue' ? 'bg-blue-600' : 'bg-transparent border border-blue-300'}`}></span>
+                                Azul
+                            </button>
+                            <button
+                                onClick={() => setTheme('glass')}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'glass' ? 'bg-white text-amber-600 shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                            >
+                                <Sun className={`w-3 h-3 ${currentTheme === 'glass' ? 'text-amber-600' : ''}`} />
+                                Claro
+                            </button>
+                            <button
+                                onClick={() => setTheme('dark')}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${currentTheme === 'dark' ? 'bg-slate-700 text-white shadow-sm' : 'text-blue-200 hover:text-white'}`}
+                            >
+                                <Moon className={`w-3 h-3 ${currentTheme === 'dark' ? 'text-slate-300' : ''}`} />
+                                Oscuro
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
@@ -7950,6 +8119,16 @@ const App = () => {
     const setTheme = (theme) => {
         setCurrentTheme(theme);
         localStorage.setItem('theme', theme);
+    };
+
+    // Page Style State
+    const [pageStyle, setPageStyle] = useState(() => {
+        return localStorage.getItem('pageStyle') || 'Redondeados';
+    });
+
+    const setPageStyleStore = (style) => {
+        setPageStyle(style);
+        localStorage.setItem('pageStyle', style);
     };
 
     // Helper for legacy dark mode support in child components
@@ -10193,6 +10372,7 @@ const App = () => {
 
     // Determine background class based on theme
     const getBackgroundClass = () => {
+        if (pageStyle === 'Minimalista' && currentTheme !== 'dark') return 'bg-slate-50'; // Minimalist fallback to #f8fafc (slate-50)
         switch (currentTheme) {
             case 'dark': return 'bg-slate-900';
             case 'glass': return 'bg-gradient-to-br from-orange-200 via-rose-200 to-amber-100';
@@ -10228,6 +10408,7 @@ const App = () => {
                     onClose={() => setSidebarOpen(false)}
                     trialDaysLeft={getTrialDaysRemaining()}
                     isPremium={profile?.is_premium}
+                    pageStyle={pageStyle}
                     onCreateNew={() => {
                         // Check unsaved changes before resetting for "New"
                         if (hasUnsavedChanges()) {
@@ -10274,7 +10455,7 @@ const App = () => {
                     </div>
                 )}
 
-                <main className={`flex-1 transition-all duration-300 md:p-8 p-3 ${mobileMode ? 'h-[calc(100vh-60px)]' : 'h-screen'} overflow-hidden ${mobileMode ? '' : 'ml-72'} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
+                <main className={`flex-1 transition-all duration-300 md:p-8 p-3 ${mobileMode ? 'h-[calc(100vh-60px)]' : 'h-screen'} overflow-hidden ${mobileMode ? '' : (pageStyle === 'Minimalista' ? 'ml-64' : 'ml-72')} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
                     {/* Trial Blocking UI */}
                     {isTrialExpired() && activeTab !== 'suscripcion' ? (
                         <div className="w-full h-full flex items-center justify-center p-4">
@@ -10284,8 +10465,8 @@ const App = () => {
                             />
                         </div>
                     ) : (
-                        <div className={`w-full h-full md:rounded-[2.5rem] rounded-3xl shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'} print:bg-white print:rounded-none print:shadow-none`}>
-                            <div ref={contentRef} className={`w-full h-full overflow-y-auto md:px-8 px-4 md:py-10 py-6 ${currentTheme === 'glass' && !isDark ? 'bg-orange-50/40 backdrop-blur-sm' : ''} print:p-0 print:h-auto print:overflow-visible`}>
+                        <div className={`w-full h-full ${pageStyle === 'Minimalista' ? 'flex flex-col' : 'md:rounded-[2.5rem] rounded-3xl shadow-2xl'} overflow-hidden ${isDark ? 'bg-slate-800' : (pageStyle === 'Minimalista' ? 'bg-transparent' : 'bg-white')} print:bg-white print:rounded-none print:shadow-none`}>
+                            <div ref={contentRef} className={`w-full h-full overflow-y-auto ${pageStyle === 'Minimalista' ? '' : 'md:px-8 px-4 md:py-10 py-6'} ${currentTheme === 'glass' && !isDark ? 'bg-orange-50/40 backdrop-blur-sm' : ''} print:p-0 print:h-auto print:overflow-visible`}>
 
                                 {activeTab === 'cotizaciones-list' && (
                                     <QuotationList
@@ -10305,6 +10486,7 @@ const App = () => {
                                         onDuplicate={duplicateQuotation}
                                         onDelete={deleteQuotation}
                                         darkMode={isDark}
+                                        pageStyle={pageStyle}
                                         onStatusChange={() => fetchQuotations(session.user.id)}
                                     />
                                 )}
@@ -10501,6 +10683,8 @@ const App = () => {
                                         darkMode={isDark}
                                         selectedTemplate={selectedTemplate}
                                         onTemplateChange={handleTemplateChange}
+                                        pageStyle={pageStyle}
+                                        onPageStyleChange={setPageStyleStore}
                                     />
                                 )}
                                 {activeTab === 'inicio' && (
@@ -10510,6 +10694,7 @@ const App = () => {
                                         quotations={quotations}
                                         products={products}
                                         darkMode={isDark}
+                                        pageStyle={pageStyle}
                                     />
                                 )}
                                 {activeTab === 'products' && (
@@ -10538,6 +10723,7 @@ const App = () => {
                                             setShowNotaPreview(true);
                                         }}
                                         user={session?.user}
+                                        pageStyle={pageStyle}
                                         refreshTrigger={servicesRefreshTrigger}
                                     />
                                 )}

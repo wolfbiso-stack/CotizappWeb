@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { UserPlus, ClipboardList, FileText, Settings, ArrowUpRight, Clock, Plus, PenTool, CheckCircle, Wrench, RotateCcw, Monitor, Printer, Smartphone, Calendar } from 'lucide-react';
 import { formatDateForInput } from '../utils/format';
 
-const InicioView = ({ services = [], savedClients = [], quotations = [], products = [], citas = [], darkMode = false }) => {
+const InicioView = ({ services = [], savedClients = [], quotations = [], products = [], citas = [], darkMode = false, pageStyle = 'Redondeados' }) => {
 
     // Chart Data States
     const [chartData, setChartData] = useState({
@@ -188,7 +188,10 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
     }, [citas]);
 
     // Component Base Style
-    const baseCard = `rounded-2xl shadow-sm border p-6 flex flex-col ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`;
+    const isMinimalista = pageStyle === 'Minimalista';
+    const baseCard = isMinimalista
+        ? `bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col`
+        : `rounded-2xl shadow-sm border p-6 flex flex-col ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`;
 
     return (
         <div className="w-full px-4 md:px-8 py-8 animate-in fade-in duration-300">
@@ -196,51 +199,95 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
                 {/* Clientes */}
-                <div className={`rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-emerald-400 to-transparent w-full h-full pointer-events-none rounded-xl" />
+                <div className={isMinimalista ? `bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500` : `rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    {!isMinimalista && <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-emerald-400 to-transparent w-full h-full pointer-events-none rounded-xl" />}
                     <div>
-                        <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{savedClients.length}</h3>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Clientes</p>
+                        {isMinimalista ? (
+                            <>
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Clientes</p>
+                                <h3 className="text-3xl font-bold text-slate-800 mt-1">{savedClients.length}</h3>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{savedClients.length}</h3>
+                                <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Clientes</p>
+                            </>
+                        )}
                     </div>
-                    <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-500">
-                        <UserPlus className="w-5 h-5" />
-                    </div>
+                    {!isMinimalista && (
+                        <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-500">
+                            <UserPlus className="w-5 h-5" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Órdenes */}
-                <div className={`rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-blue-400 to-transparent w-full h-full pointer-events-none rounded-xl" />
+                <div className={isMinimalista ? `bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500` : `rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    {!isMinimalista && <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-blue-400 to-transparent w-full h-full pointer-events-none rounded-xl" />}
                     <div>
-                        <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{services.length}</h3>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Órdenes</p>
+                        {isMinimalista ? (
+                            <>
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Órdenes</p>
+                                <h3 className="text-3xl font-bold text-slate-800 mt-1">{services.length}</h3>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{services.length}</h3>
+                                <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Órdenes</p>
+                            </>
+                        )}
                     </div>
-                    <div className="p-2.5 rounded-lg bg-blue-50 text-blue-500">
-                        <ClipboardList className="w-5 h-5" />
-                    </div>
+                    {!isMinimalista && (
+                        <div className="p-2.5 rounded-lg bg-blue-50 text-blue-500">
+                            <ClipboardList className="w-5 h-5" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Cotizaciones */}
-                <div className={`rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-purple-400 to-transparent w-full h-full pointer-events-none rounded-xl" />
+                <div className={isMinimalista ? `bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-purple-500` : `rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    {!isMinimalista && <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-purple-400 to-transparent w-full h-full pointer-events-none rounded-xl" />}
                     <div>
-                        <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{quotations.length}</h3>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Cotizaciones</p>
+                        {isMinimalista ? (
+                            <>
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Cotizaciones</p>
+                                <h3 className="text-3xl font-bold text-slate-800 mt-1">{quotations.length}</h3>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{quotations.length}</h3>
+                                <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Cotizaciones</p>
+                            </>
+                        )}
                     </div>
-                    <div className="p-2.5 rounded-lg bg-purple-50 text-purple-500">
-                        <FileText className="w-5 h-5" />
-                    </div>
+                    {!isMinimalista && (
+                        <div className="p-2.5 rounded-lg bg-purple-50 text-purple-500">
+                            <FileText className="w-5 h-5" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Prod / Serv */}
-                <div className={`rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-amber-400 to-transparent w-full h-full pointer-events-none rounded-xl" />
+                <div className={isMinimalista ? `bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500` : `rounded-xl shadow-sm border p-6 flex justify-between items-start relative overflow-hidden group ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    {!isMinimalista && <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity bg-gradient-to-bl from-amber-400 to-transparent w-full h-full pointer-events-none rounded-xl" />}
                     <div>
-                        <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{products.length}</h3>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Prod/Serv</p>
+                        {isMinimalista ? (
+                            <>
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Prod/Serv</p>
+                                <h3 className="text-3xl font-bold text-slate-800 mt-1">{products.length}</h3>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className={`text-4xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{products.length}</h3>
+                                <p className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Prod/Serv</p>
+                            </>
+                        )}
                     </div>
-                    <div className="p-2.5 rounded-lg bg-amber-50 text-amber-500">
-                        <Settings className="w-5 h-5" />
-                    </div>
+                    {!isMinimalista && (
+                        <div className="p-2.5 rounded-lg bg-amber-50 text-amber-500">
+                            <Settings className="w-5 h-5" />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -249,7 +296,7 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
 
                 {/* Left Column: Actividades Recientes */}
                 <div className={`lg:col-span-1 ${baseCard}`}>
-                    <h3 className={`text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
+                    <h3 className={isMinimalista ? `text-lg font-bold text-slate-800 mb-6` : `text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
                         Actividades Recientes
                     </h3>
 
@@ -276,7 +323,7 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
                 <div className="lg:col-span-1 flex flex-col gap-6">
                     {/* Citas */}
                     <div className={baseCard}>
-                        <h3 className={`text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
+                        <h3 className={isMinimalista ? `text-lg font-bold text-slate-800 mb-6` : `text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
                             Citas
                         </h3>
 
@@ -299,7 +346,7 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
 
                     {/* Ingresos últimos 3 meses (Mock Chart) */}
                     <div className={baseCard}>
-                        <h3 className={`text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
+                        <h3 className={isMinimalista ? `text-lg font-bold text-slate-800 mb-6` : `text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
                             Ingresos últimos 3 meses
                         </h3>
 
@@ -345,7 +392,7 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
                 <div className="lg:col-span-1 flex flex-col gap-6">
                     {/* Cotizaciones convertidas (Mock Chart) */}
                     <div className={baseCard}>
-                        <h3 className={`text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
+                        <h3 className={isMinimalista ? `text-lg font-bold text-slate-800 mb-6` : `text-sm font-bold text-center mb-6 pb-4 border-b ${darkMode ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-100'}`}>
                             Cotizaciones convertidas
                         </h3>
 
