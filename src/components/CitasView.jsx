@@ -243,10 +243,9 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                     <Plus className="w-5 h-5" />
                     Nueva Cita
                 </button>
-            </div>
-
             <div className={baseCard}>
-                <div className="overflow-x-auto">
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b">
@@ -278,17 +277,12 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                                     <td className={cellClass}>{renderStatusBadge(cita.estatus)}</td>
                                     <td className={`${cellClass} text-center`}>
                                         <div className="flex flex-wrap items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                                            {/* Acción Ver */}
                                             <button onClick={() => handleOpenForm(cita, true)} className="p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg text-blue-500 hover:shadow-sm" title="Ver Cita">
                                                 <Eye className="w-4 h-4" />
                                             </button>
-
-                                            {/* Acción Editar */}
                                             <button onClick={() => handleOpenForm(cita, false)} className="p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg text-slate-500 hover:shadow-sm" title="Editar Cita">
                                                 <Edit2 className="w-4 h-4" />
                                             </button>
-
-                                            {/* Acciones Rápidas Status */}
                                             {cita.estatus !== 'Atendida' && (
                                                 <button onClick={() => handleQuickStatusUpdate(cita.id, 'Atendida')} className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg text-emerald-500 hover:shadow-sm" title="Marcar como Atendida">
                                                     <CheckCircle className="w-4 h-4" />
@@ -303,17 +297,71 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                                     </td>
                                 </tr>
                             ))}
-                            {filteredCitas.length === 0 && (
-                                <tr>
-                                    <td colSpan="6" className={`text-center py-8 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                        No hay citas registradas.
-                                    </td>
-                                </tr>
-                            )}
                         </tbody>
                     </table>
                 </div>
-            </div>
+
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4">
+                    {filteredCitas.map((cita) => (
+                        <div key={cita.id} className={`p-4 rounded-xl border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <span className="text-blue-500 font-bold text-xs">{cita.folio}</span>
+                                    <h4 className={`font-bold text-base leading-tight mt-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{cita.cliente_nombre}</h4>
+                                </div>
+                                {renderStatusBadge(cita.estatus)}
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="space-y-1">
+                                    <p className={`text-[10px] uppercase font-bold tracking-wider ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Fecha y Hora</p>
+                                    <p className={`text-xs font-semibold flex items-center gap-1 ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                        <Calendar className="w-3 h-3" /> {formatServiceDate(cita.fecha)}
+                                    </p>
+                                    <p className={`text-xs flex items-center gap-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        <Clock className="w-3 h-3" /> {cita.hora}
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className={`text-[10px] uppercase font-bold tracking-wider ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Técnico</p>
+                                    <p className={`text-xs font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{cita.tecnico_nombre || 'No asignado'}</p>
+                                </div>
+                            </div>
+
+                            <div className={`flex items-center justify-between pt-3 border-t ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleOpenForm(cita, true)} className={`p-2 rounded-lg ${darkMode ? 'bg-slate-800 text-blue-400' : 'bg-white text-blue-600 shadow-sm'}`}>
+                                        <Eye className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={() => handleOpenForm(cita, false)} className={`p-2 rounded-lg ${darkMode ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-500 shadow-sm'}`}>
+                                        <Edit2 className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    {cita.estatus !== 'Atendida' && (
+                                        <button onClick={() => handleQuickStatusUpdate(cita.id, 'Atendida')} className="bg-emerald-500 text-white p-2 rounded-lg shadow-lg shadow-emerald-500/20">
+                                            <CheckCircle className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                    {cita.estatus !== 'Cancelada' && (
+                                        <button onClick={() => handleQuickStatusUpdate(cita.id, 'Cancelada')} className="bg-red-500 text-white p-2 rounded-lg shadow-lg shadow-red-500/20">
+                                            <XCircle className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {filteredCitas.length === 0 && (
+                    <div className={`text-center py-12 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <Calendar className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p className="font-medium">No hay citas registradas para mostrar.</p>
+                    </div>
+                )}
+            </div>       </div>
 
             {/* Modal de Formulario */}
             {isFormOpen && (

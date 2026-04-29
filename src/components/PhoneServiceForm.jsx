@@ -200,7 +200,7 @@ const PhoneServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     const currentTotal = subtotal + ivaValue;
     const restante = currentTotal - (parseFloat(formData.anticipo) || 0);
 
-    const inputClass = `w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${darkMode
+    const inputClass = `w-full px-4 py-3 md:py-2 text-base md:text-sm rounded-xl md:rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${darkMode
         ? 'bg-slate-700/50 border-slate-600 text-slate-100 placeholder-slate-400'
         : 'bg-white/50 border-slate-200 text-slate-800 placeholder-slate-400'
         }`;

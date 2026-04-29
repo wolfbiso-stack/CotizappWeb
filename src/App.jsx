@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical } from 'lucide-react';
+import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -175,6 +175,7 @@ const QuotationStatusToggle = ({ quotation, onStatusChange, darkMode }) => {
 
 const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDuplicate, onShare, darkMode, onStatusChange, pageStyle = 'Redondeados' }) => {
     const isMinimalista = pageStyle === 'Minimalista';
+    const isCCRoutes = pageStyle === 'CC Routes';
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -263,16 +264,49 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 pb-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 mb-6">
                 {statusCards.map(card => {
                     const count = quotations.filter(card.filter).length;
                     const isActive = statusFilter === card.id;
+
+                    if (isCCRoutes) {
+                        const ccRoutesConfig = {
+                            'Todas': { subtitle: 'Todas las cotizaciones', icon: TrendingUp, bg: 'bg-[#334155]', activeBorder: 'border-slate-400', activeText: 'text-slate-300', topBorder: 'border-t-slate-500' },
+                            'Aceptadas': { subtitle: 'Cotizaciones aprobadas', icon: ThumbsUp, bg: 'bg-[#10b981]', activeBorder: 'border-[#10b981]', activeText: 'text-[#10b981]', topBorder: 'border-t-[#10b981]' },
+                            'Rechazadas': { subtitle: 'Cotizaciones declinadas', icon: ThumbsDown, bg: 'bg-[#ef4444]', activeBorder: 'border-[#ef4444]', activeText: 'text-[#ef4444]', topBorder: 'border-t-[#ef4444]' },
+                        };
+                        const config = ccRoutesConfig[card.id] || ccRoutesConfig['Todas'];
+                        const IconComponent = config.icon;
+
+                        return (
+                            <button
+                                key={card.id}
+                                onClick={() => setStatusFilter(card.id)}
+                                className={`flex flex-col justify-between w-full p-4 rounded-lg border shadow-sm relative h-[120px] transition-colors ${isActive ? (darkMode ? `bg-[#24303F] border-[1.5px] ${config.activeBorder}` : `bg-white border-[1.5px] ${config.activeBorder} shadow-md`) : (darkMode ? `bg-[#1c2434] border-x border-b border-[#313D4A] border-t-2 ${config.topBorder} hover:bg-[#24303F]` : `bg-slate-50 border-x border-b border-slate-200 border-t-2 ${config.topBorder} hover:bg-white`)}`}
+                            >
+                                <div className="flex justify-between items-start w-full">
+                                    <div className="flex flex-col text-left">
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-slate-500'}`}>{card.label}</span>
+                                        <span className={`text-3xl font-bold mt-1 leading-none ${darkMode ? 'text-white' : 'text-slate-800'}`}>{count}</span>
+                                    </div>
+                                    <div className={`w-8 h-8 rounded flex items-center justify-center text-white ${config.bg}`}>
+                                        <IconComponent className="w-4 h-4" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-end w-full mt-2">
+                                    <span className="text-[10px] text-slate-500 truncate pr-2 text-left">{config.subtitle}</span>
+                                    {isActive && <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${config.activeText}`}><Check className="w-3 h-3"/> ACTIVO</span>}
+                                </div>
+                            </button>
+                        );
+                    }
 
                     return (
                         <button
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
-                            className={isMinimalista ? `flex flex-col w-full p-4 rounded-xl border shadow-sm text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} ${isActive ? 'border-l-4 border-l-blue-500' : ''}` : `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                            className={isMinimalista ? `flex flex-col w-full p-4 rounded-xl border shadow-sm text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} ${isActive ? 'border-l-4 border-l-blue-500' : ''}` :
+                            `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
                                 ? (darkMode ? 'bg-blue-900/40 border-blue-500 scale-105' : 'bg-blue-50 border-blue-500 scale-105')
                                 : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
@@ -320,23 +354,23 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
             ) : (
                 <>
                     {/* Desktop Table View */}
-                    <div className={isMinimalista ? `hidden md:block rounded-xl border overflow-hidden shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : `hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    <div className={isMinimalista ? `hidden md:block rounded-xl border overflow-hidden shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : (isCCRoutes ? `hidden md:block rounded-sm overflow-hidden shadow-sm ${darkMode ? 'bg-[#1c2434]' : 'bg-slate-50 border border-slate-200'}` : `hidden md:block rounded-xl shadow-lg border overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`)}>
                         <table className="w-full">
-                            <thead className={isMinimalista ? `border-b ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200'}` : `border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                            <thead className={isMinimalista ? `border-b ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200'}` : (isCCRoutes ? (darkMode ? `bg-[#24303F] border-none text-white` : `bg-slate-50 border-b border-slate-200 text-slate-800`) : `border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-gray-200'}`)}>
                                 <tr>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Folio</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Cliente</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Estado</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Fecha</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Total</th>
-                                    <th className={isMinimalista ? `px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`}>Acciones</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : (isCCRoutes ? `px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`)}>Folio</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : (isCCRoutes ? `px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`)}>Cliente</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : (isCCRoutes ? `px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`)}>Estado</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : (isCCRoutes ? `px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`)}>Fecha</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : (isCCRoutes ? `px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`)}>Total</th>
+                                    <th className={isMinimalista ? `px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : (isCCRoutes ? `px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}` : `px-6 py-4 text-right text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-600'}`)}>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className={isMinimalista ? `divide-y ${darkMode ? 'divide-slate-700/50' : 'divide-slate-100'}` : `divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
+                            <tbody className={isMinimalista ? `divide-y ${darkMode ? 'divide-slate-700/50' : 'divide-slate-100'}` : (isCCRoutes ? (darkMode ? `divide-y divide-[#313D4A]` : `divide-y divide-slate-200`) : `divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`)}>
                                 {paginatedQuotations.map((quotation) => (
                                     <tr
                                         key={quotation.id}
-                                        className={`transition-all duration-500 ${isMinimalista ? (darkMode ? 'hover:bg-slate-700/30' : 'hover:bg-slate-50') : (darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30')} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
+                                        className={`transition-all duration-500 ${isMinimalista ? (darkMode ? 'hover:bg-slate-700/30' : 'hover:bg-slate-50') : (isCCRoutes ? (darkMode ? 'hover:bg-[#24303F]' : 'hover:bg-white') : (darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'))} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'}`}
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`text-sm font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>#{quotation.folio}</span>
@@ -594,7 +628,8 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
     const PAGE_STYLES = [
         { id: 'Redondeados', name: 'Redondeados', description: 'Diseños de panel de control atractivos basados en bloques individuales, temas de color dinámico.' },
         { id: 'Minimalista', name: 'Minimalista', description: 'Líneas limpias, poco espaciado (próximamente)' },
-        { id: 'Moderno', name: 'Moderno', description: 'Diseño vanguardista clásico oscuro puro (próximamente)' }
+        { id: 'Moderno', name: 'Moderno', description: 'Diseño vanguardista clásico oscuro puro (próximamente)' },
+        { id: 'CC Routes', name: 'CC Routes', description: 'Estilo inspirado en panel de control oscuro con acentos azules.' }
     ];
 
     const TEMPLATES = [
@@ -848,6 +883,25 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
                                             <div className="w-full h-full bg-slate-900 rounded-sm p-3 flex gap-2">
                                                 <div className="w-1/4 bg-slate-800 rounded shadow-inner"></div>
                                                 <div className="grow bg-slate-800 rounded border-l-4 border-blue-500 shadow-inner"></div>
+                                            </div>
+                                        )}
+                                        {style.id === 'CC Routes' && (
+                                            <div className="w-full h-full bg-slate-900 p-0 flex gap-0 overflow-hidden rounded-sm border border-slate-700">
+                                                <div className="w-1/4 bg-[#1c2434] border-r border-slate-800 p-1 flex flex-col gap-1">
+                                                    <div className="w-full h-3 bg-blue-600 rounded-sm"></div>
+                                                    <div className="w-full h-2 bg-slate-800 rounded-sm"></div>
+                                                    <div className="w-full h-2 bg-slate-800 rounded-sm"></div>
+                                                </div>
+                                                <div className="grow bg-[#1a222c] flex flex-col">
+                                                    <div className="h-4 bg-[#1c2434] border-b border-slate-800 flex items-center px-1">
+                                                        <div className="w-16 h-1.5 bg-blue-500 rounded-full"></div>
+                                                    </div>
+                                                    <div className="p-2 grid grid-cols-2 gap-1">
+                                                        <div className="h-6 bg-slate-800 border-l-2 border-blue-500 rounded-sm"></div>
+                                                        <div className="h-6 bg-slate-800 border-l-2 border-green-500 rounded-sm"></div>
+                                                        <div className="h-6 bg-slate-800 border-l-2 border-red-500 rounded-sm col-span-2"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -1147,7 +1201,6 @@ const ClientsList = ({ onCreateNew, darkMode, clients: sharedClients, onRefresh,
                     <div className={`divide-y ${darkMode ? 'divide-slate-600' : 'divide-slate-100'}`}>
                         {filteredClients.map((client) => (
                             <div key={client.id} className={`grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center transition-colors group ${darkMode ? 'hover:bg-slate-600' : 'hover:bg-blue-50/30'}`}>
-                                {/* Name & Company */}
                                 <div className="col-span-5 flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${darkMode ? 'bg-slate-600 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
                                         {client.nombre.charAt(0).toUpperCase()}
@@ -1157,8 +1210,6 @@ const ClientsList = ({ onCreateNew, darkMode, clients: sharedClients, onRefresh,
                                         {client.empresa && <p className={`text-xs truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{client.empresa}</p>}
                                     </div>
                                 </div>
-
-                                {/* Contact Info */}
                                 <div className="col-span-4 space-y-1">
                                     {client.correo && (
                                         <div className={`flex items-center gap-2 text-sm truncate ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
@@ -1172,29 +1223,18 @@ const ClientsList = ({ onCreateNew, darkMode, clients: sharedClients, onRefresh,
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Actions */}
-                                <div className="col-span-3 flex justify-end gap-2 opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => setSelectedClient(client)}
-                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                        title="Ver detalles"
-                                    >
-                                        <FileText className="w-4 h-4" />
+                                <div className="col-span-3 flex items-center justify-end gap-3 mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-none border-slate-100 dark:border-slate-700">
+                                    <button onClick={() => setSelectedClient(client)} className={`flex-1 md:flex-none p-3 md:p-2 rounded-xl md:rounded-lg transition-all flex items-center justify-center gap-2 ${darkMode ? 'bg-slate-700 text-slate-300 hover:bg-blue-900/40 hover:text-blue-400' : 'bg-slate-50 text-slate-500 hover:bg-blue-50 hover:text-blue-600'}`}>
+                                        <FileText className="w-5 h-5 md:w-4 md:h-4" />
+                                        <span className="md:hidden font-bold text-xs">Ver</span>
                                     </button>
-                                    <button
-                                        onClick={() => handleEdit(client)}
-                                        className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                                        title="Editar"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
+                                    <button onClick={() => handleEdit(client)} className={`flex-1 md:flex-none p-3 md:p-2 rounded-xl md:rounded-lg transition-all flex items-center justify-center gap-2 ${darkMode ? 'bg-slate-700 text-slate-300 hover:bg-emerald-900/40 hover:text-emerald-400' : 'bg-slate-50 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'}`}>
+                                        <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
+                                        <span className="md:hidden font-bold text-xs">Editar</span>
                                     </button>
-                                    <button
-                                        onClick={() => handleDelete(client.id)}
-                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Eliminar"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
+                                    <button onClick={() => handleDelete(client.id)} className={`flex-1 md:flex-none p-3 md:p-2 rounded-xl md:rounded-lg transition-all flex items-center justify-center gap-2 ${darkMode ? 'bg-slate-700 text-slate-300 hover:bg-rose-900/40 hover:text-rose-400' : 'bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-rose-600'}`}>
+                                        <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
+                                        <span className="md:hidden font-bold text-xs">Borrar</span>
                                     </button>
                                 </div>
                             </div>
@@ -3216,7 +3256,6 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
 // Status Dropdown Component
 const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servicios_pc', pageStyle = 'Redondeados' }) => {
-    const isMinimalista = pageStyle === 'Minimalista';
     const [isOpen, setIsOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
     const [openUpward, setOpenUpward] = useState(false);
@@ -3238,16 +3277,11 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     const handleStatusUpdate = async (newStatus) => {
         setUpdating(true);
         try {
-            // Determinar campo de ID y de Estado según la tabla
             let idField = 'id';
             let idValue = service.id;
-
-            // Standardize status field name
             const statusField = 'status';
-
             const updatePayload = { [statusField]: newStatus };
 
-            // Sincronizar estado de pago/entrega para todos los servicios
             const tablesToSync = ['servicios_pc', 'servicios_celulares', 'servicios_cctv', 'servicios_impresoras', 'servicios_redes'];
             if (tablesToSync.includes(tableName)) {
                 if (newStatus === 'entregado') {
@@ -3275,28 +3309,40 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
         }
     };
 
-    const getStatusColorClass = (colorName) => {
-        if (isMinimalista) {
-            const minColors = {
-                black: 'bg-slate-100 text-slate-700',
-                yellow: 'bg-yellow-100 text-yellow-700',
-                blue: 'bg-blue-100 text-blue-700',
-                green: 'bg-green-100 text-green-700',
-                red: 'bg-red-100 text-red-700',
-                gray: 'bg-slate-100 text-slate-700'
-            };
-            return minColors[colorName] || minColors.gray;
-        }
-
-        const colors = {
-            black: 'bg-slate-900 text-white ring-slate-900/20 shadow-lg shadow-slate-900/10',
-            yellow: 'bg-amber-400 text-amber-950 ring-amber-400/20 shadow-lg shadow-amber-400/10',
-            blue: 'bg-blue-600 text-white ring-blue-600/20 shadow-lg shadow-blue-600/10',
-            green: 'bg-emerald-500 text-white ring-emerald-500/20 shadow-lg shadow-emerald-500/10',
-            red: 'bg-rose-500 text-white ring-rose-500/20 shadow-lg shadow-rose-500/10',
-            gray: 'bg-slate-500 text-white ring-slate-500/20 shadow-lg shadow-slate-500/10'
+    const getModernColorStyle = (colorName) => {
+        const styles = {
+            black: darkMode 
+                ? 'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:border-slate-600' 
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300',
+            yellow: darkMode 
+                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30' 
+                : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300',
+            blue: darkMode 
+                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/30' 
+                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300',
+            green: darkMode 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/30' 
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300',
+            red: darkMode 
+                ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20 hover:border-rose-500/30' 
+                : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-300',
+            gray: darkMode 
+                ? 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/20 hover:border-slate-500/30' 
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
         };
-        return colors[colorName] || colors.gray;
+        return styles[colorName] || styles.gray;
+    };
+
+    const getDotColor = (colorName) => {
+        const dots = {
+            black: darkMode ? 'bg-slate-400' : 'bg-slate-600',
+            yellow: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
+            blue: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]',
+            green: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]',
+            red: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]',
+            gray: 'bg-slate-400'
+        };
+        return dots[colorName] || dots.gray;
     };
 
     const statusValue = (service.status || 'pendiente').toLowerCase();
@@ -3305,60 +3351,56 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     const displayColor = currentStatus ? currentStatus.color : 'gray';
 
     return (
-        <div className="relative inline-block w-full" ref={dropdownRef}>
+        <div className="relative inline-block w-full min-w-[140px]" ref={dropdownRef}>
             <button
                 onClick={() => {
                     if (!isOpen && dropdownRef.current) {
                         const rect = dropdownRef.current.getBoundingClientRect();
                         const spaceBelow = window.innerHeight - rect.bottom;
-                        const shouldOpenUpward = spaceBelow < 300;
+                        const shouldOpenUpward = spaceBelow < 250;
                         setOpenUpward(shouldOpenUpward);
                     }
                     setIsOpen(!isOpen);
                 }}
                 disabled={updating}
-                className={isMinimalista ? `px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}` : `w-full px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-between gap-3 group relative overflow-hidden ${getStatusColorClass(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95 cursor-pointer shadow-md hover:shadow-xl'} ring-1`}
+                className={`w-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide rounded-full border backdrop-blur-sm transition-all duration-300 flex items-center justify-between gap-2 group relative overflow-hidden shadow-sm ${getModernColorStyle(displayColor)} ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
             >
                 {updating ? (
-                    <div className="flex items-center gap-2 justify-center w-full">
-                        <Loader className={isMinimalista ? "w-3 h-3 animate-spin" : "w-4 h-4 animate-spin"} />
-                        <span>Espere...</span>
+                    <div className="flex items-center gap-2 justify-center w-full py-0.5">
+                        <Loader className="w-3.5 h-3.5 animate-spin" />
+                        <span>ACTUALIZANDO...</span>
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center gap-2.5 overflow-hidden">
-                            {!isMinimalista && <div className={`w-1.5 h-1.5 rounded-full bg-white opacity-50 group-hover:opacity-100 transition-opacity animate-pulse`}></div>}
+                        <div className="flex items-center gap-2 overflow-hidden py-0.5">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getDotColor(displayColor)}`}></div>
                             <span className="truncate">{displayLabel}</span>
                         </div>
-                        {!isMinimalista && <ChevronDown className={`w-4 h-4 opacity-70 group-hover:opacity-100 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />}
+                        <ChevronDown className={`w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
                     </>
                 )}
             </button>
 
             {isOpen && !updating && (
                 <div
-                    className={`absolute z-[200] w-56 rounded-md shadow-lg border overflow-hidden ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                    className={`absolute z-[200] w-full min-w-[180px] p-1.5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border backdrop-blur-xl ${openUpward ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 ${darkMode ? 'bg-slate-800/95 border-slate-700/50' : 'bg-white/95 border-slate-200/50'}`}
                 >
                     {STATUS_OPTIONS.map((status) => (
                         <button
                             key={status.value}
                             onClick={() => handleStatusUpdate(status.value)}
-                            className={`w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-between group transition-all ${darkMode
-                                ? 'hover:bg-slate-700/50 text-slate-400 hover:text-white'
-                                : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'
-                                }`}
+                            className={`w-full text-left px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide rounded-xl flex items-center justify-between group transition-all duration-200 ${
+                                statusValue === status.value
+                                    ? (darkMode ? 'bg-slate-700/50 text-white' : 'bg-slate-100/80 text-slate-900')
+                                    : (darkMode ? 'text-slate-400 hover:bg-slate-700/30 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900')
+                            }`}
                         >
-                            <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full shadow-sm ${status.color === 'black' ? 'bg-slate-900' :
-                                    status.color === 'yellow' ? 'bg-amber-400' :
-                                        status.color === 'blue' ? 'bg-blue-600' :
-                                            status.color === 'green' ? 'bg-emerald-500' :
-                                                status.color === 'red' ? 'bg-rose-500' : 'bg-slate-400'
-                                    }`}></div>
+                            <div className="flex items-center gap-2.5">
+                                <div className={`w-1.5 h-1.5 rounded-full ${getDotColor(status.color).replace(/shadow-\[.*?\]/g, '')}`}></div>
                                 <span>{status.label}</span>
                             </div>
                             {statusValue === status.value && (
-                                <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                             )}
                         </button>
                     ))}
@@ -4135,6 +4177,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
 const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices, pageStyle = 'Redondeados' }) => {
     const isMinimalista = pageStyle === 'Minimalista';
+    const isCCRoutes = pageStyle === 'CC Routes';
     const [unifiedServices, setUnifiedServices] = useState(sharedServices || []);
     const [loading, setLoading] = useState(!sharedServices);
     const [refreshing, setRefreshing] = useState(false);
@@ -4448,11 +4491,47 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                     const count = sortedServices.filter(card.filter).length;
                     const isActive = statusFilter === card.id;
 
+                    if (isCCRoutes) {
+                        const ccRoutesConfig = {
+                            'Todas': { subtitle: 'Todos los servicios e...', icon: TrendingUp, bg: 'bg-[#334155]', activeBorder: 'border-slate-400', activeText: 'text-slate-300', topBorder: 'border-t-slate-500' },
+                            'Pendientes': { subtitle: 'Pendiente verificación', icon: Clock, bg: 'bg-[#f59e0b]', activeBorder: 'border-[#f59e0b]', activeText: 'text-[#f59e0b]', topBorder: 'border-t-[#f59e0b]' },
+                            'En Proceso': { subtitle: 'Asignado a técnico', icon: ScrollText, bg: 'bg-[#3b82f6]', activeBorder: 'border-[#3b82f6]', activeText: 'text-[#3b82f6]', topBorder: 'border-t-[#3b82f6]' },
+                            'P. de Entrega': { subtitle: 'Listo para entregar', icon: ArrowUpDown, bg: 'bg-[#10b981]', activeBorder: 'border-[#10b981]', activeText: 'text-[#10b981]', topBorder: 'border-t-[#10b981]' },
+                            'Canceladas': { subtitle: 'Servicios cancelados', icon: AlertTriangle, bg: 'bg-[#ef4444]', activeBorder: 'border-[#ef4444]', activeText: 'text-[#ef4444]', topBorder: 'border-t-[#ef4444]' },
+                            'Completadas': { subtitle: 'Servicios finalizados', icon: Zap, bg: 'bg-[#f97316]', activeBorder: 'border-[#f97316]', activeText: 'text-[#f97316]', topBorder: 'border-t-[#f97316]' },
+                        };
+                        const config = ccRoutesConfig[card.id];
+                        const IconComponent = config.icon;
+
+                        return (
+                            <button
+                                key={card.id}
+                                onClick={() => setStatusFilter(card.id)}
+                                className={`flex flex-col justify-between w-full p-4 rounded-lg border shadow-sm relative h-[120px] transition-colors ${isActive ? (darkMode ? `bg-[#24303F] border-[1.5px] ${config.activeBorder}` : `bg-white border-[1.5px] ${config.activeBorder} shadow-md`) : (darkMode ? `bg-[#1c2434] border-x border-b border-[#313D4A] border-t-2 ${config.topBorder} hover:bg-[#24303F]` : `bg-slate-50 border-x border-b border-slate-200 border-t-2 ${config.topBorder} hover:bg-white`)}`}
+                            >
+                                <div className="flex justify-between items-start w-full">
+                                    <div className="flex flex-col text-left">
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-slate-500'}`}>{card.label}</span>
+                                        <span className={`text-3xl font-bold mt-1 leading-none ${darkMode ? 'text-white' : 'text-slate-800'}`}>{count}</span>
+                                    </div>
+                                    <div className={`w-8 h-8 rounded flex items-center justify-center text-white ${config.bg}`}>
+                                        <IconComponent className="w-4 h-4" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-end w-full mt-2">
+                                    <span className="text-[10px] text-slate-500 truncate pr-2 text-left">{config.subtitle}</span>
+                                    {isActive && <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${config.activeText}`}><Check className="w-3 h-3"/> ACTIVO</span>}
+                                </div>
+                            </button>
+                        );
+                    }
+
                     return (
                         <button
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
-                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : (card.id === 'Pendientes' && count > 0 ? 'border-l-4 border-l-yellow-500' : card.id === 'En Proceso' && count > 0 ? 'border-l-4 border-l-blue-500' : card.id === 'Completadas' && count > 0 ? 'border-l-4 border-l-green-500' : '')}` : `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : (card.id === 'Pendientes' && count > 0 ? 'border-l-4 border-l-yellow-500' : card.id === 'En Proceso' && count > 0 ? 'border-l-4 border-l-blue-500' : card.id === 'Completadas' && count > 0 ? 'border-l-4 border-l-green-500' : '')}` :
+                            `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
                                 ? (darkMode ? 'bg-blue-900/40 border-blue-500' : 'bg-blue-50 border-blue-500 scale-105')
                                 : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
@@ -4491,7 +4570,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 </div>
             </div>
 
-            <div className={isMinimalista ? `rounded-xl border overflow-hidden shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
+            <div className={isMinimalista ? `rounded-xl border overflow-hidden shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : (isCCRoutes ? `rounded-sm border-none overflow-hidden shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'bg-[#1c2434]' : 'bg-slate-50 border border-slate-200'}` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] flex flex-col ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`)}>
                 {loading && !refreshing ? (
                     <div className="p-20 flex flex-col items-center justify-center gap-4">
                         <Loader className="w-10 h-10 animate-spin text-blue-600" />
@@ -4530,38 +4609,38 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                     </thead>
                                 ) : (
                                     <thead>
-                                        <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
-                                            <th onClick={() => requestSort('type')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                        <tr className={isCCRoutes ? (darkMode ? `bg-[#24303F] text-white border-b border-[#313D4A]` : `bg-slate-50 text-slate-800 border-b border-slate-200`) : `${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'} border-b ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                                            <th onClick={() => requestSort('type')} className={isCCRoutes ? `px-6 py-5 text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'} cursor-pointer` : `px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none`}>
                                                 <div className="flex items-center gap-1">
                                                     Tipo
                                                     {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                                 </div>
                                             </th>
-                                            <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Folio</th>
-                                            <th onClick={() => requestSort('cliente')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                            <th className={`px-6 py-5 ${isCCRoutes ? 'text-[10px]' : 'text-xs'} font-black uppercase tracking-widest ${isCCRoutes ? (darkMode ? 'text-slate-400' : 'text-slate-500') : 'text-slate-400'}`}>Folio</th>
+                                            <th onClick={() => requestSort('cliente')} className={`px-6 py-5 ${isCCRoutes ? 'text-[10px]' : 'text-xs'} font-black uppercase tracking-widest ${isCCRoutes ? (darkMode ? 'text-slate-400' : 'text-slate-500') : 'text-slate-400'} cursor-pointer hover:bg-slate-500/10 transition-colors select-none`}>
                                                 <div className="flex items-center gap-1">
                                                     Cliente
                                                     {sortConfig.key === 'cliente' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                                 </div>
                                             </th>
-                                            <th onClick={() => requestSort('fecha')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                            <th onClick={() => requestSort('fecha')} className={`px-6 py-5 ${isCCRoutes ? 'text-[10px]' : 'text-xs'} font-black uppercase tracking-widest ${isCCRoutes ? (darkMode ? 'text-slate-400' : 'text-slate-500') : 'text-slate-400'} cursor-pointer hover:bg-slate-500/10 transition-colors select-none`}>
                                                 <div className="flex items-center gap-1">
                                                     Fecha
                                                     {sortConfig.key === 'fecha' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                                 </div>
                                             </th>
-                                            <th onClick={() => requestSort('total')} className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer hover:bg-slate-500/10 transition-colors select-none">
+                                            <th onClick={() => requestSort('total')} className={`px-6 py-5 ${isCCRoutes ? 'text-[10px]' : 'text-xs'} font-black uppercase tracking-widest ${isCCRoutes ? (darkMode ? 'text-slate-400' : 'text-slate-500') : 'text-slate-400'} cursor-pointer hover:bg-slate-500/10 transition-colors select-none`}>
                                                 <div className="flex items-center gap-1">
                                                     Total
                                                     {sortConfig.key === 'total' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                                                 </div>
                                             </th>
-                                            <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Estado</th>
-                                            <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Acciones</th>
+                                            <th className={`px-6 py-5 ${isCCRoutes ? 'text-[10px]' : 'text-xs'} font-black uppercase tracking-widest ${isCCRoutes ? (darkMode ? 'text-slate-400' : 'text-slate-500') : 'text-slate-400'}`}>Estado</th>
+                                            <th className={`px-6 py-5 ${isCCRoutes ? 'text-[10px]' : 'text-xs'} font-black uppercase tracking-widest ${isCCRoutes ? (darkMode ? 'text-slate-400' : 'text-slate-500') : 'text-slate-400'} text-right`}>Acciones</th>
                                         </tr>
                                     </thead>
                                 )}
-                                <tbody className={isMinimalista ? `divide-y ${darkMode ? 'divide-slate-700/50' : 'divide-slate-100'}` : `divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
+                                <tbody className={isMinimalista ? `divide-y ${darkMode ? 'divide-slate-700/50' : 'divide-slate-100'}` : (isCCRoutes ? (darkMode ? `divide-y divide-[#313D4A]` : `divide-y divide-slate-200`) : `divide-y ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`)}>
                                     {paginatedServices.map((service) => {
                                         return isMinimalista ? (
                                             <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/30' : 'hover:bg-slate-50'}`}>
@@ -4623,7 +4702,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                                 </td>
                                             </tr>
                                         ) : (
-                                            <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30'}`}>
+                                            <tr key={`${service.tableName}-${service.id || service.folio}`} className={`transition-colors ${isCCRoutes ? (darkMode ? 'hover:bg-[#24303F]' : 'hover:bg-slate-50') : (darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-blue-50/30')}`}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' :
                                                         service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' :
@@ -4908,10 +4987,10 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
             {/* Modal de Nuevo Servicio */}
             {
                 showNewServiceModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                        <div className={`w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
-                            <div className="p-6 md:p-12">
-                                <div className="flex justify-between items-start md:items-center mb-8 md:mb-12 gap-4">
+                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-300">
+                        <div className={`w-full max-w-5xl rounded-t-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-300 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+                            <div className="p-6 md:p-12 max-h-[90vh] overflow-y-auto">
+                                <div className="flex justify-between items-start md:items-center mb-6 md:mb-12 gap-4">
                                     <div>
                                         <h2 className={`text-2xl md:text-4xl font-black tracking-tight mb-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Nuevo Servicio</h2>
                                         <p className={`text-sm md:text-lg font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona la categoría del servicio a registrar</p>
@@ -5776,15 +5855,16 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
     const isGlass = currentTheme === 'glass';
     const isDark = currentTheme === 'dark';
     const isMinimalista = pageStyle === 'Minimalista';
+    const isCCRoutes = pageStyle === 'CC Routes';
 
     const sidebarClasses = mobileMode
-        ? `fixed inset-y-0 left-0 z-50 w-64 ${!isMinimalista ? (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600') : (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-white border-r border-slate-200')} ${isGlass ? 'text-amber-900' : (isMinimalista ? (isDark ? 'text-slate-200' : 'text-slate-800') : 'text-white')} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
-        : `fixed inset-y-0 left-0 z-20 ${isMinimalista ? 'w-64' : 'w-72'} ${isGlass ? 'text-amber-900' : (isMinimalista ? (isDark ? 'text-slate-200' : 'text-slate-800') : 'text-white')} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : (isMinimalista ? (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-white border-r border-slate-200') : 'bg-transparent')} no-print`;
+        ? `fixed inset-y-0 left-0 z-50 w-64 ${isCCRoutes ? (isDark ? 'bg-[#1c2434] border-r border-slate-800' : 'bg-slate-50 border-r border-slate-200') : (!isMinimalista ? (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-600') : (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-white border-r border-slate-200'))} ${isGlass ? 'text-amber-900' : (isCCRoutes ? (isDark ? 'text-slate-300' : 'text-slate-800') : (isMinimalista ? (isDark ? 'text-slate-200' : 'text-slate-800') : 'text-white'))} transform transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'} no-print`
+        : `fixed inset-y-0 left-0 z-20 ${(isMinimalista || isCCRoutes) ? 'w-64' : 'w-72'} ${isGlass ? 'text-amber-900' : (isCCRoutes ? (isDark ? 'text-slate-300' : 'text-slate-800') : (isMinimalista ? (isDark ? 'text-slate-200' : 'text-slate-800') : 'text-white'))} flex flex-col hidden md:flex ${isGlass ? 'bg-white/30 backdrop-blur-2xl border-r border-orange-200/40 rounded-r-3xl' : (isCCRoutes ? (isDark ? 'bg-[#1c2434] border-r border-slate-800' : 'bg-slate-50 border-r border-slate-200') : (isMinimalista ? (isDark ? 'bg-slate-900 border-r border-slate-800' : 'bg-white border-r border-slate-200') : 'bg-transparent'))} no-print`;
 
-    const textMuted = isGlass ? 'text-amber-700/70' : (isMinimalista ? (isDark ? 'text-slate-400' : 'text-slate-400') : 'text-blue-200');
-    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : (isMinimalista ? (isDark ? 'hover:bg-slate-800/50 rounded-md transition-colors' : 'hover:bg-slate-100/50 rounded-md transition-colors') : 'hover:text-white hover:bg-white/10 rounded-xl');
-    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : (isMinimalista ? (isDark ? 'font-medium text-blue-400 bg-slate-800 rounded-md' : 'font-medium text-blue-600 bg-slate-100 rounded-md') : 'font-bold text-white bg-white/20 rounded-xl shadow-sm');
-    const inactiveClass = isGlass ? 'text-amber-800' : (isMinimalista ? (isDark ? 'text-slate-400' : 'text-slate-600') : 'text-blue-100');
+    const textMuted = isGlass ? 'text-amber-700/70' : (isCCRoutes ? (isDark ? 'text-slate-400' : 'text-slate-500') : (isMinimalista ? (isDark ? 'text-slate-400' : 'text-slate-400') : 'text-blue-200'));
+    const textHover = isGlass ? 'hover:text-amber-950 hover:bg-amber-900/10 rounded-lg' : (isCCRoutes ? (isDark ? 'hover:text-white hover:bg-[#24303F] transition-colors rounded-lg' : 'hover:text-blue-700 hover:bg-white border border-transparent hover:border-slate-200 transition-colors rounded-lg shadow-sm') : (isMinimalista ? (isDark ? 'hover:bg-slate-800/50 rounded-md transition-colors' : 'hover:bg-slate-100/50 rounded-md transition-colors') : 'hover:text-white hover:bg-white/10 rounded-xl'));
+    const activeClass = isGlass ? 'font-bold text-amber-950 bg-amber-900/20 rounded-lg shadow-sm' : (isCCRoutes ? 'font-medium text-white bg-blue-600 rounded-lg shadow-sm' : (isMinimalista ? (isDark ? 'font-medium text-blue-400 bg-slate-800 rounded-md' : 'font-medium text-blue-600 bg-slate-100 rounded-md') : 'font-bold text-white bg-white/20 rounded-xl shadow-sm'));
+    const inactiveClass = isGlass ? 'text-amber-800' : (isCCRoutes ? (isDark ? 'text-slate-400' : 'text-slate-600') : (isMinimalista ? (isDark ? 'text-slate-400' : 'text-slate-600') : 'text-blue-100'));
 
     return (
         <>
@@ -5794,11 +5874,19 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
             )}
 
             <div className={sidebarClasses}>
-                <div className="p-8 pb-4">
+                <div className="p-8 pb-4 relative">
+                    {mobileMode && (
+                        <button
+                            onClick={onClose}
+                            className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : (isMinimalista ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/20 text-white')}`}
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    )}
                     <div className="flex items-center gap-3 mb-1 relative">
                         {companyLogo ? (
-                            <div className="relative">
-                                <img src={companyLogo} alt="Company Logo" className="w-10 h-10 rounded-full object-cover" />
+                            <div className="relative shrink-0">
+                                <img src={companyLogo} alt="Company Logo" className="w-10 h-10 rounded-full object-cover shadow-md" />
                                 {isPremium && (
                                     <div className="absolute -top-1 -right-1 bg-yellow-400 text-slate-900 rounded-full p-0.5 shadow-lg border border-white">
                                         <Crown className="w-2.5 h-2.5 fill-current" />
@@ -5806,7 +5894,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 )}
                             </div>
                         ) : (
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm relative ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : (isMinimalista && isDark ? 'bg-slate-800 text-slate-200 shadow-sm border border-slate-700' : 'bg-white/20 text-white')}`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm relative shrink-0 ${isGlass ? 'bg-white/40 text-slate-800 shadow-sm' : (isMinimalista && isDark ? 'bg-slate-800 text-slate-200 shadow-sm border border-slate-700' : 'bg-white/20 text-white')}`}>
                                 <span className={`font-bold text-xl ${isMinimalista && !isDark && !isGlass ? 'text-slate-700' : ''}`}>{companyName?.[0] || 'C'}</span>
                                 {isPremium && (
                                     <div className="absolute -top-1 -right-1 bg-yellow-400 text-slate-900 rounded-full p-0.5 shadow-lg border border-white">
@@ -5815,7 +5903,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 )}
                             </div>
                         )}
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <h2 className="font-bold text-lg leading-tight truncate flex items-center gap-1.5">
                                 {companyName || 'Empresa'}
                             </h2>
@@ -7950,6 +8038,26 @@ const ReportsView = ({ darkMode, user, services = [] }) => {
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+const CCRoutesClock = ({ isDark }) => {
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div className={`${isDark ? 'bg-[#24303F] border-[#313D4A]' : 'bg-slate-50 border-slate-200'} border rounded-lg px-4 py-1.5 flex flex-col items-center justify-center min-w-[140px] shadow-sm`}>
+            <span className={`${isDark ? 'text-white' : 'text-slate-800'} text-[15px] font-bold tracking-wider leading-tight`}>
+                {time.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+            <span className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-[10px] font-semibold tracking-wide`}>
+                {time.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '')}
+            </span>
         </div>
     );
 };
@@ -10458,23 +10566,31 @@ const App = () => {
 
                 {/* Mobile Header */}
                 {mobileMode && (
-                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-md ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-blue-600 text-white border-blue-500'} no-print`}>
+                    <div className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b shadow-lg transition-colors ${isDark ? 'bg-[#1c2434] border-slate-700' : 'bg-blue-600 text-white border-blue-500'} no-print`}>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setSidebarOpen(true)}
-                                className={`p-2 -ml-2 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-blue-500 text-white'}`}
+                                className={`p-3 -ml-3 rounded-xl transition-all ${isDark ? 'hover:bg-slate-800 text-slate-200 bg-slate-800/40' : 'hover:bg-blue-500 text-white bg-white/10'}`}
                                 aria-label="Abrir Menú"
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
                             <div className="flex items-center gap-2">
-                                <span className="font-bold text-lg tracking-tight">SmartQuote</span>
+                                <span className="font-black text-xl tracking-tight italic">CotizaApp</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setTheme(isDark ? 'blue' : 'dark')} className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-blue-500 text-white'}`}>
+                                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            </button>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-inner ${isDark ? 'bg-slate-700 text-blue-400' : 'bg-white/20 text-white'}`}>
+                                {(session?.user?.email?.[0] || 'U').toUpperCase()}
                             </div>
                         </div>
                     </div>
                 )}
 
-                <main className={`flex-1 transition-all duration-300 md:p-8 p-3 ${mobileMode ? 'h-[calc(100vh-60px)]' : 'h-screen'} overflow-hidden ${mobileMode ? '' : (pageStyle === 'Minimalista' ? 'ml-64' : 'ml-72')} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
+                <main className={`flex-1 transition-all duration-300 ${pageStyle === 'CC Routes' ? 'p-0 md:p-0 bg-[#1A222C]' : 'md:p-8 p-3'} ${mobileMode ? 'h-[calc(100vh-60px)]' : 'h-screen'} overflow-hidden ${mobileMode ? '' : (pageStyle === 'Minimalista' || pageStyle === 'CC Routes' ? 'ml-64' : 'ml-72')} print:ml-0 print:p-0 print:h-auto print:overflow-visible`}>
                     {isTrialExpired() && activeTab !== 'suscripcion' ? (
                         <div className="w-full h-full flex items-center justify-center p-4">
                             <TrialExpiredView
@@ -10483,8 +10599,35 @@ const App = () => {
                             />
                         </div>
                     ) : (
-                        <div className={`w-full h-full ${pageStyle === 'Minimalista' ? 'flex flex-col' : 'md:rounded-[2.5rem] rounded-3xl shadow-2xl'} overflow-hidden ${pageStyle === 'Minimalista' ? 'bg-transparent' : (isDark ? 'bg-slate-800' : 'bg-white')} print:bg-white print:rounded-none print:shadow-none`}>
-                            <div ref={contentRef} className={`w-full h-full overflow-y-auto ${pageStyle === 'Minimalista' ? '' : 'md:px-8 px-4 md:py-10 py-6'} ${currentTheme === 'glass' && !isDark ? 'bg-orange-50/40 backdrop-blur-sm' : ''} print:p-0 print:h-auto print:overflow-visible`}>
+                        <div className={`w-full h-full ${(pageStyle === 'Minimalista' || pageStyle === 'CC Routes') ? 'flex flex-col' : 'md:rounded-[2.5rem] rounded-3xl shadow-2xl'} overflow-hidden ${pageStyle === 'Minimalista' ? 'bg-transparent' : (pageStyle === 'CC Routes' ? (isDark ? 'bg-[#1A222C]' : 'bg-slate-100') : (isDark ? 'bg-slate-800' : 'bg-white'))} print:bg-white print:rounded-none print:shadow-none`}>
+                            {pageStyle === 'CC Routes' && (
+                                <header className={`w-full h-16 ${isDark ? 'bg-[#1c2434] border-slate-800' : 'bg-white border-slate-200'} border-b flex items-center justify-between px-6 shrink-0 z-10 hidden md:flex`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`${isDark ? 'text-slate-300' : 'text-slate-700'} font-semibold tracking-wide`}>Panel Administrador</div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <CCRoutesClock isDark={isDark} />
+                                        <button onClick={() => setTheme(isDark ? 'blue' : 'dark')} className={`p-2 rounded-full ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'} transition-colors`}>
+                                            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                                        </button>
+                                        <button className={`p-2 rounded-full ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'} transition-colors relative`}>
+                                            <Bell className="w-5 h-5" />
+                                            <span className={`absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 ${isDark ? 'border-[#1c2434]' : 'border-white'}`}></span>
+                                        </button>
+                                        <div className={`flex items-center gap-3 pl-4 border-l ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                                            <div className="text-right hidden lg:block">
+                                                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'} leading-tight`}>{session?.user?.email?.split('@')[0] || 'Usuario'}</p>
+                                                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Administrador</p>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
+                                                {(session?.user?.email?.[0] || 'U').toUpperCase()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </header>
+                            )}
+                            <div ref={contentRef} className={`w-full h-full overflow-y-auto ${(pageStyle === 'Minimalista' || pageStyle === 'CC Routes') ? '' : 'md:px-8 px-4 md:py-10 py-6'} ${currentTheme === 'glass' && !isDark ? 'bg-orange-50/40 backdrop-blur-sm' : ''} print:p-0 print:h-auto print:overflow-visible relative`}>
+
 
                                 {activeTab === 'cotizaciones-list' && (
                                     <QuotationList
