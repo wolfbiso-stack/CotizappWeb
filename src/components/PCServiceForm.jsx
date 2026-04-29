@@ -243,22 +243,22 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             )}
             <div className={`w-full max-w-5xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Header */}
-                <div className={`px-8 py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20 text-white">
-                            <Monitor className="w-6 h-6" />
+                <div className={`px-4 md:px-8 py-3 md:py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <div className="p-2 md:p-3 bg-blue-600 rounded-xl md:rounded-2xl shadow-lg shadow-blue-500/20 text-white">
+                            <Monitor className="w-5 h-5 md:w-6 md:h-6" />
                         </div>
                         <div>
-                            <h2 className={`text-2xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                            <h2 className={`text-lg md:text-2xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
                                 {service ? 'Editar Servicio' : 'Nuevo Servicio'} <span className="text-blue-600">PC</span>
                             </h2>
-                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            <p className={`text-[10px] md:text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                                 {service ? `Orden: #${service.orden_numero}` : 'Complete los datos del equipo'}
                             </p>
                         </div>
                     </div>
                     <button onClick={onCancel} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}>
-                        <X className="w-6 h-6 text-slate-400" />
+                        <X className="w-5 h-5 md:w-6 md:h-6 text-slate-400" />
                     </button>
                 </div>
 
@@ -601,73 +601,75 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 </form>
 
                 {/* Footer / Totals */}
-                <div className={`p-8 border-t sticky bottom-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'bg-gray-50/90 border-slate-100'} backdrop-blur-md`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <div>
-                            <label className={labelClass}>Mano de Obra</label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    name="mano_obra"
-                                    value={formData.mano_obra}
-                                    onChange={handleNumberChange}
-                                    className={`${inputClass} pl-7 font-bold text-blue-600`}
-                                />
+                <div className={`px-4 py-4 md:p-8 border-t sticky bottom-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/95' : 'bg-gray-50/95 border-slate-100'} backdrop-blur-md`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                        <div className="grid grid-cols-2 md:block gap-4">
+                            <div>
+                                <label className={labelClass}>Mano de Obra</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        name="mano_obra"
+                                        value={formData.mano_obra}
+                                        onChange={handleNumberChange}
+                                        className={`${inputClass} pl-7 font-bold text-blue-600`}
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div>
-                            <label className={labelClass}>Anticipo</label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    name="anticipo"
-                                    value={formData.anticipo}
-                                    onChange={handleNumberChange}
-                                    className={`${inputClass} pl-7 font-bold text-rose-600`}
-                                />
+                            <div>
+                                <label className={labelClass}>Anticipo</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        name="anticipo"
+                                        value={formData.anticipo}
+                                        onChange={handleNumberChange}
+                                        className={`${inputClass} pl-7 font-bold text-rose-600`}
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         <div className="lg:col-span-2 flex flex-col justify-end">
-                            <div className={`flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl ${darkMode ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'} shadow-sm gap-4`}>
+                            <div className={`flex items-center justify-between p-3 md:p-4 rounded-2xl ${darkMode ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'} shadow-sm gap-4`}>
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Por Pagar</span>
                                         {formData.incluir_iva && <span className="bg-blue-100 text-blue-600 text-[8px] px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase">Con IVA</span>}
                                     </div>
                                     <div className="flex items-baseline gap-2">
-                                        <span className={`text-4xl font-black ${restante > 0 ? 'text-slate-800' : 'text-green-500'}`}>
+                                        <span className={`text-xl md:text-4xl font-black ${restante > 0 ? 'text-slate-800' : 'text-green-500'}`}>
                                             ${formatCurrency(restante)}
                                         </span>
-                                        <span className={`text-xs font-bold ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        <span className={`hidden sm:inline text-xs font-bold ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                                             Total: ${formatCurrency(currentTotal)}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 justify-end">
-                                        <span className={`text-[10px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>IVA 16%</span>
+                                <div className="flex flex-row items-center gap-3">
+                                    <div className="flex flex-col items-end gap-0.5">
+                                        <span className={`text-[9px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>IVA</span>
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, incluir_iva: !prev.incluir_iva }))}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${formData.incluir_iva ? 'bg-blue-600' : 'bg-slate-300'}`}
+                                            className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${formData.incluir_iva ? 'bg-blue-600' : 'bg-slate-300'}`}
                                         >
-                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${formData.incluir_iva ? 'translate-x-5' : 'translate-x-1'}`} />
+                                            <span className={`inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform ${formData.incluir_iva ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
                                     </div>
 
                                     <button
                                         type="button"
                                         onClick={handleSubmit}
-                                        className="btn bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 transform hover:-translate-y-0.5 px-8 py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3"
+                                        className="bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 px-4 md:px-8 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-xs md:text-sm transition-all flex items-center justify-center gap-2"
                                     >
-                                        <Save className="w-5 h-5" />
+                                        <Save className="w-4 h-4 md:w-5 md:h-5" />
                                         GUARDAR
                                     </button>
                                 </div>
