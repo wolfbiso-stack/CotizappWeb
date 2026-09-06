@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { getProgressFromStatus, STATUS_OPTIONS } from '../utils/statusMapper';
-import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock, Package } from 'lucide-react';
+import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock, Package, Image as ImageIcon, FileSearch, ClipboardCheck, X, Activity } from 'lucide-react';
 
 const PublicRepairTracking = () => {
     // Modified for Hash Routing compatibility
@@ -63,6 +63,8 @@ const PublicRepairTracking = () => {
     const [company, setCompany] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [photos, setPhotos] = useState([]);
+    const [selectedPhoto, setSelectedPhoto] = useState(null);
 
     useEffect(() => {
         if (token) {
@@ -124,6 +126,20 @@ const PublicRepairTracking = () => {
                     }
                 } catch (err) {
                     console.log('No company data available');
+                }
+
+                // Fetch photos
+                try {
+                    const { data: photosData, error: photosError } = await supabase
+                        .from('servicio_fotos')
+                        .select('uri')
+                        .eq('servicio_id', serviceData.id);
+                    
+                    if (photosData && !photosError) {
+                        setPhotos(photosData.map(p => p.uri));
+                    }
+                } catch (err) {
+                    console.log('Error fetching photos', err);
                 }
             }
         } catch (err) {
@@ -303,9 +319,9 @@ const PublicRepairTracking = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 mt-8 sm:mt-0">
-                    {/* Left Column (Details) - Spans 8 */}
-                    <div className="lg:col-span-8 space-y-4 sm:space-y-8 order-2 lg:order-1 pt-6 sm:pt-0">
+                <div className="mt-8 space-y-4 sm:space-y-8">
+                    {/* Main Details */}
+                    <div className="space-y-4 sm:space-y-8">
                         {/* Equipment Card */}
                         <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
                             <div className="bg-slate-50/50 px-8 py-5 border-b border-white/50 flex items-center justify-between">
@@ -418,46 +434,106 @@ const PublicRepairTracking = () => {
                             </div>
                         )}
 
+                        {/* Diagnostics & Work Done */}
+                        {(service.diagnostico || service.trabajo_realizado) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {service.diagnostico && (
+                                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-blue-100 overflow-hidden relative group">
+                                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-blue-400 group-hover:w-3 transition-all"></div>
+                                        <div className="p-8 pl-10">
+                                            <h3 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <FileSearch className="w-4 h-4" />
+                                                Diagnóstico Realizado
+                                            </h3>
+                                            <p className="text-slate-700 text-lg leading-relaxed font-medium">
+                                                {service.diagnostico}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {service.trabajo_realizado && (
+                                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-green-100 overflow-hidden relative group">
+                                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-green-400 group-hover:w-3 transition-all"></div>
+                                        <div className="p-8 pl-10">
+                                            <h3 className="text-sm font-bold text-green-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <ClipboardCheck className="w-4 h-4" />
+                                                Trabajo Realizado
+                                            </h3>
+                                            <div className="text-slate-700 text-lg leading-relaxed font-medium">
+                                                <ul className="list-disc pl-5 space-y-2 marker:text-green-500">
+                                                    {String(service.trabajo_realizado)
+                                                        .split(/[,.\n]+/)
+                                                        .filter(s => s.trim() !== '')
+                                                        .map((sentence, idx) => (
+                                                            <li key={idx}>
+                                                                {sentence.trim()}
+                                                            </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Photos Gallery */}
+                        {photos && photos.length > 0 && (
+                            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 overflow-hidden">
+                                <div className="bg-slate-50/50 px-8 py-5 border-b border-white/50 flex items-center">
+                                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
+                                        <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                                            <ImageIcon className="w-5 h-5" />
+                                        </div>
+                                        Evidencia Fotográfica
+                                    </h2>
+                                </div>
+                                <div className="p-8">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        {photos.map((uri, idx) => (
+                                            <div 
+                                                key={idx} 
+                                                className="aspect-square rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md hover:scale-105 transition-all border border-slate-200 bg-slate-100"
+                                                onClick={() => setSelectedPhoto(uri)}
+                                            >
+                                                <img src={uri} alt={`Evidencia ${idx + 1}`} className="w-full h-full object-cover" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Footer Info */}
                         <div className="text-center text-slate-400 text-sm font-medium pt-8 pb-12">
                             <p>Esta es una página pública de seguimiento. No requiere inicio de sesión.</p>
                             <p className="mt-2 text-xs opacity-60">© {new Date().getFullYear()} CotizApp - Sistema de Gestión</p>
                         </div>
                     </div>
-
-                    {/* Right Column (Cost) - Spans 4 */}
-                    <div className="lg:col-span-4 space-y-8 order-1 lg:order-2">
-                        {/* Cost Card (Glass Light) */}
-                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 relative overflow-hidden group hover:bg-white/90 transition-all duration-300">
-                            {/* Decorative Background Blob */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
-
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 text-slate-500 flex items-center gap-2">
-                                Costo Estimado
-                            </h3>
-                            <div className="flex items-baseline gap-1 mb-8 relative z-10">
-                                <span className="text-6xl font-black tracking-tight text-slate-800">${formatCurrency(service.total).split('.')[0]}</span>
-                                <span className="text-2xl font-bold text-slate-400">.{formatCurrency(service.total).split('.')[1]}</span>
-                            </div>
-
-                            {service.anticipo > 0 && (
-                                <div className="space-y-4 pt-6 border-t border-slate-100 relative z-10">
-                                    <div className="flex justify-between text-sm items-center">
-                                        <span className="text-slate-500 font-medium">Anticipo realizado</span>
-                                        <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">-${formatCurrency(service.anticipo)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-lg items-center pt-2">
-                                        <span className="font-bold text-slate-700">Restante por pagar</span>
-                                        <span className="font-black text-blue-600 text-xl">
-                                            ${formatCurrency((service.total || 0) - (service.anticipo || 0))}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
                 </div>
             </div>
+
+            {/* Photo Modal */}
+            {selectedPhoto && (
+                <div 
+                    className="fixed inset-0 z-[500] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300"
+                    onClick={() => setSelectedPhoto(null)}
+                >
+                    <button 
+                        onClick={() => setSelectedPhoto(null)}
+                        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                    <img 
+                        src={selectedPhoto} 
+                        alt="Evidencia Ampliada" 
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()} 
+                    />
+                </div>
+            )}
         </div>
     );
 };
