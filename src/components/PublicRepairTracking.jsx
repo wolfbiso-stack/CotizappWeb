@@ -209,6 +209,24 @@ const PublicRepairTracking = () => {
     const currentStatusIndex = STATUS_OPTIONS.findIndex(s => s.value === service.status?.toLowerCase());
     const displayStatuses = STATUS_OPTIONS.filter(s => s.value !== 'no_reparable').slice(0, 4);
 
+    const getFormattedList = (text) => {
+        if (!text) return [];
+        try {
+            if (typeof text === 'string' && text.trim().startsWith('[') && text.trim().endsWith(']')) {
+                const parsed = JSON.parse(text);
+                if (Array.isArray(parsed)) {
+                    return parsed.filter(s => typeof s === 'string' && s.trim() !== '').map(s => s.trim());
+                }
+            }
+        } catch (e) {
+            // Ignore parse errors
+        }
+        return String(text)
+            .split(/[,.\n]+/)
+            .filter(s => s.trim() !== '')
+            .map(s => s.trim());
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-slate-100 py-4 px-3 sm:py-8 sm:px-6 lg:px-8 font-sans text-slate-800 pb-20">
             {/* Main Container */}
@@ -429,7 +447,15 @@ const PublicRepairTracking = () => {
                                         <XCircle className="w-4 h-4" />
                                         Reporte de Falla
                                     </h3>
-                                    <p className="text-slate-700 text-lg leading-relaxed font-medium italic">"{service.problema_reportado}"</p>
+                                    <div className="text-slate-700 text-lg leading-relaxed font-medium">
+                                        <ul className="list-disc pl-5 space-y-2 marker:text-red-500">
+                                            {getFormattedList(service.problema_reportado).map((sentence, idx) => (
+                                                <li key={idx} className="italic">
+                                                    {sentence}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -445,9 +471,15 @@ const PublicRepairTracking = () => {
                                                 <FileSearch className="w-4 h-4" />
                                                 Diagnóstico Realizado
                                             </h3>
-                                            <p className="text-slate-700 text-lg leading-relaxed font-medium">
-                                                {service.diagnostico}
-                                            </p>
+                                            <div className="text-slate-700 text-lg leading-relaxed font-medium">
+                                                <ul className="list-disc pl-5 space-y-2 marker:text-blue-500">
+                                                    {getFormattedList(service.diagnostico).map((sentence, idx) => (
+                                                        <li key={idx}>
+                                                            {sentence}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -462,13 +494,10 @@ const PublicRepairTracking = () => {
                                             </h3>
                                             <div className="text-slate-700 text-lg leading-relaxed font-medium">
                                                 <ul className="list-disc pl-5 space-y-2 marker:text-green-500">
-                                                    {String(service.trabajo_realizado)
-                                                        .split(/[,.\n]+/)
-                                                        .filter(s => s.trim() !== '')
-                                                        .map((sentence, idx) => (
-                                                            <li key={idx}>
-                                                                {sentence.trim()}
-                                                            </li>
+                                                    {getFormattedList(service.trabajo_realizado).map((sentence, idx) => (
+                                                        <li key={idx}>
+                                                            {sentence}
+                                                        </li>
                                                     ))}
                                                 </ul>
                                             </div>
