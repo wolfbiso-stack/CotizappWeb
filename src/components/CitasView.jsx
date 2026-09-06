@@ -67,19 +67,19 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
     };
 
     // UI Helpers
-    const baseCard = `rounded-xl shadow-sm border p-6 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`;
-    const headClass = `text-left py-4 px-4 font-bold text-xs uppercase tracking-wider ${darkMode ? 'text-slate-400 border-slate-700' : 'text-slate-500 border-slate-100'}`;
-    const cellClass = `py-4 px-4 text-sm ${darkMode ? 'text-slate-300 border-slate-700/50' : 'text-slate-600 border-slate-50'}`;
-    const inputClass = `w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${darkMode ? 'bg-slate-900/50 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400'}`;
+    const baseCard = `rounded-[2rem] shadow-xl border overflow-hidden ${darkMode ? 'bg-slate-800/50 border-slate-700/50 backdrop-blur-sm' : 'bg-white border-slate-100'}`;
+    const headClass = `text-left py-5 px-6 text-[10px] font-black uppercase tracking-[0.2em] ${darkMode ? 'text-slate-500 border-slate-700' : 'text-slate-400 border-slate-100'}`;
+    const cellClass = `py-5 px-6 text-sm ${darkMode ? 'text-slate-300 border-slate-700/50' : 'text-slate-600 border-slate-50'}`;
+    const inputClass = `w-full px-5 py-3 rounded-2xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${darkMode ? 'bg-slate-900/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'}`;
 
     const renderStatusBadge = (status) => {
-        let colorClass = 'bg-slate-100 text-slate-600';
-        if (status === 'Pendiente') colorClass = 'bg-yellow-100 text-yellow-700';
-        if (status === 'Atendida') colorClass = 'bg-emerald-100 text-emerald-700';
-        if (status === 'Cancelada') colorClass = 'bg-red-100 text-red-700';
+        let style = 'bg-slate-100 text-slate-600 border-slate-200';
+        if (status === 'Pendiente') style = 'bg-amber-50 text-amber-600 border-amber-100';
+        if (status === 'Atendida') style = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+        if (status === 'Cancelada') style = 'bg-rose-50 text-rose-600 border-rose-100';
 
         return (
-            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${colorClass}`}>
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${style}`}>
                 {status || 'Desconocido'}
             </span>
         );
@@ -215,40 +215,48 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
 
     return (
         <div className="animate-in fade-in duration-300 space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex-1">
-                    <h2 className={`text-2xl font-black flex items-center gap-2 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                        <Calendar className="w-6 h-6 text-blue-500" />
-                        Gestión de Citas
-                    </h2>
-                    <p className={`text-sm mt-1 mb-4 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                        Administra tus visitas, mantenimientos y servicios programados
-                    </p>
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+                <div className="flex-1 w-full">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className={`p-3 rounded-2xl ${darkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                            <Calendar className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className={`text-3xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                                Gestión de Citas
+                            </h2>
+                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Administra tus visitas y servicios programados
+                            </p>
+                        </div>
+                    </div>
 
-                    <div className="relative w-full md:max-w-md">
-                        <Search className={`absolute left-3 top-3 w-5 h-5 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <div className="relative w-full max-w-xl mt-6">
+                        <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${darkMode ? 'text-slate-600' : 'text-slate-400'}`} />
                         <input
                             type="text"
                             placeholder="Buscar por folio, cliente o técnico..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`${inputClass} pl-10`}
+                            className={`${inputClass} pl-12 shadow-sm`}
                         />
                     </div>
                 </div>
                 <button
                     onClick={() => handleOpenForm()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-95 whitespace-nowrap"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 transition-all shadow-xl shadow-blue-600/20 hover:shadow-blue-600/30 active:scale-95 whitespace-nowrap"
                 >
-                    <Plus className="w-5 h-5" />
-                    Nueva Cita
+                    <Plus className="w-6 h-6" />
+                    <span>Nueva Cita</span>
                 </button>
+            </div>
+
             <div className={baseCard}>
                 {/* Desktop View */}
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b">
+                            <tr className={`${darkMode ? 'bg-slate-900/50' : 'bg-slate-50/50'}`}>
                                 <th className={headClass}>Folio</th>
                                 <th className={headClass}>Cliente</th>
                                 <th className={headClass}>Fecha y Hora</th>
@@ -257,39 +265,50 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                                 <th className={`${headClass} text-center`}>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                             {filteredCitas.map((cita) => (
-                                <tr key={cita.id} className="border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                <tr key={cita.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
                                     <td className={cellClass}>
-                                        <span className="font-bold text-blue-500">
+                                        <span className="font-black text-blue-600 dark:text-blue-400">
                                             {cita.folio}
                                         </span>
                                     </td>
                                     <td className={cellClass}>
-                                        <p className="font-bold">{cita.cliente_nombre}</p>
-                                        <p className="text-xs opacity-70 flex items-center gap-1"><Phone className="w-3 h-3" /> {cita.cliente_telefono || 'Sin Tel.'}</p>
+                                        <p className="font-bold text-slate-800 dark:text-white">{cita.cliente_nombre}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider"><Phone className="w-3 h-3" /> {cita.cliente_telefono || 'Sin Tel.'}</p>
                                     </td>
                                     <td className={cellClass}>
-                                        <p className="font-medium">{formatServiceDate(cita.fecha)}</p>
-                                        <p className="text-xs opacity-70 flex items-center gap-1"><Clock className="w-3 h-3" /> {cita.hora}</p>
+                                        <p className="font-bold text-slate-700 dark:text-slate-200">{formatServiceDate(cita.fecha)}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider"><Clock className="w-3 h-3 text-blue-500" /> {cita.hora}</p>
                                     </td>
-                                    <td className={cellClass}>{cita.tecnico_nombre || '-'}</td>
+                                    <td className={cellClass}>
+                                        {cita.tecnico_nombre ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[10px] font-bold">
+                                                    {cita.tecnico_nombre.charAt(0)}
+                                                </div>
+                                                <span className="font-medium">{cita.tecnico_nombre}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-slate-400 italic text-xs">No asignado</span>
+                                        )}
+                                    </td>
                                     <td className={cellClass}>{renderStatusBadge(cita.estatus)}</td>
-                                    <td className={`${cellClass} text-center`}>
-                                        <div className="flex flex-wrap items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleOpenForm(cita, true)} className="p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg text-blue-500 hover:shadow-sm" title="Ver Cita">
+                                    <td className={cellClass}>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button onClick={() => handleOpenForm(cita, true)} className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="Ver Cita">
                                                 <Eye className="w-4 h-4" />
                                             </button>
-                                            <button onClick={() => handleOpenForm(cita, false)} className="p-1.5 hover:bg-white dark:hover:bg-slate-900 rounded-lg text-slate-500 hover:shadow-sm" title="Editar Cita">
+                                            <button onClick={() => handleOpenForm(cita, false)} className="p-2 bg-slate-50 text-slate-600 dark:bg-slate-700/30 dark:text-slate-400 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm" title="Editar Cita">
                                                 <Edit2 className="w-4 h-4" />
                                             </button>
                                             {cita.estatus !== 'Atendida' && (
-                                                <button onClick={() => handleQuickStatusUpdate(cita.id, 'Atendida')} className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg text-emerald-500 hover:shadow-sm" title="Marcar como Atendida">
+                                                <button onClick={() => handleQuickStatusUpdate(cita.id, 'Atendida')} className="p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Marcar como Atendida">
                                                     <CheckCircle className="w-4 h-4" />
                                                 </button>
                                             )}
                                             {cita.estatus !== 'Cancelada' && (
-                                                <button onClick={() => handleQuickStatusUpdate(cita.id, 'Cancelada')} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-red-500 hover:shadow-sm" title="Marcar como Cancelada">
+                                                <button onClick={() => handleQuickStatusUpdate(cita.id, 'Cancelada')} className="p-2 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm" title="Marcar como Cancelada">
                                                     <XCircle className="w-4 h-4" />
                                                 </button>
                                             )}
@@ -302,10 +321,10 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                 </div>
 
                 {/* Mobile View */}
-                <div className="md:hidden space-y-4">
+                <div className="md:hidden space-y-4 px-4 pb-6">
                     {filteredCitas.map((cita) => (
-                        <div key={cita.id} className={`p-4 rounded-xl border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
-                            <div className="flex justify-between items-start mb-3">
+                        <div key={cita.id} className={`p-6 rounded-[2rem] border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700/50' : 'bg-white border-slate-100 shadow-sm'}`}>
+                            <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <span className="text-blue-500 font-bold text-xs">{cita.folio}</span>
                                     <h4 className={`font-bold text-base leading-tight mt-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>{cita.cliente_nombre}</h4>
@@ -361,7 +380,7 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                         <p className="font-medium">No hay citas registradas para mostrar.</p>
                     </div>
                 )}
-            </div>       </div>
+            </div>
 
             {/* Modal de Formulario */}
             {isFormOpen && (

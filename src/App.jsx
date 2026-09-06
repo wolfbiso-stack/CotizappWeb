@@ -10,6 +10,8 @@ import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
 import PCServiceReport from './components/PCServiceReport';
 import ServiceReceipt from './components/ServiceReceipt';
+import ServiceLabel from './components/ServiceLabel';
+import PrintQRModal from './components/PrintQRModal';
 import PCServiceForm from './components/PCServiceForm';
 import PrinterServiceForm from './components/PrinterServiceForm';
 import NetworkServiceForm from './components/NetworkServiceForm';
@@ -605,6 +607,22 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
     );
 };
 
+const ImageModal = ({ imageUrl, onClose }) => {
+    if (!imageUrl) return null;
+    return (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-sm transition-all" onClick={onClose}>
+            <div className="relative max-w-6xl w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={onClose}
+                    className="absolute top-0 right-0 md:-top-4 md:-right-4 bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-colors border border-white/10 z-10"
+                >
+                    <X className="w-6 h-6" />
+                </button>
+                <img src={imageUrl} alt="Vista ampliada" className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-300" />
+            </div>
+        </div>
+    );
+};
 
 const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selectedTemplate, onTemplateChange, pageStyle, onPageStyleChange }) => {
     const [activeSubTab, setActiveSubTab] = useState('company');
@@ -636,7 +654,8 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
         { id: 'classic', name: 'Clásica', description: 'Diseño limpio y tradicional.' },
         { id: 'modern', name: 'Moderna', description: 'Estilo audaz con encabezados llamativos.' },
         { id: 'formal', name: 'Formal', description: 'Elegante y corporativo, ideal para empresas serias.' },
-        { id: 'creative', name: 'Creativa', description: 'Toque de color y diseño único.' }
+        { id: 'creative', name: 'Creativa', description: 'Toque de color y diseño único.' },
+        { id: 'integral', name: 'Integral (Azul)', description: 'Diseño en 2 columnas, letras azules.' }
     ];
 
     return (
@@ -2221,6 +2240,156 @@ const TemplateCreative = ({ company, client, items, terms, folio, date, dueDate,
     </div>
 );
 
+const TemplateIntegral = ({ company, client, items, terms, folio, date, dueDate, subtotal, totalDiscount, totalTax, grandTotal, isPdf, formatCurrency }) => {
+    const midIndex = Math.ceil(items.length / 2);
+    const leftItems = items.slice(0, midIndex);
+    const rightItems = items.slice(midIndex);
+
+    return (
+        <div className="bg-white max-w-[900px] mx-auto text-gray-800 relative shadow-none font-sans" style={{ width: '900px', minHeight: isPdf ? 'auto' : '1100px' }}>
+            <div className="p-12 flex flex-col h-full">
+                {/* Header Section */}
+                <div className="flex justify-between items-start mb-6">
+                    <div className="w-1/3">
+                        {company.logo_uri ? (
+                            <img src={company.logo_uri} alt="Logo" className="max-w-full max-h-32 object-contain" />
+                        ) : (
+                            <div className="text-3xl font-black text-blue-600">
+                                {company.nombre || "EMPRESA"}
+                            </div>
+                        )}
+                    </div>
+                    <div className="w-2/3 text-right flex flex-col justify-end">
+                        <h1 className="text-3xl font-black text-blue-600 mb-2">{company.nombre || "NOMBRE DE EMPRESA"}</h1>
+                        <p className="text-sm font-bold text-gray-700">
+                            {company.encargado || company.nombre} {company.telefono ? `| ${company.telefono}` : ''}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">{company.direccion || "Dirección de la empresa"}</p>
+                    </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-1 w-full bg-blue-600 mb-10"></div>
+
+                {/* Client and Service Info */}
+                <div className="flex justify-between mb-10">
+                    <div className="w-1/2 pr-6">
+                        <h3 className="text-sm font-bold text-blue-600 uppercase mb-3">DATOS DEL CLIENTE</h3>
+                        <p className="font-bold text-gray-800 mb-1">{client.name}</p>
+                        {client.rfc && <p className="text-sm text-gray-600 mb-1">RFC: {client.rfc}</p>}
+                        <p className="text-sm text-gray-600 leading-relaxed">{client.address}</p>
+                    </div>
+                    <div className="w-1/2 pl-6 text-right">
+                        <h3 className="text-sm font-bold text-blue-600 uppercase mb-3">DETALLES DEL SERVICIO</h3>
+                        <p className="text-sm text-gray-600 mb-1">Fecha: {date} | Vence: {dueDate}</p>
+                        <p className="text-sm text-gray-600 mb-1">WhatsApp Cliente: {client.phone || 'N/A'}</p>
+                        <p className="text-sm font-bold text-gray-800 mt-2">Folio: #{folio}</p>
+                    </div>
+                </div>
+
+                {/* 2-Column Table */}
+                <div className="grid grid-cols-2 gap-6 mb-8 flex-1">
+                    {/* Left Table */}
+                    <div>
+                        <table className="w-full text-sm border-collapse">
+                            <thead>
+                                <tr className="bg-gray-900 text-white">
+                                    <th className="py-2 px-3 text-left text-xs font-bold uppercase tracking-wider">Descripción</th>
+                                    <th className="py-2 px-3 text-center text-xs font-bold uppercase tracking-wider w-16">Cant.</th>
+                                    <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wider w-24">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {leftItems.map((item, idx) => {
+                                    const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
+                                    return (
+                                        <tr key={idx}>
+                                            <td className="py-3 px-3 text-gray-700">
+                                                {item.desc}
+                                                {item.discount > 0 && <span className="block text-xs text-blue-500">Desc. {item.discount}%</span>}
+                                            </td>
+                                            <td className="py-3 px-3 text-center text-gray-700">{item.qty}</td>
+                                            <td className="py-3 px-3 text-right font-medium text-gray-800">${formatCurrency(total)}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Right Table */}
+                    <div>
+                        {rightItems.length > 0 && (
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-900 text-white">
+                                        <th className="py-2 px-3 text-left text-xs font-bold uppercase tracking-wider">Descripción</th>
+                                        <th className="py-2 px-3 text-center text-xs font-bold uppercase tracking-wider w-16">Cant.</th>
+                                        <th className="py-2 px-3 text-right text-xs font-bold uppercase tracking-wider w-24">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {rightItems.map((item, idx) => {
+                                        const total = (item.qty * item.price) - (item.qty * item.price * (item.discount || 0) / 100);
+                                        return (
+                                            <tr key={idx}>
+                                                <td className="py-3 px-3 text-gray-700">
+                                                    {item.desc}
+                                                    {item.discount > 0 && <span className="block text-xs text-blue-500">Desc. {item.discount}%</span>}
+                                                </td>
+                                                <td className="py-3 px-3 text-center text-gray-700">{item.qty}</td>
+                                                <td className="py-3 px-3 text-right font-medium text-gray-800">${formatCurrency(total)}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer Section */}
+                <div className="flex justify-between items-end mt-auto pt-8">
+                    <div className="w-1/2 pr-12">
+                        {terms && (
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Términos y Notas</h4>
+                                <p className="text-xs text-gray-500 whitespace-pre-line leading-relaxed">{terms}</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="w-1/2 pl-12">
+                        <div className="bg-gray-50/80 rounded-xl p-5 border border-gray-100">
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>Subtotal:</span>
+                                    <span className="font-medium text-gray-800">${formatCurrency(subtotal)}</span>
+                                </div>
+                                {totalDiscount > 0 && (
+                                    <div className="flex justify-between text-sm text-gray-600">
+                                        <span>Descuento:</span>
+                                        <span className="font-medium text-green-600">-${formatCurrency(totalDiscount)}</span>
+                                    </div>
+                                )}
+                                {totalTax > 0 && (
+                                    <div className="flex justify-between text-sm text-gray-600">
+                                        <span>IVA / Impuestos:</span>
+                                        <span className="font-medium text-gray-800">${formatCurrency(totalTax)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-base font-bold text-gray-800 border-t border-gray-200 pt-3 mt-3">
+                                    <span>Total:</span>
+                                    <span className="text-blue-600">${formatCurrency(grandTotal)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const PrintableNotaDeVenta = ({ service, company, darkMode }) => {
     if (!service) return null;
 
@@ -2464,6 +2633,7 @@ const PrintableQuotation = ({
         case 'modern': return <TemplateModern {...props} />;
         case 'formal': return <TemplateFormal {...props} />;
         case 'creative': return <TemplateCreative {...props} />;
+        case 'integral': return <TemplateIntegral {...props} />;
         case 'classic':
         default:
             return <TemplateClassic {...props} />;
@@ -2890,6 +3060,7 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         if (service?.id) fetchPhotos();
@@ -3190,7 +3361,7 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 <div key={photo.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-200 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500">
                                     <img src={photo.uri} alt={`Foto ${index + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                        <button onClick={() => window.open(photo.uri, '_blank')} className="w-full py-2 bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-white/40 transition-colors">
+                                        <button onClick={() => setSelectedImage(photo.uri)} className="w-full py-2 bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-white/40 transition-colors">
                                             Ver Imagen
                                         </button>
                                     </div>
@@ -3250,6 +3421,8 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     />
                 )
             }
+            {/* Image Modal */}
+            <ImageModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
         </div>
     );
 };
@@ -3792,6 +3965,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         if (service?.id) fetchPhotos();
@@ -4130,7 +4304,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     />
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                                         <button
-                                            onClick={() => window.open(photo.uri, '_blank')}
+                                            onClick={() => setSelectedImage(photo.uri)}
                                             className="bg-white text-slate-800 p-3 rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform"
                                         >
                                             <Eye className="w-5 h-5" />
@@ -4170,6 +4344,8 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     />
                 )
             }
+            {/* Image Modal */}
+            <ImageModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
         </div>
     );
 };
@@ -4195,6 +4371,10 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [selectedServiceForActions, setSelectedServiceForActions] = useState(null);
     const [showPCReport, setShowPCReport] = useState(false);
     const [selectedServiceForPCReport, setSelectedServiceForPCReport] = useState(null);
+    const [showServiceLabel, setShowServiceLabel] = useState(false);
+    const [selectedServiceForLabel, setSelectedServiceForLabel] = useState(null);
+    const [showPrintQRModal, setShowPrintQRModal] = useState(false);
+    const [selectedServiceForPrintQR, setSelectedServiceForPrintQR] = useState(null);
 
     const statusCards = [
         { id: 'Todas', label: 'Todas', filter: () => true },
@@ -5059,6 +5239,32 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 )
             }
 
+            {/* Service Label Modal */}
+            {showServiceLabel && selectedServiceForLabel && (
+                <ServiceLabel
+                    user={user}
+                    service={selectedServiceForLabel}
+                    company={company}
+                    onClose={() => {
+                        setShowServiceLabel(false);
+                        setSelectedServiceForLabel(null);
+                    }}
+                    darkMode={darkMode}
+                />
+            )}
+
+            {/* Print QR Modal */}
+            {showPrintQRModal && selectedServiceForPrintQR && (
+                <PrintQRModal
+                    service={selectedServiceForPrintQR}
+                    onClose={() => {
+                        setShowPrintQRModal(false);
+                        setSelectedServiceForPrintQR(null);
+                    }}
+                    darkMode={darkMode}
+                />
+            )}
+
             {/* Receipt Modal */}
             {
                 showReceipt && selectedServiceForReceipt && (
@@ -5117,6 +5323,20 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                             <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Ver Ticket QR</span>
                                         </button>
 
+                                        <button
+                                            onClick={() => {
+                                                setSelectedServiceForPrintQR(selectedServiceForActions);
+                                                setShowPrintQRModal(true);
+                                                setShowActionsModal(false);
+                                            }}
+                                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-blue-500 hover:bg-white'}`}
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                                                <QrCode className="w-5 h-5" />
+                                            </div>
+                                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Imprimir QR</span>
+                                        </button>
+
                                         {selectedServiceForActions.type === 'PC' && (
                                             <button
                                                 onClick={() => {
@@ -5148,6 +5368,20 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                         </button>
                                     </>
                                 )}
+
+                                <button
+                                    onClick={() => {
+                                        setSelectedServiceForLabel(selectedServiceForActions);
+                                        setShowServiceLabel(true);
+                                        setShowActionsModal(false);
+                                    }}
+                                    className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-purple-500 hover:bg-white'}`}
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Etiqueta Servicio</span>
+                                </button>
 
                                 <button
                                     onClick={() => {
@@ -5558,6 +5792,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         if (service?.id) fetchPhotos();
@@ -5634,173 +5869,222 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                 </div>
 
                 {/* Content Grid */}
-                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Info Cards Row */}
+                <div className="p-8 md:p-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left Column - 2 cols */}
+                    <div className="lg:col-span-2 space-y-6 text-left">
+
+                        {/* Cliente y Técnico */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 shadow-sm">
-                                <div className="flex items-center gap-3 mb-4 text-blue-600">
-                                    <User className="w-5 h-5" />
-                                    <h3 className="text-xs font-black uppercase tracking-widest">Información del Cliente</h3>
+                            {/* Cliente */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-blue-600">Cliente</h3>
                                 </div>
                                 <p className="text-xl font-bold text-slate-800 mb-1">{service.cliente_nombre}</p>
-                                <p className="text-sm font-medium text-slate-500">{service.cliente_telefono || "Sin teléfono"}</p>
+                                <p className="text-sm text-slate-500">{service.cliente_telefono || "Sin teléfono"}</p>
                             </div>
 
-                            <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 shadow-sm">
-                                <div className="flex items-center gap-3 mb-4 text-orange-600">
-                                    <User className="w-5 h-5" />
-                                    <h3 className="text-xs font-black uppercase tracking-widest">Atendido por</h3>
+                            {/* Técnico Responsable */}
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Users className="w-5 h-5 text-orange-600" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-orange-600">Técnico Responsable</h3>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-orange-600 text-white flex items-center justify-center font-black">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
                                         {service.tecnico_nombre ? service.tecnico_nombre.charAt(0) : 'T'}
                                     </div>
-                                    <p className="text-xl font-bold text-slate-800">{service.tecnico_nombre || "Público General"}</p>
+                                    <div>
+                                        <p className="text-lg font-bold text-slate-800">{service.tecnico_nombre || 'Sin asignar'}</p>
+                                        <p className="text-xs text-slate-500">Asignado al servicio</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Device Section */}
-                        <div className="p-8 rounded-3xl bg-slate-900 text-white shadow-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-10">
-                                <Smartphone className="w-32 h-32" />
+                        {/* Dispositivo */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-rose-50 to-white border border-rose-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Smartphone className="w-5 h-5 text-rose-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-600">Dispositivo</h3>
                             </div>
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-3 mb-6 text-rose-400">
-                                    <Smartphone className="w-5 h-5" />
-                                    <h3 className="text-xs font-black uppercase tracking-widest">Detalles del Dispositivo</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Modelo / Equipo</p>
+                                    <p className="text-base font-semibold text-slate-800">{service.equipo_modelo}</p>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">IMEI de Seguridad</p>
+                                    <p className="text-base font-mono text-slate-600 tracking-tight">{service.equipo_imei || "----------------"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Acceso / Pass</p>
+                                    <p className="text-sm font-bold bg-rose-100 text-rose-700 px-3 py-1 rounded-lg inline-block uppercase">{service.equipo_pass || "LIBRE"}</p>
+                                </div>
+                            </div>
+                            {service.estado_fisico && (
+                                <div className="mt-4 pt-4 border-t border-rose-100">
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Estado Físico Reportado</p>
+                                    <p className="text-sm italic text-slate-600">"{service.estado_fisico}"</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Informe Técnico */}
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-50 to-white border border-cyan-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Settings className="w-5 h-5 text-cyan-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Informe Técnico</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Problema Reportado */}
+                                {service.problema_reportado && (
                                     <div>
-                                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Modelo / Equipo</p>
-                                        <p className="text-xl font-bold">{service.equipo_modelo}</p>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Problema Reportado</p>
+                                        <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                                            {service.problema_reportado.split('\n').map((line, i) => (
+                                                line.trim() && (
+                                                    <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                        <Check className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                        <span className="text-sm text-red-800">{line}</span>
+                                                    </div>
+                                                )
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">IMEI de Seguridad</p>
-                                        <p className="text-xl font-mono font-bold tracking-tighter text-slate-300">{service.equipo_imei || "----------------"}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Acceso / Pass</p>
-                                        <p className="text-xl font-bold bg-white/10 px-3 py-1 rounded-lg inline-block">{service.equipo_pass || "LIBRE"}</p>
+                                )}
+
+                                {/* Trabajo Realizado */}
+                                <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Trabajo Realizado</p>
+                                    <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                                        {(service.trabajo_realizado || "Sin descripción de trabajo.").split('\n').map((line, i) => (
+                                            line.trim() && (
+                                                <div key={i} className="flex gap-2 items-start mb-1 last:mb-0">
+                                                    <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" strokeWidth={3} />
+                                                    <span className="text-sm text-green-800">{line}</span>
+                                                </div>
+                                            )
+                                        ))}
                                     </div>
                                 </div>
-                                {service.estado_fisico && (
-                                    <div className="mt-8 pt-6 border-t border-white/10">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado Físico Reportado</p>
-                                        <p className="text-sm italic text-slate-300">"{service.estado_fisico}"</p>
+
+                                {/* Repuestos */}
+                                {service.repuestos_descripcion && service.repuestos_descripcion !== '[]' && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Refacciones & Materiales</p>
+                                        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                            {(() => {
+                                                try {
+                                                    const p = JSON.parse(service.repuestos_descripcion);
+                                                    return (
+                                                        <div className="w-full">
+                                                            <div className="flex text-[10px] font-black uppercase text-slate-400 border-b border-slate-200 pb-2 mb-2">
+                                                                <div className="w-12 text-center">Cant</div>
+                                                                <div className="flex-1">Artículo</div>
+                                                                <div className="w-20 text-right">Precio</div>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                {p.map((item, idx) => (
+                                                                    <div key={idx} className="flex items-start text-sm py-1 border-b border-slate-100 last:border-0">
+                                                                        <div className="w-12 text-center text-slate-500 font-bold">{item.cantidad}</div>
+                                                                        <div className="flex-1 text-slate-700 font-bold">{item.producto || item.descripcion}</div>
+                                                                        <div className="w-20 text-right text-slate-900 font-mono font-bold">${formatCurrency(item.costoPublico || item.precio_publico)}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                } catch {
+                                                    return <p className="text-sm text-slate-700">{service.repuestos_descripcion}</p>;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Observaciones */}
+                                {service.observaciones && (
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Observaciones</p>
+                                        <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                                            <p className="text-sm text-amber-800 italic">"{service.observaciones}"</p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
-                        </div>
-
-                        {/* Analysis Section */}
-                        <div className="p-8 rounded-3xl border border-slate-100 bg-white shadow-sm space-y-8">
-                            <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2">
-                                    <Settings className="w-4 h-4" /> TRABAJO REALIZADO
-                                </h3>
-                                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
-                                    <p className="text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">{service.trabajo_realizado || "Sin descripción de trabajo."}</p>
-                                </div>
-                            </div>
-
-                            {service.repuestos_descripcion && service.repuestos_descripcion !== '[]' && (
-                                <div>
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2">
-                                        <ShoppingCart className="w-4 h-4" /> REFACCIONES UTILIZADAS
-                                    </h3>
-                                    <div className="overflow-hidden rounded-2xl border border-slate-100">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b border-slate-100">
-                                                <tr>
-                                                    <th className="px-5 py-3 text-center">Cant</th>
-                                                    <th className="px-5 py-3 text-left">Descripción del Componente</th>
-                                                    <th className="px-5 py-3 text-right">Precio</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-50">
-                                                {(() => {
-                                                    try {
-                                                        const p = JSON.parse(service.repuestos_descripcion);
-                                                        return p.map((item, idx) => (
-                                                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                                <td className="px-5 py-4 text-center font-bold text-slate-400">{item.cantidad}</td>
-                                                                <td className="px-5 py-4 font-bold text-slate-700">{item.producto || item.descripcion}</td>
-                                                                <td className="px-5 py-4 text-right font-mono font-bold text-slate-900">${formatCurrency(item.costoPublico || item.precio_publico)}</td>
-                                                            </tr>
-                                                        ));
-                                                    } catch { return null; }
-                                                })()}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
-                            {service.observaciones && (
-                                <div>
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">NOTAS ADICIONALES</h3>
-                                    <p className="text-sm italic text-slate-500">{service.observaciones}</p>
-                                </div>
-                            )}
                         </div>
                     </div>
 
                     {/* Financial Summary */}
-                    <div className="space-y-6">
-                        <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl sticky top-10">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-rose-400 mb-8 border-b border-white/10 pb-4">Resumen de Cuenta</h3>
+                    <div className="lg:col-span-1 space-y-6">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-rose-50 to-white border border-rose-100 sticky top-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <ShoppingCart className="w-5 h-5 text-rose-600" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-600">Resumen Financiero</h3>
+                            </div>
 
-                            <div className="space-y-4 mb-8">
+                            <div className="space-y-3 mb-6">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Servicio / M.O.</span>
-                                    <span className="font-bold">{formatMoney(service.mano_obra)}</span>
+                                    <span className="text-slate-600">Mano de Obra</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.mano_obra)}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Refacciones</span>
-                                    <span className="font-bold">{formatMoney(service.repuestos_costo)}</span>
+                                    <span className="text-slate-600">Refacciones</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.repuestos_costo)}</span>
                                 </div>
                                 {service.incluir_iva && (
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">IVA (16%)</span>
-                                        <span className="font-bold">{formatMoney(service.iva)}</span>
+                                        <span className="text-slate-600">IVA (16%)</span>
+                                        <span className="font-semibold text-slate-800">{formatMoney(service.iva)}</span>
                                     </div>
                                 )}
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-100">
+                                    <span className="text-slate-600">Subtotal</span>
+                                    <span className="font-semibold text-slate-800">{formatMoney(service.subtotal)}</span>
+                                </div>
                             </div>
 
-                            <div className="bg-white/5 p-6 rounded-3xl border border-white/10 mb-8">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400 mb-2 text-center">TOTAL NETO</p>
-                                <p className="text-5xl font-black text-center tracking-tighter text-white">
+                            <div className="border-t border-rose-200 pt-4 mb-6">
+                                <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-2 text-center">Total Neto</p>
+                                <p className="text-4xl font-black text-center text-rose-600 tracking-tighter">
                                     {formatMoney(service.total)}
                                 </p>
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Anticipo</span>
-                                    <span className="font-black text-emerald-400">-{formatMoney(service.anticipo)}</span>
+                            <div className="space-y-2 p-4 rounded-xl bg-white border border-rose-200 shadow-sm">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">Anticipo</span>
+                                    <span className="font-bold text-emerald-600">-{formatMoney(service.anticipo)}</span>
                                 </div>
-                                <div className="flex justify-between items-center p-4 rounded-2xl bg-rose-500 shadow-lg shadow-rose-500/20">
-                                    <span className="text-xs font-black text-rose-100 uppercase tracking-widest">POR LIQUIDAR</span>
-                                    <span className="text-2xl font-black text-white">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-rose-200">
+                                    <span className="text-slate-800 font-black uppercase text-[10px] tracking-widest">Pendiente</span>
+                                    <span className="text-xl font-black text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Mini Gallery */}
-                        <div className="p-6 rounded-3xl border border-slate-100 bg-white">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Evidencia ({photos.length})</h3>
+                        {/* Gallery Section */}
+                        <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Image className="w-5 h-5 text-rose-600" />
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Evidencia ({photos.length})</h3>
+                            </div>
                             {loadingPhotos ? (
-                                <Loader className="animate-spin w-5 h-5 text-slate-300 mx-auto" />
+                                <div className="flex justify-center p-4">
+                                    <Loader className="animate-spin w-6 h-6 text-slate-300" />
+                                </div>
                             ) : photos.length === 0 ? (
-                                <p className="text-xs text-center text-slate-300 italic py-4 font-medium">Sin fotografías adjuntas.</p>
+                                <p className="text-xs text-center text-slate-300 italic py-4">Sin fotografías adjuntas.</p>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                     {photos.map(p => (
-                                        <div key={p.id} className="aspect-square rounded-2xl overflow-hidden border border-slate-100 group relative">
-                                            <img src={p.uri} alt="evidencia" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                            <button onClick={() => window.open(p.uri, '_blank')} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div key={p.id} className="aspect-square rounded-xl overflow-hidden border border-slate-100 group relative cursor-pointer">
+                                            <img src={p.uri} alt="evidencia" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                            <button onClick={() => setSelectedImage(p.uri)} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                 <Eye className="w-5 h-5 text-white" />
                                             </button>
                                         </div>
@@ -5810,7 +6094,27 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                         </div>
                     </div>
                 </div>
+
+                {/* Firmas Section */}
+                {(service.firma_tecnico_path || service.firma_cliente_path) && (
+                    <div className="px-8 md:px-10 pb-8 grid grid-cols-2 gap-6">
+                        {service.firma_tecnico_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_tecnico_path} alt="Firma Técnico" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Firma del Técnico</p>
+                            </div>
+                        )}
+                        {service.firma_cliente_path && (
+                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center">
+                                <img src={service.firma_cliente_path} alt="Firma Cliente" className="h-16 object-contain mb-3 mix-blend-multiply" />
+                                <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Firma de Conformidad</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
+
+            <ImageModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
 
             {/* QR Ticket Modal */}
             {
@@ -6520,6 +6824,7 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         if (service?.id) fetchPhotos();
@@ -6869,7 +7174,7 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     {photos.map(p => (
                                         <div key={p.id} className="aspect-square rounded-2xl overflow-hidden border border-slate-100 group relative">
                                             <img src={p.uri} alt="evidencia" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                            <button onClick={() => window.open(p.uri, '_blank')} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button onClick={() => setSelectedImage(p.uri)} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                 <Eye className="w-5 h-5 text-white" />
                                             </button>
                                         </div>
@@ -6926,6 +7231,8 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     />
                 )
             }
+            {/* Image Modal */}
+            <ImageModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
         </div>
     );
 };
@@ -6950,6 +7257,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 
     const [photos, setPhotos] = useState([]);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         if (service?.id) fetchPhotos();
@@ -7192,7 +7500,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {photos.map((photo, index) => (
                                         <div key={index} className="aspect-square rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer">
-                                            <img src={photo.uri} alt="Evidencia" className="w-full h-full object-cover" onClick={() => window.open(photo.uri, '_blank')} />
+                                            <img src={photo.uri} alt="Evidencia" className="w-full h-full object-cover" onClick={() => setSelectedImage(photo.uri)} />
                                         </div>
                                     ))}
                                 </div>
@@ -7615,6 +7923,8 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                     />
                 )
             }
+            {/* Image Modal */}
+            <ImageModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
         </div>
     );
 };
