@@ -128,18 +128,23 @@ const PublicRepairTracking = () => {
                     console.log('No company data available');
                 }
 
-                // Fetch photos
-                try {
-                    const { data: photosData, error: photosError } = await supabase
-                        .from('servicio_fotos')
-                        .select('uri')
-                        .eq('servicio_id', serviceData.id);
-                    
-                    if (photosData && !photosError) {
-                        setPhotos(photosData.map(p => p.uri));
+                // Fetch photos - Now handled by the updated get_service_by_token RPC!
+                if (serviceData && serviceData.fotos_array) {
+                    setPhotos(serviceData.fotos_array);
+                } else {
+                    // Fallback in case they haven't run the SQL script yet
+                    try {
+                        const { data: photosData, error: photosError } = await supabase
+                            .from('servicio_fotos')
+                            .select('uri')
+                            .eq('servicio_id', serviceData.id);
+                        
+                        if (photosData && !photosError) {
+                            setPhotos(photosData.map(p => p.uri));
+                        }
+                    } catch (err) {
+                        console.log('Error fetching photos', err);
                     }
-                } catch (err) {
-                    console.log('Error fetching photos', err);
                 }
             }
         } catch (err) {
