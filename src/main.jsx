@@ -49,10 +49,37 @@ class ErrorBoundary extends React.Component {
     }
 }
 
+import PublicApp from './PublicApp.jsx';
+
+const hostname = window.location.hostname;
+const searchParams = new URLSearchParams(window.location.search);
+const hash = window.location.hash;
+const pathname = window.location.pathname;
+
+// Determine if we should show the App (Private Dashboard)
+let isAppRoute = false;
+
+if (searchParams.get('app') === 'true') {
+    isAppRoute = true;
+} else if (hostname.startsWith('app.')) {
+    isAppRoute = true;
+} else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    if (!hash.includes('#/track/') && !pathname.includes('/track/')) {
+        isAppRoute = true;
+    }
+} else if (hostname === 'wolfbiso-stack.github.io') {
+     // GitHub Pages fallback to app by default unless tracking
+     if (!hash.includes('#/track/')) {
+        isAppRoute = true;
+     }
+}
+
+const MainComponent = isAppRoute ? App : PublicApp;
+
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <ErrorBoundary>
-            <App />
+            <MainComponent />
         </ErrorBoundary>
     </React.StrictMode>,
 )

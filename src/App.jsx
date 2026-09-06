@@ -10789,19 +10789,7 @@ const App = () => {
     };
 
     // Check for public tracking route BEFORE auth check
-    // Check for public tracking route BEFORE auth check
-    // Modified for GitHub Pages Hash Routing compatibility
-    const urlHash = window.location.hash;
-    if (urlHash.includes('#/track/')) {
-        return <PublicRepairTracking />;
-    }
-
-    // Legacy support for direct paths (in case of local dev or different hosting)
-    const urlPath = window.location.pathname;
-    if (urlPath.includes('/track/')) {
-        return <PublicRepairTracking />;
-    }
-
+    // (Tracking is now handled by main.jsx routing to PublicApp)
     if (loadingAuth) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
     if (!session) return <Login currentTheme={currentTheme} setTheme={setTheme} />;
 
