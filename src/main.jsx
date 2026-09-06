@@ -59,19 +59,17 @@ const pathname = window.location.pathname;
 // Determine if we should show the App (Private Dashboard)
 let isAppRoute = false;
 
-if (searchParams.get('app') === 'true') {
+// If it's a tracking URL, it must ALWAYS go to PublicApp
+if (hash.includes('#/track/') || pathname.includes('/track/')) {
+    isAppRoute = false;
+} else if (searchParams.get('app') === 'true') {
     isAppRoute = true;
 } else if (hostname.startsWith('app.')) {
     isAppRoute = true;
 } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    if (!hash.includes('#/track/') && !pathname.includes('/track/')) {
-        isAppRoute = true;
-    }
+    isAppRoute = true;
 } else if (hostname === 'wolfbiso-stack.github.io') {
-     // GitHub Pages fallback to app by default unless tracking
-     if (!hash.includes('#/track/')) {
-        isAppRoute = true;
-     }
+    isAppRoute = true;
 }
 
 const MainComponent = isAppRoute ? App : PublicApp;
