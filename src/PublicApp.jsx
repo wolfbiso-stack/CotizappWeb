@@ -32,7 +32,7 @@ const PublicApp = () => {
                     {/* Logo (With white background since original logo has dark text) */}
                     <div className="mb-8 w-64 h-48 sm:w-80 sm:h-56 relative flex items-center justify-center bg-white rounded-2xl p-6 shadow-xl border border-slate-800">
                         <img 
-                            src="logo.png" 
+                            src="LogoEmpresa.png" 
                             alt="CUBI Servicios Logo" 
                             className="w-full h-full object-contain"
                         />
