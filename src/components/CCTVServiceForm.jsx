@@ -215,7 +215,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-200">
             {showQuoteSelector && (
                 <QuoteSelector
                     onSelect={handleQuoteSelect}
@@ -223,7 +223,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     darkMode={darkMode}
                 />
             )}
-            <div className={`w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <div className={`w-full md:w-[95vw] max-w-6xl h-[95vh] md:max-h-[90vh] md:h-auto flex flex-col rounded-t-[2rem] md:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Fixed Header */}
                 <div className={`px-4 md:px-8 py-3 md:py-6 flex justify-between items-center border-b ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
                     <div className="flex items-center gap-3 md:gap-4">
@@ -245,7 +245,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 </div>
 
                 {/* Scrollable Form */}
-                <form id="cctvForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+                <form id="cctvForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-8">
                     {/* Basic Info Section */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="col-span-2">
