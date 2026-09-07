@@ -9,6 +9,8 @@ import { supabase } from '../utils/supabase';
 import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
 import PCServiceReport from './components/PCServiceReport';
+
+
 import PhoneServiceReport from './components/PhoneServiceReport';
 import PrinterServiceReport from './components/PrinterServiceReport';
 import NetworkServiceReport from './components/NetworkServiceReport';
@@ -189,12 +191,12 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
     const [deletingId, setDeletingId] = useState(null);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [currentPage, setCurrentPage] = useState(1);
-    const [statusFilter, setStatusFilter] = useState('Todas');
+    const [statusFilter, setStatusFilter] = useState('Todías');
 
     const statusCards = [
-        { id: 'Todas', label: 'Todas', filter: () => true },
-        { id: 'Aceptadas', label: 'Aceptadas', filter: (q) => q.aceptada_rechazada?.toLowerCase() === 'aceptada' },
-        { id: 'Rechazadas', label: 'Rechazadas', filter: (q) => q.aceptada_rechazada?.toLowerCase() === 'rechazada' }
+        { id: 'Todías', label: 'Todías', filter: () => true },
+        { id: 'Aceptadías', label: 'Aceptadías', filter: (q) => q.aceptada_rechazada?.toLowerCase() === 'aceptada' },
+        { id: 'Rechazadías', label: 'Rechazadías', filter: (q) => q.aceptada_rechazada?.toLowerCase() === 'rechazada' }
     ];
 
     const handleDeleteClick = (id) => {
@@ -280,11 +282,11 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
 
                     if (isCCRoutes) {
                         const ccRoutesConfig = {
-                            'Todas': { subtitle: 'Todas las cotizaciones', icon: TrendingUp, bg: 'bg-[#334155]', activeBorder: 'border-slate-400', activeText: 'text-slate-300', topBorder: 'border-t-slate-500' },
-                            'Aceptadas': { subtitle: 'Cotizaciones aprobadas', icon: ThumbsUp, bg: 'bg-[#10b981]', activeBorder: 'border-[#10b981]', activeText: 'text-[#10b981]', topBorder: 'border-t-[#10b981]' },
-                            'Rechazadas': { subtitle: 'Cotizaciones declinadas', icon: ThumbsDown, bg: 'bg-[#ef4444]', activeBorder: 'border-[#ef4444]', activeText: 'text-[#ef4444]', topBorder: 'border-t-[#ef4444]' },
+                            'Todías': { subtitle: 'Todías las cotizaciones', icon: TrendingUp, bg: 'bg-[#334155]', activeBorder: 'border-slate-400', activeText: 'text-slate-300', topBorder: 'border-t-slate-500' },
+                            'Aceptadías': { subtitle: 'Cotizaciones aprobadías', icon: ThumbsUp, bg: 'bg-[#10b981]', activeBorder: 'border-[#10b981]', activeText: 'text-[#10b981]', topBorder: 'border-t-[#10b981]' },
+                            'Rechazadías': { subtitle: 'Cotizaciones declinadías', icon: ThumbsDown, bg: 'bg-[#ef4444]', activeBorder: 'border-[#ef4444]', activeText: 'text-[#ef4444]', topBorder: 'border-t-[#ef4444]' },
                         };
-                        const config = ccRoutesConfig[card.id] || ccRoutesConfig['Todas'];
+                        const config = ccRoutesConfig[card.id] || ccRoutesConfig['Todías'];
                         const IconComponent = config.icon;
 
                         return (
@@ -349,9 +351,9 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-slate-600 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
                         <FileText className="w-10 h-10" />
                     </div>
-                    <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>No hay cotizaciones guardadas</h3>
+                    <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-700'}`}>No hay cotizaciones guardadías</h3>
                     <p className={`max-w-md mx-auto mb-8 ${darkMode ? 'text-slate-300' : 'text-slate-500'}`}>
-                        Las cotizaciones que guardes aparecerán aquí para que puedas editarlas o volver a descargarlas.
+                        Las cotizaciones que guardes aparecerán aquí para que puedías editarlas o volver a descargarlas.
                     </p>
                     <button
                         onClick={onCreateNew}
@@ -518,7 +520,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                     />
                                 </div>
 
-                                <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
                                     <div>
                                         <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                                         <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -702,7 +704,7 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
                             <div className={`flex items-start gap-8 border-b pb-8 ${darkMode ? 'border-slate-700' : 'border-slate-100'}`}>
                                 <div className="w-32">
                                     <label className={`block text-sm font-bold mb-2 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>Logotipo</label>
-                                    <div className={`w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden relative group ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-500' : 'bg-slate-50 border-slate-300 text-slate-400'}`}>
+                                    <div className={`w-24 h-24 border-2 border-díashed rounded-lg flex items-center justify-center overflow-hidden relative group ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-500' : 'bg-slate-50 border-slate-300 text-slate-400'}`}>
                                         {previewUrl || companyData.logo_uri ? (
                                             <img src={previewUrl || companyData.logo_uri} className="w-full h-full object-contain" />
                                         ) : (
@@ -2962,7 +2964,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, onShowNotaVenta, user, 
                                         />
                                     </div>
 
-                                    <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
                                         <div>
                                             <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                                             <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -3203,14 +3205,14 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Monitor className="w-5 h-5 text-indigo-600" />
-                                    <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600">Cámaras Instaladas</h3>
+                                    <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600">Cámaras Instaladías</h3>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {service.tipos_camaras?.map((cam, idx) => (
                                         <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 uppercase">
                                             {cam}
                                         </span>
-                                    )) || <p className="text-sm text-slate-500 italic">No especificadas</p>}
+                                    )) || <p className="text-sm text-slate-500 italic">No especificadías</p>}
                                 </div>
                             </div>
                         </div>
@@ -3340,7 +3342,7 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
                                     <span className="font-bold text-blue-600">-{formatMoney(service.anticipo)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-díashed border-slate-300">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${service.pagado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                         {service.pagado ? 'Totalmente Pagado' : 'Pendiente de Pago'}
                                     </span>
@@ -3376,8 +3378,8 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
-                            <p className="text-slate-400 font-medium italic">No hay fotografías registradas para este servicio</p>
+                        <div className="text-center py-12 bg-white rounded-3xl border border-díashed border-slate-300">
+                            <p className="text-slate-400 font-medium italic">No hay fotografías registradías para este servicio</p>
                         </div>
                     )}
                 </div>
@@ -3864,7 +3866,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onSh
                                         />
                                     </div>
 
-                                    <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
                                         <div>
                                             <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                                             <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -4258,7 +4260,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
                                     <span className="font-bold text-blue-600">-{formatMoney(service.anticipo)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-díashed border-slate-300">
                                     <span className="text-slate-800 font-bold uppercase text-xs">Restante</span>
                                     <span className="font-bold text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
                                 </div>
@@ -4296,7 +4298,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                             <Loader className="animate-spin w-8 h-8 text-blue-500" />
                         </div>
                     ) : photos.length === 0 ? (
-                        <div className="p-12 rounded-xl border border-dashed border-slate-300 text-center text-slate-400">
+                        <div className="p-12 rounded-xl border border-díashed border-slate-300 text-center text-slate-400">
                             No se han adjuntado fotografías a este servicio.
                         </div>
                     ) : (
@@ -4372,7 +4374,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [currentPage, setCurrentPage] = useState(1);
-    const [statusFilter, setStatusFilter] = useState('Todas');
+    const [statusFilter, setStatusFilter] = useState('Todías');
     const [showActionsModal, setShowActionsModal] = useState(false);
     const [selectedServiceForActions, setSelectedServiceForActions] = useState(null);
     const [showTechnicalReport, setShowTechnicalReport] = useState(false);
@@ -4383,12 +4385,12 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [selectedServiceForPrintQR, setSelectedServiceForPrintQR] = useState(null);
 
     const statusCards = [
-        { id: 'Todas', label: 'Todas', filter: () => true },
+        { id: 'Todías', label: 'Todías', filter: () => true },
         { id: 'Pendientes', label: 'Pendientes', filter: (s) => !s.status || ['pendiente', 'recibido'].includes(s.status?.toLowerCase()) },
         { id: 'En Proceso', label: 'En Proceso', filter: (s) => ['diagnosticado', 'en_proceso', 'en_revision', 'en_reparacion'].includes(s.status?.toLowerCase()) },
         { id: 'P. de Entrega', label: 'P. de Entrega', filter: (s) => ['listo_para_entregar', 'listo', 'reparado'].includes(s.status?.toLowerCase()) },
-        { id: 'Completadas', label: 'Completadas', filter: (s) => ['entregado', 'completado', 'aceptada'].includes(s.status?.toLowerCase()) },
-        { id: 'Canceladas', label: 'Canceladas', filter: (s) => ['no_reparable', 'cancelado', 'rechazada'].includes(s.status?.toLowerCase()) }
+        { id: 'Completadías', label: 'Completadías', filter: (s) => ['entregado', 'completado', 'aceptada'].includes(s.status?.toLowerCase()) },
+        { id: 'Canceladías', label: 'Canceladías', filter: (s) => ['no_reparable', 'cancelado', 'rechazada'].includes(s.status?.toLowerCase()) }
     ];
 
     const serviceCategories = [
@@ -4679,12 +4681,12 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
 
                     if (isCCRoutes) {
                         const ccRoutesConfig = {
-                            'Todas': { subtitle: 'Todos los servicios e...', icon: TrendingUp, bg: 'bg-[#334155]', activeBorder: 'border-slate-400', activeText: 'text-slate-300', topBorder: 'border-t-slate-500' },
+                            'Todías': { subtitle: 'Todos los servicios e...', icon: TrendingUp, bg: 'bg-[#334155]', activeBorder: 'border-slate-400', activeText: 'text-slate-300', topBorder: 'border-t-slate-500' },
                             'Pendientes': { subtitle: 'Pendiente verificación', icon: Clock, bg: 'bg-[#f59e0b]', activeBorder: 'border-[#f59e0b]', activeText: 'text-[#f59e0b]', topBorder: 'border-t-[#f59e0b]' },
                             'En Proceso': { subtitle: 'Asignado a técnico', icon: ScrollText, bg: 'bg-[#3b82f6]', activeBorder: 'border-[#3b82f6]', activeText: 'text-[#3b82f6]', topBorder: 'border-t-[#3b82f6]' },
                             'P. de Entrega': { subtitle: 'Listo para entregar', icon: ArrowUpDown, bg: 'bg-[#10b981]', activeBorder: 'border-[#10b981]', activeText: 'text-[#10b981]', topBorder: 'border-t-[#10b981]' },
-                            'Canceladas': { subtitle: 'Servicios cancelados', icon: AlertTriangle, bg: 'bg-[#ef4444]', activeBorder: 'border-[#ef4444]', activeText: 'text-[#ef4444]', topBorder: 'border-t-[#ef4444]' },
-                            'Completadas': { subtitle: 'Servicios finalizados', icon: Zap, bg: 'bg-[#f97316]', activeBorder: 'border-[#f97316]', activeText: 'text-[#f97316]', topBorder: 'border-t-[#f97316]' },
+                            'Canceladías': { subtitle: 'Servicios cancelados', icon: AlertTriangle, bg: 'bg-[#ef4444]', activeBorder: 'border-[#ef4444]', activeText: 'text-[#ef4444]', topBorder: 'border-t-[#ef4444]' },
+                            'Completadías': { subtitle: 'Servicios finalizados', icon: Zap, bg: 'bg-[#f97316]', activeBorder: 'border-[#f97316]', activeText: 'text-[#f97316]', topBorder: 'border-t-[#f97316]' },
                         };
                         const config = ccRoutesConfig[card.id];
                         const IconComponent = config.icon;
@@ -4716,7 +4718,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                         <button
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
-                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : (card.id === 'Pendientes' && count > 0 ? 'border-l-4 border-l-yellow-500' : card.id === 'En Proceso' && count > 0 ? 'border-l-4 border-l-blue-500' : card.id === 'Completadas' && count > 0 ? 'border-l-4 border-l-green-500' : '')}` :
+                            className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : (card.id === 'Pendientes' && count > 0 ? 'border-l-4 border-l-yellow-500' : card.id === 'En Proceso' && count > 0 ? 'border-l-4 border-l-blue-500' : card.id === 'Completadías' && count > 0 ? 'border-l-4 border-l-green-500' : '')}` :
                                 `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
                                     ? (darkMode ? 'bg-blue-900/40 border-blue-500' : 'bg-blue-50 border-blue-500 scale-105')
                                     : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
@@ -5169,7 +5171,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                             key={category.id}
                                             onClick={() => handleServiceSelect(category)}
                                             className={`relative group p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-3 md:gap-4 ${!category.implemented
-                                                ? 'opacity-60 cursor-not-allowed border-dashed grayscale bg-slate-50 border-slate-200'
+                                                ? 'opacity-60 cursor-not-allowed border-díashed grayscale bg-slate-50 border-slate-200'
                                                 : darkMode
                                                     ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
                                                     : 'bg-white border-slate-100 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
@@ -5287,7 +5289,20 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                             </p>
 
                             <div className="w-full space-y-3 mb-8">
-                                {selectedServiceForActions.type !== 'CCTV' && selectedServiceForActions.type !== 'Redes' && (
+                                <button
+                                            onClick={() => {
+                                                setSelectedServiceForReport(selectedServiceForActions);
+                                                setShowTechnicalReport(true);
+                                                setShowActionsModal(false);
+                                            }}
+                                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-indigo-500 hover:bg-white'}`}
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Reporte Técnico</span>
+                                        </button>
+                                  {selectedServiceForActions.type !== 'CCTV' && selectedServiceForActions.type !== 'Redes' && (
                                     <>
                                         <button
                                             onClick={() => {
@@ -5317,19 +5332,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                             <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Imprimir QR</span>
                                         </button>
 
-                                                                                <button
-                                            onClick={() => {
-                                                setSelectedServiceForReport(selectedServiceForActions);
-                                                setShowTechnicalReport(true);
-                                                setShowActionsModal(false);
-                                            }}
-                                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-indigo-500 hover:bg-white'}`}
-                                        >
-                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                                <FileText className="w-5 h-5" />
-                                            </div>
-                                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Reporte TǸcnico</span>
-                                        </button>
+                                                                                
 
                                         <button
                                             onClick={() => {
@@ -5665,7 +5668,7 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, o
                                         />
                                     </div>
 
-                                    <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
                                         <div>
                                             <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                                             <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -6038,7 +6041,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">Anticipo</span>
                                     <span className="font-bold text-emerald-600">-{formatMoney(service.anticipo)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-rose-200">
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-díashed border-rose-200">
                                     <span className="text-slate-800 font-black uppercase text-[10px] tracking-widest">Pendiente</span>
                                     <span className="text-xl font-black text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
                                 </div>
@@ -6697,7 +6700,7 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                         />
                                     </div>
 
-                                    <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
                                         <div>
                                             <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                                             <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -7133,7 +7136,7 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
                                     <span className="font-bold text-purple-600">-{formatMoney(service.anticipo)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-díashed border-slate-300">
                                     <span className="text-slate-800 font-bold uppercase text-xs">Restante</span>
                                     <span className="font-bold text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
                                 </div>
@@ -7521,7 +7524,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                     <span className="text-slate-600 font-bold uppercase text-xs">Anticipo</span>
                                     <span className="font-bold text-cyan-600">-{formatMoney(service.anticipo)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm pt-2 border-t border-dashed border-slate-300">
+                                <div className="flex justify-between items-center text-sm pt-2 border-t border-díashed border-slate-300">
                                     <span className="text-slate-800 font-bold uppercase text-xs">Restante</span>
                                     <span className="font-bold text-rose-600">{formatMoney((service.total || 0) - (service.anticipo || 0))}</span>
                                 </div>
@@ -7820,7 +7823,7 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                                         />
                                     </div>
 
-                                    <div className="flex justify-between items-end border-t border-dashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
                                         <div>
                                             <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                                             <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -8053,7 +8056,7 @@ const ReportsView = ({ darkMode, user, services = [] }) => {
 
     // Simple Bar Chart Component
     const MiniBarChart = ({ data }) => {
-        if (!data || data.length === 0) return <div className="h-64 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+        if (!data || data.length === 0) return <div className="h-64 flex flex-col items-center justify-center text-slate-400 border-2 border-díashed border-slate-200 dark:border-slate-800 rounded-3xl">
             <BarChart2 className="w-10 h-10 mb-2 opacity-20" />
             <p className="font-bold text-sm">Sin datos para el período</p>
         </div>;
@@ -8113,7 +8116,7 @@ const ReportsView = ({ darkMode, user, services = [] }) => {
                         <div className="flex items-center gap-3">
                             <span className={`text-sm font-semibold px-3 py-1 rounded-full ${darkMode ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>PRO ANALYTICS</span>
                             <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
-                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Visualización de métricas avanzadas en tiempo real</p>
+                            <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Visualización de métricas avanzadías en tiempo real</p>
                         </div>
                     </div>
                 </div>
@@ -10475,7 +10478,7 @@ const App = () => {
                     <div className="bg-[#1e3a8a] md:p-10 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 print:bg-[#1e3a8a] print:text-white print:flex-row">
                         <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="relative group">
-                                <div className="bg-white/10 p-2 rounded border border-dashed border-white/30 hover:border-white transition cursor-pointer">
+                                <div className="bg-white/10 p-2 rounded border border-díashed border-white/30 hover:border-white transition cursor-pointer">
                                     {company?.logo_uri ? (
                                         <img src={company.logo_uri} alt="Logo" className="max-h-20 md:max-h-24 w-auto object-contain" />
                                     ) : (
@@ -10502,7 +10505,7 @@ const App = () => {
                             CONTRATO DE PRESTACIÓN DE SERVICIOS DE INSTALACIÓN DE SISTEMAS DE VIDEOVIGILANCIA (CCTV) que celebran por una parte <strong>{company?.nombre}</strong>, con domicilio en <strong>{company?.direccion}, {company?.ciudad}</strong>, a quien en lo sucesivo se le denominará “EL PRESTADOR”, y por la otra <span
                                 contentEditable
                                 suppressContentEditableWarning
-                                className="font-bold uppercase px-2 bg-green-500/10 border-b border-dashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
+                                className="font-bold uppercase px-2 bg-green-500/10 border-b border-díashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
                             >{clientName}</span>, a quien en lo sucesivo se le denominará “EL CLIENTE”, al tenor de las siguientes declaraciones y cláusulas:
                         </p>
 
@@ -10529,22 +10532,22 @@ const App = () => {
 
                                 <div className="space-y-6">
                                     <div className="bg-blue-50 md:p-5 p-4 rounded-lg border border-blue-100 print:bg-blue-50 print:border-blue-100">
-                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-green-500/10 px-1 border-b border-dashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
+                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-green-500/10 px-1 border-b border-díashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
                                         <ul className="list-disc ml-6 md:ml-8 mt-2">
-                                            <li>Anticipo de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-green-500/10 px-1 border-b border-dashed border-blue-500 outline-none">{advanceAmount}</span> al firmar el contrato.</li>
+                                            <li>Anticipo de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-green-500/10 px-1 border-b border-díashed border-blue-500 outline-none">{advanceAmount}</span> al firmar el contrato.</li>
                                             <li>Saldo restante al concluir la instalación.</li>
                                         </ul>
                                     </div>
 
                                     <div>
-                                        <p><strong>SEXTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{warrantyDays}</span> días sobre la instalación realizada.</p>
+                                        <p><strong>SEXTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-green-500/10 border-b border-díashed border-blue-500 outline-none">{warrantyDays}</span> días sobre la instalación realizada.</p>
                                     </div>
                                 </div>
                             </section>
 
                             <section className="mt-6 break-inside-avoid">
                                 <p className="mb-8">
-                                    Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-dashed border-blue-500 outline-none">{year}</span>.
+                                    Leído que fue el presente contrato y enteradías las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-díashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-díashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-green-500/10 border-b border-díashed border-blue-500 outline-none">{year}</span>.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 text-center mt-10">
@@ -10645,7 +10648,7 @@ const App = () => {
                     <div className="bg-[#1e3a8a] md:p-10 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 print:bg-[#1e3a8a] print:text-white print:flex-row">
                         <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="relative group">
-                                <div className="bg-white/10 p-2 rounded border border-dashed border-white/30 hover:border-white transition cursor-pointer">
+                                <div className="bg-white/10 p-2 rounded border border-díashed border-white/30 hover:border-white transition cursor-pointer">
                                     {company?.logo_uri ? (
                                         <img src={company.logo_uri} alt="Logo" className="max-h-20 md:max-h-24 w-auto object-contain" />
                                     ) : (
@@ -10673,7 +10676,7 @@ const App = () => {
                             CONTRATO DE PRESTACIÓN DE SERVICIOS DE ENSAMBLE, CONFIGURACIÓN Y OPTIMIZACIÓN DE EQUIPO DE CÓMPUTO que celebran por una parte <strong>{company?.nombre}</strong>, con domicilio en <strong>{company?.direccion}, {company?.ciudad}</strong>, a quien en lo sucesivo se le denominará “EL PRESTADOR”, y por la otra <span
                                 contentEditable
                                 suppressContentEditableWarning
-                                className="font-bold uppercase px-2 bg-slate-200/50 border-b border-dashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
+                                className="font-bold uppercase px-2 bg-slate-200/50 border-b border-díashed border-blue-500 outline-none focus:bg-blue-50 transition-colors"
                             >{clientName}</span>, a quien en lo sucesivo se le denominará “EL CLIENTE”, al tenor de las siguientes declaraciones y cláusulas:
                         </p>
 
@@ -10684,7 +10687,7 @@ const App = () => {
                                     <p><strong>I. Declara EL PRESTADOR que:</strong></p>
                                     <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Se dedica al ensamble, configuración, diagnóstico y optimización de hardware de cómputo de alto rendimiento.</li>
-                                        <li>Cuenta con los conocimientos técnicos en arquitectura de hardware y herramientas especializadas.</li>
+                                        <li>Cuenta con los conocimientos técnicos en arquitectura de hardware y herramientas especializadías.</li>
                                     </ul>
 
                                     <p><strong>II. Declara EL CLIENTE que:</strong></p>
@@ -10700,22 +10703,22 @@ const App = () => {
 
                                 <div className="space-y-6">
                                     <div className="bg-blue-50 md:p-5 p-4 rounded-lg border border-blue-100 print:bg-blue-50 print:border-blue-100">
-                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-slate-200/50 px-1 border-b border-dashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
+                                        <p><strong>TERCERA. PRECIO Y FORMA DE PAGO.</strong> EL CLIENTE se obliga a pagar la cantidad de <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold tracking-wider italic text-blue-700 underline uppercase bg-slate-200/50 px-1 border-b border-díashed border-blue-500 outline-none">{totalAmount}</span> MXN, de la siguiente forma:</p>
                                         <ul className="list-disc ml-6 md:ml-8 mt-2">
-                                            <li>Anticipo por servicio: <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-slate-200/50 px-1 border-b border-dashed border-blue-500 outline-none">{advanceAmount}</span>.</li>
+                                            <li>Anticipo por servicio: <span className="font-bold">$</span><span contentEditable suppressContentEditableWarning className="font-bold italic text-blue-700 underline uppercase bg-slate-200/50 px-1 border-b border-díashed border-blue-500 outline-none">{advanceAmount}</span>.</li>
                                             <li>Saldo restante: Al concluir el ensamble y pruebas.</li>
                                         </ul>
                                     </div>
 
                                     <div>
-                                        <p><strong>QUINTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{warrantyDays}</span> días sobre el ensamble.</p>
+                                        <p><strong>QUINTA. GARANTÍA.</strong> EL PRESTADOR otorga una garantía de <span contentEditable suppressContentEditableWarning className="font-bold px-2 italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-díashed border-blue-500 outline-none">{warrantyDays}</span> días sobre el ensamble.</p>
                                     </div>
                                 </div>
                             </section>
 
                             <section className="mt-6 break-inside-avoid">
                                 <p className="mb-6">
-                                    Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-dashed border-blue-500 outline-none">{year}</span>.
+                                    Leído que fue el presente contrato y enteradías las partes de su contenido y alcance legal, lo firman por duplicado en {company?.ciudad}, a <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-díashed border-blue-500 outline-none">{day}</span> de <span contentEditable suppressContentEditableWarning className="px-2 font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-díashed border-blue-500 outline-none">{month}</span> de 20<span contentEditable suppressContentEditableWarning className="font-semibold italic text-blue-700 underline uppercase bg-slate-200/50 border-b border-díashed border-blue-500 outline-none">{year}</span>.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 text-center mt-10">

@@ -454,7 +454,7 @@ const PhoneServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             ))}
 
                             {/* Upload Button */}
-                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-blue-400 group">
+                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-díashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-blue-400 group">
                                 <Image className="w-8 h-8 text-slate-300 group-hover:text-blue-400 mb-2" />
                                 <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-blue-500">Subir Foto</span>
                                 <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />

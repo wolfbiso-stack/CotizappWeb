@@ -448,7 +448,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             ))}
 
                             {files.map((file, index) => (
-                                <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-blue-500 border-dashed bg-blue-50/30 flex items-center justify-center">
+                                <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-blue-500 border-díashed bg-blue-50/30 flex items-center justify-center">
                                     <span className="text-[10px] font-bold text-blue-600 text-center px-2 truncate w-full">{file.name}</span>
                                     <button
                                         type="button"
@@ -460,7 +460,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 </div>
                             ))}
 
-                            <label className={`aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${darkMode ? 'border-slate-700 hover:border-indigo-500 hover:bg-indigo-500/5' : 'border-slate-200 hover:border-indigo-500 hover:bg-indigo-50'} `}>
+                            <label className={`aspect-square rounded-2xl border-2 border-díashed flex flex-col items-center justify-center cursor-pointer transition-all ${darkMode ? 'border-slate-700 hover:border-indigo-500 hover:bg-indigo-500/5' : 'border-slate-200 hover:border-indigo-500 hover:bg-indigo-50'} `}>
                                 <Plus className="w-8 h-8 text-slate-400 mb-2" />
                                 <span className="text-[10px] font-black uppercase text-slate-400">Subir Fotos</span>
                                 <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />

@@ -271,7 +271,7 @@ const QRServiceTicket = ({ service, user, company: companyProp, onClose, darkMod
 
                                     <div>
                                         <p className="text-gray-400 text-xs font-medium mb-1">Observaciones de Recepción</p>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50 min-h-[60px]">
+                                        <div className="border-2 border-díashed border-gray-300 rounded-lg p-3 bg-gray-50 min-h-[60px]">
                                             <p className="text-gray-600 text-xs leading-relaxed">
                                                 {service.observaciones || service.comentarios || 'Sin observaciones adicionales.'}
                                             </p>
@@ -293,7 +293,7 @@ const QRServiceTicket = ({ service, user, company: companyProp, onClose, darkMod
                                 </div>
 
                                 {/* Footer Terms */}
-                                <div className="border-t border-dashed border-gray-200 pt-4">
+                                <div className="border-t border-díashed border-gray-200 pt-4">
                                     <p className="text-[9px] text-gray-400 text-justify leading-tight">
                                         <span className="font-bold text-gray-500">Términos y Condiciones:</span> Después de 30 días naturales a partir de la fecha de recepción, no nos hacemos responsables por equipos olvidados, pudiendo estos ser desechados o vendidos para recuperar costos de mano de obra y/o materiales. No hay garantía en software ni virus.
                                     </p>

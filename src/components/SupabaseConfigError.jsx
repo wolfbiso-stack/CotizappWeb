@@ -40,7 +40,7 @@ const SupabaseConfigError = () => {
                                     </div>
                                 </div>
                             </li>
-                            <li>Una vez agregadas, ve a la pestaña <strong>Actions</strong> y re-ejecuta el último workflow fallido o haz un nuevo commit.</li>
+                            <li>Una vez agregadías, ve a la pestaña <strong>Actions</strong> y re-ejecuta el último workflow fallido o haz un nuevo commit.</li>
                         </ol>
                     </div>
 

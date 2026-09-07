@@ -213,11 +213,11 @@ const NetworkServiceReport = ({ service, user, company: companyProp, onClose, da
                 <div className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-10 min-h-0 flex flex-col items-center">
                     <div className="relative w-full max-w-4xl flex justify-center py-4">
                         {/* Visual Page Break Indicators - Carta (1056px) - NO PRINT / NO CAPTURE */}
-                        <div className="absolute left-0 right-0 top-[1056px] border-b-2 border-dashed border-red-400 z-[60] no-print flex justify-end pointer-events-none">
+                        <div className="absolute left-0 right-0 top-[1056px] border-b-2 border-díashed border-red-400 z-[60] no-print flex justify-end pointer-events-none">
                             <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 font-bold rounded-l-md uppercase shadow-sm">Fin Hoja 1 (Carta)</span>
                         </div>
 
-                        <div className="absolute left-0 right-0 top-[2112px] border-b-2 border-dashed border-red-400 z-[60] no-print flex justify-end pointer-events-none">
+                        <div className="absolute left-0 right-0 top-[2112px] border-b-2 border-díashed border-red-400 z-[60] no-print flex justify-end pointer-events-none">
                             <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 font-bold rounded-l-md uppercase shadow-sm">Fin Hoja 2 (Carta)</span>
                         </div>
 
@@ -299,9 +299,21 @@ const NetworkServiceReport = ({ service, user, company: companyProp, onClose, da
                                               <span className="text-sm text-gray-500 block">Equipos Involucrados</span>
                                               <strong className="text-gray-900">{service.equipos_involucrados || 'N/A'}</strong>
                                           </div>
+                                          <div>
+                                              <span className="text-sm text-gray-500 block">Red WiFi (SSID)</span>
+                                              <strong className="text-gray-900">{service.wifi_ssid || 'N/A'}</strong>
+                                          </div>
+                                          <div>
+                                              <span className="text-sm text-gray-500 block">Contraseña WiFi</span>
+                                              <strong className="text-gray-900 font-mono tracking-wider bg-yellow-100 px-2 py-0.5 rounded">{service.wifi_password || 'N/A'}</strong>
+                                          </div>
+                                          <div>
+                                              <span className="text-sm text-gray-500 block">IP / Puerta de Enlace</span>
+                                              <strong className="text-gray-900">{service.wifi_gateway_ip || 'N/A'}</strong>
+                                          </div>
                                           <div className="col-span-2 md:col-span-3">
-                                              <span className="text-sm text-gray-500 block">Configuración IP / Credenciales</span>
-                                              <strong className="text-gray-900">{service.config_ip || 'N/A'}</strong>
+                                              <span className="text-sm text-gray-500 block">Contraseña Portal / Admin</span>
+                                              <strong className="text-gray-900 font-mono tracking-wider bg-yellow-100 px-2 py-0.5 rounded">{service.wifi_portal_password || 'N/A'}</strong>
                                           </div>
                                       </div>
                                   </section>

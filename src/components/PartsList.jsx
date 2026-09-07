@@ -51,14 +51,14 @@ export default function PartsList({ parts, setParts, darkMode, setShowQuoteSelec
                     </div>
                     <div>
                         <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>Repuestos y Materiales</h3>
-                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Desglose de refacciones utilizadas</p>
+                        <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Desglose de refacciones utilizadías</p>
                     </div>
                 </div>
             </div>
 
             <div className="space-y-3 mb-6">
                 {parts.length === 0 ? (
-                    <div className={`text-center py-8 rounded-2xl border border-dashed ${darkMode ? 'border-slate-700 text-slate-500' : 'border-slate-300 text-slate-400'}`}>
+                    <div className={`text-center py-8 rounded-2xl border border-díashed ${darkMode ? 'border-slate-700 text-slate-500' : 'border-slate-300 text-slate-400'}`}>
                         <ShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">No se han agregado repuestos</p>
                     </div>

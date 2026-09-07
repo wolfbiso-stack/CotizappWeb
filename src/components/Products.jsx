@@ -379,7 +379,7 @@ const Products = ({ darkMode, user, products: sharedProducts, onRefresh }) => {
                                 {/* Image Upload */}
                                 <div className="flex justify-center mb-6">
                                     <div className="relative group cursor-pointer">
-                                        <div className={`w-32 h-32 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all ${darkMode ? 'border-slate-600 bg-slate-700/50' : 'border-slate-300 bg-slate-50'} ${imagePreview ? 'border-solid border-blue-500' : ''}`}>
+                                        <div className={`w-32 h-32 rounded-2xl border-2 border-díashed flex items-center justify-center overflow-hidden transition-all ${darkMode ? 'border-slate-600 bg-slate-700/50' : 'border-slate-300 bg-slate-50'} ${imagePreview ? 'border-solid border-blue-500' : ''}`}>
                                             {imagePreview ? (
                                                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                             ) : (
