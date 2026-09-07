@@ -1211,7 +1211,7 @@ const ClientsList = ({ onCreateNew, darkMode, clients: sharedClients, onRefresh,
                     </button>
                 </div>
             ) : (
-                <div className={`rounded-xl shadow-lg border min-h-[500px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <div className={`md:rounded-xl md:shadow-lg md:border min-h-[500px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                     {/* List Header */}
                     <div className={`grid grid-cols-12 gap-4 p-4 border-b text-xs font-bold uppercase tracking-widest hidden md:grid ${darkMode ? 'bg-slate-600/50 border-slate-500 text-slate-200' : 'bg-gray-50/50 border-slate-100 text-slate-500'}`}>
                         <div
@@ -2823,7 +2823,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, onShowNotaVenta, user, 
                 </button>
             </div>
 
-            <div className={`rounded-xl shadow-lg border min-h-[500px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`md:rounded-xl md:shadow-lg md:border min-h-[500px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de CCTV registrados.
@@ -2938,7 +2938,7 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, onShowNotaVenta, user, 
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-4 p-4">
+                        <div className="md:hidden flex flex-col gap-4">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-cctv-${service.servicio_numero}`}
@@ -3533,7 +3533,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     const displayColor = currentStatus ? currentStatus.color : 'gray';
 
     return (
-        <div className="relative inline-block w-full min-w-[140px]" ref={dropdownRef}>
+        <div className={`relative inline-block w-full min-w-[140px] ${isOpen ? 'z-[100]' : 'z-10'}`} ref={dropdownRef}>
             <button
                 onClick={() => {
                     if (!isOpen && dropdownRef.current) {
@@ -3726,7 +3726,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onSh
                 </div>
             </div>
 
-            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`md:rounded-xl md:shadow-lg md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de PC registrados.
@@ -3841,7 +3841,7 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onSh
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-pc-${service.id}`}
@@ -4766,7 +4766,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 </div>
             </div>
 
-            <div className={isMinimalista ? `rounded-xl border overflow-hidden shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}` : (isCCRoutes ? `rounded-sm border-none overflow-hidden shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'bg-[#1c2434]' : 'bg-slate-50 border border-slate-200'}` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] flex flex-col ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`)}>
+            <div className={isMinimalista ? `md:rounded-xl md:border overflow-hidden md:shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-200'}` : (isCCRoutes ? `md:rounded-sm border-none overflow-hidden md:shadow-sm min-h-[600px] flex flex-col ${darkMode ? 'md:bg-[#1c2434]' : 'md:bg-slate-50 md:border md:border-slate-200'}` : `md:rounded-[2rem] md:shadow-2xl md:border min-h-[600px] flex flex-col ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`)}>
                 {loading && !refreshing ? (
                     <div className="p-20 flex flex-col items-center justify-center gap-4">
                         <Loader className="w-10 h-10 animate-spin text-blue-600" />
@@ -5032,7 +5032,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 pb-24">
                             {paginatedServices.map((service) => {
                                     const isExpanded = expandedMobileCards[service.id || service.folio];
                                     return (
@@ -5567,7 +5567,7 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, o
                 </div>
             </div>
 
-            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`md:rounded-xl md:shadow-lg md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de celulares registrados.
@@ -5684,7 +5684,7 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, o
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-phone-${service.id}`}
@@ -6600,7 +6600,7 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                 </div>
             </div>
 
-            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`md:rounded-xl md:shadow-lg md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de Impresoras registrados.
@@ -6716,7 +6716,7 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-printer-${service.id}`}
@@ -7731,7 +7731,7 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                 </div>
             </div>
 
-            <div className={`rounded-xl shadow-lg border min-h-[600px] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`md:rounded-xl md:shadow-lg md:border min-h-[600px] ${darkMode ? 'md:bg-slate-800 md:border-slate-700' : 'md:bg-white md:border-slate-100'}`}>
                 {services.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         No hay servicios de Redes registrados.
@@ -7839,7 +7839,7 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-network-${service.id}`}
