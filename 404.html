@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redireccionando...</title>
+    <script>
+        // Store the original path and redirect to the root with hash
+        // e.g. /CotizappWeb/track/123 -> /CotizappWeb/#/track/123
+        var path = window.location.pathname;
+        var appBase = '/CotizappWeb'; // Default base
+        
+        // Detect base dynamically if possible, or fallback
+        // Since we know the repo name is CotizappWeb, this is safe.
+        // If we want to be generic:
+        // var segments = path.split('/').filter(Boolean);
+        // var repoName = segments[0]; 
+
+        // Redirect logic
+        // If path starts with base, strip it to getting the route
+        if (path.startsWith(appBase)) {
+            var route = path.substring(appBase.length);
+            if (route && route !== '/') {
+                 window.location.replace(appBase + '/#' + route + window.location.search);
+            } else {
+                 // Already at root
+                 window.location.replace(appBase + '/');
+            }
+        } else {
+            // Unexpected, just redirect to base
+            window.location.replace(appBase + '/');
+        }
+    </script>
+</head>
+<body>
+    <p>Redireccionando a la aplicación...</p>
+</body>
+</html>
