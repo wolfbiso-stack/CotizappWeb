@@ -3094,17 +3094,17 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                 {/* Header Section */}
                 <div className="p-8 bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-start gap-3 sm:gap-5 flex-col sm:flex-row w-full sm:w-auto">
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-blue-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-start gap-4">
+                            <div className="flex flex-col sm:flex-row items-start gap-4 w-full">
                                 {company?.logo_uri ? (
                                     <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
                                     {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
@@ -3112,7 +3112,7 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
                                         {company?.rfc && <p className="text-[10px] font-bold text-blue-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
-                                    <div className="flex gap-3 mt-3 no-print">
+                                    <div className="flex flex-wrap gap-3 mt-3 no-print w-full">
                                         <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
@@ -4010,17 +4010,17 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                 {/* Header Section */}
                 <div className="p-8 bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-start gap-3 sm:gap-5 flex-col sm:flex-row w-full sm:w-auto">
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-blue-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-start gap-4">
+                            <div className="flex flex-col sm:flex-row items-start gap-4 w-full">
                                 {company?.logo_uri ? (
                                     <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
                                     {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
@@ -4028,7 +4028,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
                                         {company?.rfc && <p className="text-[10px] font-bold text-blue-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
-                                    <div className="flex gap-3 mt-3 no-print">
+                                    <div className="flex flex-wrap gap-3 mt-3 no-print w-full">
                                         <button onClick={() => handleShowQR(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
                                             <QrCode className="w-3.5 h-3.5" /> TICKET QR
                                         </button>
@@ -5799,17 +5799,17 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                 {/* Header Section */}
                 <div className="p-8 bg-gradient-to-r from-rose-50 to-white border-b border-rose-100">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-start gap-3 sm:gap-5 flex-col sm:flex-row w-full sm:w-auto">
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-rose-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-start gap-4">
+                            <div className="flex flex-col sm:flex-row items-start gap-4 w-full">
                                 {company?.logo_uri ? (
                                     <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-rose-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-rose-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
                                     {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
@@ -5817,7 +5817,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
                                         {company?.rfc && <p className="text-[10px] font-bold text-rose-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
-                                    <div className="flex gap-3 mt-3 no-print">
+                                    <div className="flex flex-wrap gap-3 mt-3 no-print w-full">
                                         <button onClick={() => handleShowQR(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
                                             <QrCode className="w-3.5 h-3.5" /> TICKET QR
                                         </button>
@@ -6842,17 +6842,17 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                 {/* Header Section */}
                 <div className="p-8 bg-gradient-to-r from-purple-50 to-white border-b border-purple-100">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-start gap-3 sm:gap-5 flex-col sm:flex-row w-full sm:w-auto">
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-purple-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-start gap-4">
+                            <div className="flex flex-col sm:flex-row items-start gap-4 w-full">
                                 {company?.logo_uri ? (
                                     <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-purple-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
                                     {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
@@ -6860,7 +6860,7 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
                                         {company?.rfc && <p className="text-[10px] font-bold text-purple-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
-                                    <div className="flex gap-3 mt-3 no-print">
+                                    <div className="flex flex-wrap gap-3 mt-3 no-print w-full">
                                         <button onClick={() => handleShowQR(service)} className="px-4 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm">
                                             <QrCode className="w-3.5 h-3.5" /> TICKET QR
                                         </button>
@@ -7275,17 +7275,17 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                 {/* Header Section */}
                 <div className="p-8 bg-gradient-to-r from-cyan-50 to-white border-b border-cyan-100">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-start gap-3 sm:gap-5 flex-col sm:flex-row w-full sm:w-auto">
                             <button onClick={onBack} className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-slate-600 hover:text-cyan-600">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
-                            <div className="flex items-start gap-4">
+                            <div className="flex flex-col sm:flex-row items-start gap-4 w-full">
                                 {company?.logo_uri ? (
                                     <img src={company.logo_uri} alt="Logo" className="w-20 h-20 object-contain p-1 rounded-xl bg-white shadow-sm" />
                                 ) : (
                                     <div className="w-20 h-20 bg-cyan-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-cyan-600/20">{company?.nombre?.charAt(0) || 'C'}</div>
                                 )}
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{company?.nombre || 'Mi Empresa'}</h2>
                                     {company?.direccion && <p className="text-[10px] text-slate-500 max-w-[250px] leading-tight mt-1">{company.direccion}</p>}
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
@@ -7293,7 +7293,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                         {company?.correo && <p className="text-[10px] font-bold text-slate-600">{company.correo}</p>}
                                         {company?.rfc && <p className="text-[10px] font-bold text-cyan-600 uppercase">RFC: {company.rfc}</p>}
                                     </div>
-                                    <div className="flex gap-3 mt-3 no-print">
+                                    <div className="flex flex-wrap gap-3 mt-3 no-print w-full">
                                         <button onClick={() => onEdit(service)} className="px-4 py-1.5 bg-cyan-600 text-white rounded-xl text-xs font-bold hover:bg-cyan-700 transition-all flex items-center gap-2 shadow-sm">
                                             <Edit2 className="w-3.5 h-3.5" /> EDITAR REPORTE
                                         </button>
