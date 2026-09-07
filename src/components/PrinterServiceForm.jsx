@@ -81,7 +81,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         id: Date.now(),
                         cantidad: 1,
                         producto: service.repuestos_descripcion,
-                        costoEmpresa: 0,
+                        costoEmpresa: '',
                         costoPublico: service.costo_repuestos || 0,
                         numeroSerie: ''
                     }];
@@ -199,8 +199,8 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             id: Date.now(),
             cantidad: 1,
             producto: '',
-            costoEmpresa: 0,
-            costoPublico: 0,
+            costoEmpresa: '',
+            costoPublico: '',
             numeroSerie: ''
         }]);
     };

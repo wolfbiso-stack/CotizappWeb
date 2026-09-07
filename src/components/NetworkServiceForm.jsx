@@ -80,7 +80,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         id: Date.now(),
                         cantidad: 1,
                         producto: service.materiales_descripcion,
-                        costoEmpresa: 0,
+                        costoEmpresa: '',
                         costoPublico: service.costo_materiales || 0,
                         numeroSerie: ''
                     }];
@@ -155,8 +155,8 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             id: Date.now(),
             cantidad: 1,
             producto: '',
-            costoEmpresa: 0,
-            costoPublico: 0,
+            costoEmpresa: '',
+            costoPublico: '',
             numeroSerie: ''
         }]);
     };
