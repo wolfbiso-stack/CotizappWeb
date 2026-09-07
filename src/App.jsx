@@ -501,7 +501,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                 key={quotation.id}
                                 className={`p-5 rounded-2xl border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'} transition-all duration-300`}
                             >
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="flex justify-between items-start mb-2">
                                     <div>
                                         <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md mb-2">
                                             #{quotation.folio}
@@ -1671,7 +1671,7 @@ const ItemsTable = ({ items, onAddItem, onRemoveItem, onUpdateItem, onMoveItem, 
                             </button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <div>
                                 <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Descripción</label>
                                 <ProductAutocomplete
@@ -2942,9 +2942,9 @@ const CCTVList = ({ darkMode, onNavigate, onViewService, onShowNotaVenta, user, 
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-cctv-${service.servicio_numero}`}
-                                    className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-2">
                                                 #{service.servicio_numero}
@@ -3841,13 +3841,13 @@ const PCList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, onSh
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-pc-${service.id}`}
-                                    className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-2">
                                                 #{service.orden_numero}
@@ -4122,7 +4122,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Informe Técnico</h3>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 {/* Problema Reportado */}
                                 <div>
                                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Problema Reportado</p>
@@ -5024,11 +5024,11 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
                             {paginatedServices.map((service) => (
                                 <div
                                     key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
-                                    className={`rounded-2xl p-6 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
                                         }`}
                                 >
                                     {/* Top Header: Badge and Action Buttons */}
@@ -5050,7 +5050,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                     </div>
 
                                     {/* ID and Photo Evidence */}
-                                    <div className="flex items-center gap-3 mb-5">
+                                    <div className="flex items-center gap-3 mb-3">
                                         <span className={`text-2xl font-black whitespace-nowrap tracking-tight ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>#{service.folio}</span>
                                         {service.hasPhotos && (
                                             <div className="bg-blue-100/50 p-1.5 rounded-full border border-blue-200/50" title="Tiene evidencia fotográfica">
@@ -5059,7 +5059,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                         )}
                                     </div>
 
-                                    <div className="space-y-4">
+                                    <div className="space-y-2">
                                         <div>
                                             <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Cliente</p>
                                             <p className={`font-medium text-lg ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>{service.cliente}</p>
@@ -5642,13 +5642,13 @@ const PhoneList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit, o
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-phone-${service.id}`}
-                                    className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 mb-2">
                                                 #{service.orden_numero}
@@ -5920,7 +5920,7 @@ const PhoneServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Informe Técnico</h3>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 {/* Problema Reportado */}
                                 {service.problema_reportado && (
                                     <div>
@@ -6674,13 +6674,13 @@ const PrinterList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-printer-${service.id}`}
-                                    className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 mb-2">
                                                 #{service.orden_numero}
@@ -6984,7 +6984,7 @@ const PrinterServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-600">Informe Técnico</h3>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 {/* Problema Reportado */}
                                 <div>
                                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Problema Reportado</p>
@@ -7403,7 +7403,7 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                 <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600">Informe Técnico</h3>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 {/* Trabajo Realizado */}
                                 <div>
                                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-bold">Trabajo Realizado</p>
@@ -7797,13 +7797,13 @@ const NetworkList = ({ darkMode, onNavigate, onViewService, onCreateNew, onEdit,
                         </div>
 
                         {/* Mobile Cards View */}
-                        <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
                             {sortedServices.map((service) => (
                                 <div
                                     key={`mobile-network-${service.id}`}
-                                    className={`rounded-2xl p-5 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800 mb-2">
                                                 #{service.orden_numero}
@@ -8288,7 +8288,7 @@ const ReportsView = ({ darkMode, user, services = [] }) => {
                             <div className="space-y-8">
                                 <section>
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-5">💰 MAYOR FACTURACIÓN</p>
-                                    <div className="space-y-4">
+                                    <div className="space-y-2">
                                         {topSpenders.map((client, i) => (
                                             <div key={i} className="group/item flex justify-between items-center p-3 rounded-2xl transition-all hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
                                                 <div className="flex items-center gap-4">
@@ -8307,7 +8307,7 @@ const ReportsView = ({ darkMode, user, services = [] }) => {
 
                                 <section>
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-5">🔄 MÁS RECURRENTES</p>
-                                    <div className="space-y-4">
+                                    <div className="space-y-2">
                                         {frequentClients.map((client, i) => (
                                             <div key={i} className="group/item flex justify-between items-center p-3 rounded-2xl transition-all hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
                                                 <div className="flex items-center gap-4">
@@ -10512,7 +10512,7 @@ const App = () => {
                         <div className="space-y-6">
                             <section>
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">DECLARACIONES</h3>
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     <p><strong>I. Declara EL PRESTADOR que:</strong></p>
                                     <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Dedicado a la instalación, configuración y mantenimiento de sistemas de videovigilancia (CCTV).</li>
@@ -10683,7 +10683,7 @@ const App = () => {
                         <div className="space-y-6">
                             <section>
                                 <h3 className="font-bold bg-slate-100 px-3 py-1 inline-block mb-3">DECLARACIONES</h3>
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     <p><strong>I. Declara EL PRESTADOR que:</strong></p>
                                     <ul className="list-disc ml-6 md:ml-8 space-y-1">
                                         <li>Se dedica al ensamble, configuración, diagnóstico y optimización de hardware de cómputo de alto rendimiento.</li>
