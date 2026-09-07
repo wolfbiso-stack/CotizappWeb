@@ -5038,7 +5038,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                     return (
                                         <div
                                             key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
-                                            className={`rounded-xl border shadow-sm overflow-hidden transition-all duration-200 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                            className={`rounded-xl border shadow-sm transition-all duration-200 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
                                         >
                                             {/* Always visible header row */}
                                             <div
@@ -5115,14 +5115,15 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                                     </div>
 
                                                     {/* Direct Action Buttons Inside Accordion */}
-                                                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed dark:border-slate-700 border-slate-200" onClick={(e) => e.stopPropagation()}>
-                                                        <button onClick={() => handleViewServiceUnified(service)} className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${darkMode ? 'bg-slate-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                                                            <Eye className="w-4 h-4" />
-                                                            <span className="text-xs font-semibold">Ver Todo</span>
+                                                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed dark:border-slate-700 border-slate-200 justify-end" onClick={(e) => e.stopPropagation()}>
+                                                        <button onClick={() => handleViewServiceUnified(service)} className={`p-2.5 rounded-xl transition-colors ${darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600'}`} title="Ver Servicio">
+                                                            <Eye className="w-5 h-5" />
                                                         </button>
-                                                        <button onClick={() => handleEditServiceUnifiedLocal(service)} className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                                                            <Edit2 className="w-4 h-4" />
-                                                            <span className="text-xs font-semibold">Editar</span>
+                                                        <button onClick={() => handleEditServiceUnifiedLocal(service)} className={`p-2.5 rounded-xl transition-colors ${darkMode ? 'bg-slate-700/50 text-slate-300' : 'bg-slate-50 text-slate-600'}`} title="Editar Servicio">
+                                                            <Edit2 className="w-5 h-5" />
+                                                        </button>
+                                                        <button onClick={() => handleDelete(service)} className={`p-2.5 rounded-xl transition-colors ${darkMode ? 'bg-rose-900/30 text-rose-400' : 'bg-red-50 text-red-600'}`} title="Eliminar Servicio">
+                                                            <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     </div>
                                                 </div>
