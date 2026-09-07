@@ -265,7 +265,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-8">
                     {/* Basic Info Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
                         <div className="col-span-2">
                             <label className={labelClass}>Nombre del Cliente</label>
                             <div className="relative">
@@ -294,7 +294,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
                         <div>
                             <label className={labelClass}>Fecha de Ingreso</label>
                             <div className="relative">
@@ -328,7 +328,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             <HardDrive className="w-5 h-5" />
                             <h3 className="font-bold uppercase text-xs tracking-widest">Especificaciones del Equipo</h3>
                         </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
                             <div>
                                 <label className={labelClass}>Tipo de Equipo</label>
                                 <select
@@ -514,7 +514,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                         </div>
 
                                         {/* Bottom row in mobile (Costs), or rest of items in desktop */}
-                                        <div className="grid grid-cols-2 md:flex md:flex-row w-full md:w-auto gap-3 items-center">
+                                        <div className="flex flex-col md:flex-row w-full md:w-auto gap-3 md:items-center">
                                             <div className="w-full md:w-32">
                                                 <label className="block text-[10px] uppercase font-black text-rose-400 mb-1 ml-1">C. Empresa</label>
                                                 <div className="relative">
@@ -541,7 +541,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="w-full md:w-32 col-span-2 md:col-span-1">
+                                            <div className="w-full md:w-32">
                                                 <label className="block text-[10px] uppercase font-black text-green-500 mb-1 ml-1">Subtotal</label>
                                                 <div className="relative">
                                                     <span className="absolute left-2 md:left-3 top-2.5 text-slate-400 text-sm">$</span>
