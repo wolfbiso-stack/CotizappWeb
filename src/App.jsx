@@ -6216,7 +6216,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Inicio</span>
                                     </div>
                                 </button>
-                            </li>\n\n                            {/* Servicios */}
+                            </li>
+
+                            {/* Servicios */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('servicios')}
@@ -6227,7 +6229,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Servicios</span>
                                     </div>
                                 </button>
-                            </li>\n\n                            {/* Cotizaciones Dropdown */}
+                            </li>
+
+                            {/* Cotizaciones Dropdown */}
                             <li>
                                 <div className="space-y-1">
                                     <button
@@ -6242,7 +6246,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
 
                                 </div>
-                            </li>\n\n                            {/* Citas */}
+                            </li>
+
+                            {/* Citas */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('citas')}
@@ -6253,7 +6259,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Citas</span>
                                     </div>
                                 </button>
-                            </li>\n\n                            {/* Clients */}
+                            </li>
+
+                            {/* Clients */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('clientes')}
@@ -6264,7 +6272,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Clientes</span>
                                     </div>
                                 </button>
-                            </li>\n\n                            {/* Contracts */}
+                            </li>
+
+                            {/* Contracts */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('contratos')}
@@ -6275,7 +6285,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Contratos</span>
                                     </div>
                                 </button>
-                            </li>\n\n                            {/* Products */}
+                            </li>
+
+                            {/* Products */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('products')}
@@ -6286,7 +6298,9 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Productos</span>
                                     </div>
                                 </button>
-                            </li>\n\n                            {/* Reports */}
+                            </li>
+
+                            {/* Reports */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('informes')}
