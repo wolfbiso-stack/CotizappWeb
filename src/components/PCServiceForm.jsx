@@ -328,7 +328,7 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             <HardDrive className="w-5 h-5" />
                             <h3 className="font-bold uppercase text-xs tracking-widest">Especificaciones del Equipo</h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className={labelClass}>Tipo de Equipo</label>
                                 <select
@@ -345,6 +345,17 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 </select>
                             </div>
                             <div>
+                                <label className={labelClass}>Número de Serie</label>
+                                <input
+                                    type="text"
+                                    name="equipo_serie"
+                                    value={formData.equipo_serie}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                    placeholder="S/N o Service Tag"
+                                />
+                            </div>
+                            <div>
                                 <label className={labelClass}>Modelo / Marca</label>
                                 <input
                                     type="text"
@@ -354,17 +365,6 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     className={inputClass}
                                     placeholder="Ej: Dell Latitude 5420"
                                     required
-                                />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Número de Serie</label>
-                                <input
-                                    type="text"
-                                    name="equipo_serie"
-                                    value={formData.equipo_serie}
-                                    onChange={handleChange}
-                                    className={inputClass}
-                                    placeholder="S/N o Service Tag"
                                 />
                             </div>
                             <div>
@@ -474,74 +474,97 @@ const PCServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                         <div className="space-y-3">
                             {parts.map((part) => (
-                                <div key={part.id} className={`flex flex-col md:flex-row gap-3 p-4 md:p-3 rounded-2xl border items-center transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-                                    <div className="w-full md:w-20">
-                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1 md:text-center">Cant.</label>
-                                        <input
-                                            type="number"
-                                            value={part.cantidad}
-                                            onChange={(e) => updatePart(part.id, 'cantidad', e.target.value)}
-                                            className={`${inputClass} text-center px-1`}
-                                            min="0"
-                                        />
-                                    </div>
-                                    <div className="w-full md:flex-1">
-                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Producto / Material</label>
-                                        <input
-                                            type="text"
-                                            value={part.producto}
-                                            onChange={(e) => updatePart(part.id, 'producto', e.target.value)}
-                                            className={inputClass}
-                                            placeholder="Descripción del artículo..."
-                                        />
-                                    </div>
-                                    <div className="w-full md:w-32">
-                                        <label className="block text-[10px] uppercase font-black text-rose-400 mb-1 ml-1">Costo Empresa</label>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={part.costoEmpresa}
-                                                onChange={(e) => updatePart(part.id, 'costoEmpresa', e.target.value)}
-                                                className={`${inputClass} pl-6 border-rose-100 focus:border-rose-300`}
-                                            />
+
+                                <div key={part.id} className={`p-4 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                    {/* Mobile & Desktop Layout */}
+                                    <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                                        
+                                        {/* Top row in mobile (Producto + Trash), or first items in desktop */}
+                                        <div className="flex w-full md:w-auto gap-3 flex-1">
+                                            <div className="w-16 md:w-20 flex-shrink-0">
+                                                <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1 md:text-center">Cant.</label>
+                                                <input
+                                                    type="number"
+                                                    value={part.cantidad}
+                                                    onChange={(e) => updatePart(part.id, 'cantidad', e.target.value)}
+                                                    className={`${inputClass} text-center px-1`}
+                                                    min="0"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1">Producto / Material</label>
+                                                <input
+                                                    type="text"
+                                                    value={part.producto}
+                                                    onChange={(e) => updatePart(part.id, 'producto', e.target.value)}
+                                                    className={inputClass}
+                                                    placeholder="Descripción..."
+                                                />
+                                            </div>
+                                            {/* Trash icon only shows on mobile here */}
+                                            <div className="md:hidden pt-5 flex-shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePart(part.id)}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="w-full md:w-32">
-                                        <label className="block text-[10px] uppercase font-black text-blue-400 mb-1 ml-1">Costo Público</label>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={part.costoPublico}
-                                                onChange={(e) => updatePart(part.id, 'costoPublico', e.target.value)}
-                                                className={`${inputClass} pl-6 border-blue-100 focus:border-blue-300`}
-                                            />
+
+                                        {/* Bottom row in mobile (Costs), or rest of items in desktop */}
+                                        <div className="grid grid-cols-3 md:flex md:flex-row w-full md:w-auto gap-3 items-center">
+                                            <div className="w-full md:w-32">
+                                                <label className="block text-[10px] uppercase font-black text-rose-400 mb-1 ml-1">C. Empresa</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-2 md:left-3 top-2.5 text-slate-400 text-sm">$</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={part.costoEmpresa}
+                                                        onChange={(e) => updatePart(part.id, 'costoEmpresa', e.target.value)}
+                                                        className={`${inputClass} pl-5 md:pl-6 border-rose-100 focus:border-rose-300`}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="w-full md:w-32">
+                                                <label className="block text-[10px] uppercase font-black text-blue-400 mb-1 ml-1">C. Público</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-2 md:left-3 top-2.5 text-slate-400 text-sm">$</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={part.costoPublico}
+                                                        onChange={(e) => updatePart(part.id, 'costoPublico', e.target.value)}
+                                                        className={`${inputClass} pl-5 md:pl-6 border-blue-100 focus:border-blue-300`}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="w-full md:w-32">
+                                                <label className="block text-[10px] uppercase font-black text-green-500 mb-1 ml-1">Subtotal</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-2 md:left-3 top-2.5 text-slate-400 text-sm">$</span>
+                                                    <input
+                                                        type="text"
+                                                        value={((parseFloat(part.cantidad) || 0) * (parseFloat(part.costoPublico) || 0)).toFixed(2)}
+                                                        readOnly
+                                                        className={`${inputClass} pl-5 md:pl-6 bg-slate-50 font-bold text-slate-600`}
+                                                    />
+                                                </div>
+                                            </div>
+                                            {/* Trash icon only shows on desktop here */}
+                                            <div className="hidden md:block md:w-auto flex justify-end md:self-end md:mb-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePart(part.id)}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Item"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="w-full md:w-32">
-                                        <label className="block text-[10px] uppercase font-black text-green-500 mb-1 ml-1">Subtotal</label>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
-                                            <input
-                                                type="text"
-                                                value={((parseFloat(part.cantidad) || 0) * (parseFloat(part.costoPublico) || 0)).toFixed(2)}
-                                                readOnly
-                                                className={`${inputClass} pl-6 bg-slate-50 font-bold text-slate-600`}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="w-full md:w-auto flex justify-end md:self-end md:mb-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => removePart(part.id)}
-                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Eliminar Item"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
                                     </div>
                                 </div>
                             ))}
