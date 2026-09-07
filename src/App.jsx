@@ -6216,9 +6216,18 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Inicio</span>
                                     </div>
                                 </button>
-                            </li>
-
-                            {/* Cotizaciones Dropdown */}
+                            </li>\n\n                            {/* Servicios */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('servicios')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'servicios' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Settings className="w-4 h-4" />
+                                        <span>Servicios</span>
+                                    </div>
+                                </button>
+                            </li>\n\n                            {/* Cotizaciones Dropdown */}
                             <li>
                                 <div className="space-y-1">
                                     <button
@@ -6233,9 +6242,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
 
 
                                 </div>
-                            </li>
-
-                            {/* Citas */}
+                            </li>\n\n                            {/* Citas */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('citas')}
@@ -6246,9 +6253,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Citas</span>
                                     </div>
                                 </button>
-                            </li>
-
-                            {/* Clients */}
+                            </li>\n\n                            {/* Clients */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('clientes')}
@@ -6259,22 +6264,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Clientes</span>
                                     </div>
                                 </button>
-                            </li>
-
-                            {/* Servicios */}
-                            <li>
-                                <button
-                                    onClick={() => setActiveTab('servicios')}
-                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'servicios' ? activeClass : `${inactiveClass} ${textHover}`}`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Settings className="w-4 h-4" />
-                                        <span>Servicios</span>
-                                    </div>
-                                </button>
-                            </li>
-
-                            {/* Contracts */}
+                            </li>\n\n                            {/* Contracts */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('contratos')}
@@ -6285,9 +6275,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Contratos</span>
                                     </div>
                                 </button>
-                            </li>
-
-                            {/* Products */}
+                            </li>\n\n                            {/* Products */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('products')}
@@ -6298,9 +6286,7 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                         <span>Productos</span>
                                     </div>
                                 </button>
-                            </li>
-
-                            {/* Reports */}
+                            </li>\n\n                            {/* Reports */}
                             <li>
                                 <button
                                     onClick={() => setActiveTab('informes')}
@@ -8543,6 +8529,31 @@ const App = () => {
 
     // Helper for legacy dark mode support in child components
     const isDark = currentTheme === 'dark';
+
+    // CAPACITOR STATUS BAR
+    useEffect(() => {
+        const updateStatusBar = async () => {
+            const isCapacitor = window.Capacitor?.isNativePlatform?.();
+            if (!isCapacitor) return;
+            
+            try {
+                // Prevenir que el contenido quede debajo de la barra (overlap)
+                await StatusBar.setOverlaysWebView({ overlay: false });
+                
+                if (isDark) {
+                    await StatusBar.setStyle({ style: Style.Dark });
+                    await StatusBar.setBackgroundColor({ color: '#1c2434' });
+                } else {
+                    await StatusBar.setStyle({ style: Style.Dark }); // Texto blanco (Dark style = light text)
+                    await StatusBar.setBackgroundColor({ color: '#2563eb' }); // blue-600
+                }
+            } catch (e) {
+                console.error("Error setting status bar", e);
+            }
+        };
+        updateStatusBar();
+    }, [isDark]);
+
 
     // Template State
     const [selectedTemplate, setSelectedTemplate] = useState(() => {
