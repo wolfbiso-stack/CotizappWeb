@@ -483,8 +483,8 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
                     {/* Materials List Section */}
                     <div className={`p-8 rounded-3xl border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700' : 'bg-gray-50/50 border-slate-100'}`}>
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-col justify-start items-start gap-4 mb-6 w-full">
+                              <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-xl ${darkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
                                     <ShoppingCart className="w-5 h-5" />
                                 </div>
