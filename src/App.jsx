@@ -26,6 +26,8 @@ import CitasView from './components/CitasView';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 // --- UTILS ---
 const computeFileHash = async (file) => {
@@ -297,7 +299,7 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                                 </div>
                                 <div className="flex justify-between items-end w-full mt-2">
                                     <span className="text-[10px] text-slate-500 truncate pr-2 text-left">{config.subtitle}</span>
-                                    {isActive && <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${config.activeText}`}><Check className="w-3 h-3"/> ACTIVO</span>}
+                                    {isActive && <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${config.activeText}`}><Check className="w-3 h-3" /> ACTIVO</span>}
                                 </div>
                             </button>
                         );
@@ -308,9 +310,9 @@ const QuotationList = ({ quotations, onCreateNew, onView, onEdit, onDelete, onDu
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
                             className={isMinimalista ? `flex flex-col w-full p-4 rounded-xl border shadow-sm text-left ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} ${isActive ? 'border-l-4 border-l-blue-500' : ''}` :
-                            `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
-                                ? (darkMode ? 'bg-blue-900/40 border-blue-500 scale-105' : 'bg-blue-50 border-blue-500 scale-105')
-                                : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
+                                `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                                    ? (darkMode ? 'bg-blue-900/40 border-blue-500 scale-105' : 'bg-blue-50 border-blue-500 scale-105')
+                                    : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
                         >
                             <span className={isMinimalista ? `text-xs font-semibold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-400'}` : `text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
@@ -612,7 +614,7 @@ const ImageModal = ({ imageUrl, onClose }) => {
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-sm transition-all" onClick={onClose}>
             <div className="relative max-w-6xl w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                <button 
+                <button
                     onClick={onClose}
                     className="absolute top-0 right-0 md:-top-4 md:-right-4 bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-colors border border-white/10 z-10"
                 >
@@ -3484,23 +3486,23 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
 
     const getModernColorStyle = (colorName) => {
         const styles = {
-            black: darkMode 
-                ? 'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:border-slate-600' 
+            black: darkMode
+                ? 'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:border-slate-600'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300',
-            yellow: darkMode 
-                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30' 
+            yellow: darkMode
+                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30'
                 : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300',
-            blue: darkMode 
-                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/30' 
+            blue: darkMode
+                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/30'
                 : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300',
-            green: darkMode 
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/30' 
+            green: darkMode
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/30'
                 : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300',
-            red: darkMode 
-                ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20 hover:border-rose-500/30' 
+            red: darkMode
+                ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20 hover:border-rose-500/30'
                 : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-300',
-            gray: darkMode 
-                ? 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/20 hover:border-slate-500/30' 
+            gray: darkMode
+                ? 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/20 hover:border-slate-500/30'
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
         };
         return styles[colorName] || styles.gray;
@@ -3562,11 +3564,10 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                         <button
                             key={status.value}
                             onClick={() => handleStatusUpdate(status.value)}
-                            className={`w-full text-left px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide rounded-xl flex items-center justify-between group transition-all duration-200 ${
-                                statusValue === status.value
-                                    ? (darkMode ? 'bg-slate-700/50 text-white' : 'bg-slate-100/80 text-slate-900')
-                                    : (darkMode ? 'text-slate-400 hover:bg-slate-700/30 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900')
-                            }`}
+                            className={`w-full text-left px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide rounded-xl flex items-center justify-between group transition-all duration-200 ${statusValue === status.value
+                                ? (darkMode ? 'bg-slate-700/50 text-white' : 'bg-slate-100/80 text-slate-900')
+                                : (darkMode ? 'text-slate-400 hover:bg-slate-700/30 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900')
+                                }`}
                         >
                             <div className="flex items-center gap-2.5">
                                 <div className={`w-1.5 h-1.5 rounded-full ${getDotColor(status.color).replace(/shadow-\[.*?\]/g, '')}`}></div>
@@ -4700,7 +4701,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                 </div>
                                 <div className="flex justify-between items-end w-full mt-2">
                                     <span className="text-[10px] text-slate-500 truncate pr-2 text-left">{config.subtitle}</span>
-                                    {isActive && <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${config.activeText}`}><Check className="w-3 h-3"/> ACTIVO</span>}
+                                    {isActive && <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${config.activeText}`}><Check className="w-3 h-3" /> ACTIVO</span>}
                                 </div>
                             </button>
                         );
@@ -4711,9 +4712,9 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                             key={card.id}
                             onClick={() => setStatusFilter(card.id)}
                             className={isMinimalista ? `flex flex-col w-full p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-left ${isActive ? 'border-l-4 border-l-blue-500' : (card.id === 'Pendientes' && count > 0 ? 'border-l-4 border-l-yellow-500' : card.id === 'En Proceso' && count > 0 ? 'border-l-4 border-l-blue-500' : card.id === 'Completadas' && count > 0 ? 'border-l-4 border-l-green-500' : '')}` :
-                            `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
-                                ? (darkMode ? 'bg-blue-900/40 border-blue-500' : 'bg-blue-50 border-blue-500 scale-105')
-                                : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
+                                `flex flex-col w-full p-4 rounded-xl border transition-all shadow-sm text-left ${isActive
+                                    ? (darkMode ? 'bg-blue-900/40 border-blue-500' : 'bg-blue-50 border-blue-500 scale-105')
+                                    : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md')
                                 }`}
                         >
                             <span className={isMinimalista ? `text-xs font-semibold text-slate-400 uppercase tracking-widest` : `text-xs font-semibold mb-2 tracking-wide uppercase ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</span>
@@ -5040,7 +5041,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                             <button onClick={() => { setSelectedServiceForActions(service); setShowActionsModal(true); }} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Más acciones"><MoreVertical className="w-4 h-4" /></button>
                                         </div>
                                     </div>
-                                    
+
                                     {/* ID and Photo Evidence */}
                                     <div className="flex items-center gap-3 mb-5">
                                         <span className={`text-2xl font-black whitespace-nowrap tracking-tight ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>#{service.folio}</span>
@@ -8648,7 +8649,59 @@ const App = () => {
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, []);
+    // CAPACITOR DEEP LINK - Google OAuth callback
+    useEffect(() => {
+        const handleAppUrl = async ({ url }) => {
+            console.log("🔗 URL recibida desde Android:", url);
 
+            if (!url.startsWith('cubiservicios://login-callback')) {
+                return;
+            }
+
+            try {
+                // Supabase está devolviendo los tokens después del #
+                const hash = url.split('#')[1];
+
+                if (!hash) {
+                    console.error("❌ No se encontró información de sesión en el callback.");
+                    return;
+                }
+
+                const params = new URLSearchParams(hash);
+
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+
+                if (!accessToken || !refreshToken) {
+                    console.error("❌ No se encontraron los tokens de sesión.");
+                    return;
+                }
+
+                console.log("🔐 Tokens recibidos. Estableciendo sesión...");
+
+                const { data, error } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                });
+
+                if (error) {
+                    console.error("❌ Error al establecer sesión:", error);
+                    return;
+                }
+
+                console.log("✅ Sesión establecida:", data.session?.user?.id);
+
+            } catch (error) {
+                console.error("❌ Error procesando callback de Google:", error);
+            }
+        };
+
+        const listener = CapacitorApp.addListener('appUrlOpen', handleAppUrl);
+
+        return () => {
+            listener.then(handle => handle.remove());
+        };
+    }, []);
     // NEW AUTH EFFECT
     useEffect(() => {
         console.log("App mounted. Starting checkAuth sequence.");

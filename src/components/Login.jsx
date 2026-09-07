@@ -17,7 +17,11 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
 
             let redirectUrl;
 
-            if (window.location.hostname === 'localhost') {
+            const isCapacitor = window.Capacitor?.isNativePlatform?.();
+
+            if (isCapacitor) {
+                redirectUrl = 'cubiservicios://login-callback';
+            } else if (window.location.hostname === 'localhost') {
                 redirectUrl = 'http://localhost:3000';
             } else if (window.location.hostname.includes('vercel.app')) {
                 redirectUrl = window.location.origin;

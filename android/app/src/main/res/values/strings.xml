@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CUBI Servicios</string>
+    <string name="title_activity_main">CUBI Servicios</string>
+    <string name="package_name">com.cubiservicios.app</string>
+    <string name="custom_url_scheme">com.cubiservicios.app</string>
+</resources>
