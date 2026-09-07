@@ -5157,35 +5157,35 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                                     {serviceCategories.map((category) => (
                                         <button
                                             key={category.id}
                                             onClick={() => handleServiceSelect(category)}
-                                            className={`relative group p-8 rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-4 ${!category.implemented
+                                            className={`relative group p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 transition-all text-left flex flex-col items-start gap-3 md:gap-4 ${!category.implemented
                                                 ? 'opacity-60 cursor-not-allowed border-dashed grayscale bg-slate-50 border-slate-200'
                                                 : darkMode
                                                     ? 'bg-slate-800 border-slate-700 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
                                                     : 'bg-white border-slate-100 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2'
                                                 }`}
                                         >
-                                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${category.bg} ${category.color}`}>
-                                                <category.icon className="w-9 h-9 stroke-[2.5]" />
+                                            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${category.bg} ${category.color}`}>
+                                                <category.icon className="w-6 h-6 md:w-8 md:h-8 stroke-[2.5]" />
                                             </div>
                                             <div>
-                                                <h3 className={`text-xl font-black mb-1 ${darkMode ? 'text-white' : 'text-slate-900'}`}>{category.title}</h3>
-                                                <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                <h3 className={`text-base md:text-xl font-black mb-1 leading-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>{category.title}</h3>
+                                                <p className={`text-[10px] md:text-sm font-medium leading-snug ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                                                     {category.implemented ? `Registrar servicio de ${category.title.toLowerCase()}` : 'Próximamente...'}
                                                 </p>
                                             </div>
                                             {!category.implemented && (
-                                                <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest border border-amber-200">
+                                                <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-amber-100 text-amber-700 text-[8px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 md:py-1 rounded-full uppercase tracking-widest border border-amber-200">
                                                     Pendiente
                                                 </div>
                                             )}
                                             {category.implemented && (
-                                                <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-                                                    <ArrowUpRight className="w-6 h-6 text-blue-500 stroke-[3]" />
+                                                <div className="absolute bottom-3 right-3 md:bottom-6 md:right-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 md:translate-x-4 group-hover:translate-x-0">
+                                                    <ArrowUpRight className="w-4 h-4 md:w-6 md:h-6 text-blue-500 stroke-[3]" />
                                                 </div>
                                             )}
                                         </button>
