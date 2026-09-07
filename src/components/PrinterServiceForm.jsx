@@ -309,7 +309,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     darkMode={darkMode}
                 />
             )}
-            <div className={`w-full md:w-[95vw] max-w-6xl h-[95vh] md:max-h-[90vh] md:h-auto flex flex-col rounded-t-[2rem] md:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <div className={`w-full md:w-[95vw] max-w-6xl h-[95vh] md:max-h-[90vh] md:h-auto flex flex-col rounded-none md:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Header */}
                 <div className={`px-4 md:px-8 py-3 md:py-6 flex justify-between items-center border-b sticky top-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
                     <div className="flex items-center gap-3 md:gap-4">
@@ -396,7 +396,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             <Printer className="w-5 h-5" />
                             <h3 className="font-bold uppercase text-xs tracking-widest">Especificaciones del Equipo</h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 gap-6">
                             <div>
                                 <label className={labelClass}>Tipo de Equipo</label>
                                 <select

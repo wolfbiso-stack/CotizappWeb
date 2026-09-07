@@ -223,7 +223,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     darkMode={darkMode}
                 />
             )}
-            <div className={`w-full md:w-[95vw] max-w-6xl h-[95vh] md:max-h-[90vh] md:h-auto flex flex-col rounded-t-[2rem] md:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <div className={`w-full md:w-[95vw] max-w-6xl h-[95vh] md:max-h-[90vh] md:h-auto flex flex-col rounded-none md:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 {/* Fixed Header */}
                 <div className={`px-4 md:px-8 py-3 md:py-6 flex justify-between items-center border-b ${darkMode ? 'border-slate-700 bg-slate-800/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
                     <div className="flex items-center gap-3 md:gap-4">
@@ -556,10 +556,8 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             </label>
                         </div>
                     </div>
-                </form>
-
-                {/* Fixed Footer */}
-                <div className={`px-4 py-4 md:p-8 border-t sticky bottom-0 z-10 ${darkMode ? 'border-slate-700 bg-slate-800/95' : 'bg-gray-50/95 border-slate-100'} backdrop-blur-md`}>
+                {/* Footer / Totals (Moved into form) */}
+                <div className={`mt-4 pt-6 md:p-8 border-t ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                         <div className="grid grid-cols-2 md:block gap-4">
                             <div>
@@ -635,6 +633,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         </div>
                     </div>
                 </div>
+                </form>
             </div>
         </div>,
         document.body
