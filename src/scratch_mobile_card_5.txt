@@ -1,0 +1,9 @@
+{/* Mobile Cards View */}
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                            {paginatedServices.map((service) => (
+                                <div
+                                    key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
+                                        }`}
+                                >
+                                    

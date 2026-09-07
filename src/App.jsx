@@ -4383,6 +4383,14 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [selectedServiceForLabel, setSelectedServiceForLabel] = useState(null);
     const [showPrintQRModal, setShowPrintQRModal] = useState(false);
     const [selectedServiceForPrintQR, setSelectedServiceForPrintQR] = useState(null);
+    const [expandedMobileCards, setExpandedMobileCards] = useState({});
+
+    const toggleMobileCard = (id) => {
+        setExpandedMobileCards(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
 
     const statusCards = [
         { id: 'Todías', label: 'Todías', filter: () => true },
@@ -5025,69 +5033,103 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
 
                         {/* Mobile Cards View */}
                         <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
-                            {paginatedServices.map((service) => (
-                                <div
-                                    key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
-                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
-                                        }`}
-                                >
-                                    {/* Top Header: Badge and Action Buttons */}
-                                    <div className="flex justify-between items-center mb-3">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit shadow-sm border ${service.type === 'CCTV' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                            service.type === 'PC' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                                service.type === 'Impresora' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                    service.type === 'Redes' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
-                                                        'bg-rose-50 text-rose-700 border-rose-200'
-                                            }`}>
-                                            {service.type}
-                                        </span>
-                                        <div className="flex gap-1">
-                                            <button onClick={() => handleViewServiceUnified(service)} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-blue-400 hover:bg-slate-700' : 'text-blue-600 hover:bg-blue-50'}`} title="Ver Servicio"><Eye className="w-4 h-4" /></button>
-                                            <button onClick={() => handleEditServiceUnifiedLocal(service)} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`} title="Editar Servicio"><Edit2 className="w-4 h-4" /></button>
-                                            <button onClick={() => handleDelete(service)} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-red-400 hover:bg-slate-700' : 'text-red-600 hover:bg-red-50'}`} title="Eliminar Servicio"><Trash2 className="w-4 h-4" /></button>
-                                            <button onClick={() => { setSelectedServiceForActions(service); setShowActionsModal(true); }} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Más acciones"><MoreVertical className="w-4 h-4" /></button>
-                                        </div>
-                                    </div>
+                            {paginatedServices.map((service) => {
+                                    const isExpanded = expandedMobileCards[service.id || service.folio];
+                                    return (
+                                        <div
+                                            key={`mobile-service-${service.tableName}-${service.id || service.folio}`}
+                                            className={`rounded-xl border shadow-sm overflow-hidden transition-all duration-200 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                        >
+                                            {/* Always visible header row */}
+                                            <div
+                                                onClick={() => toggleMobileCard(service.id || service.folio)}
+                                                className={`flex items-center justify-between p-3 transition-colors cursor-pointer ${darkMode ? 'active:bg-slate-700/50' : 'active:bg-slate-50'}`}
+                                            >
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    {/* Toggle Icon */}
+                                                    <div className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                                                        <ChevronDown className="w-5 h-5" />
+                                                    </div>
 
-                                    {/* ID and Photo Evidence */}
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <span className={`text-2xl font-black whitespace-nowrap tracking-tight ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>#{service.folio}</span>
-                                        {service.hasPhotos && (
-                                            <div className="bg-blue-100/50 p-1.5 rounded-full border border-blue-200/50" title="Tiene evidencia fotográfica">
-                                                <Image className="w-4 h-4 text-blue-600" />
+                                                    {/* Service Badge, Folio & Client */}
+                                                    <div className="flex flex-col gap-1 overflow-hidden">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold w-fit border ${service.type === 'CCTV' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                                service.type === 'PC' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                                                    service.type === 'Impresora' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                                        service.type === 'Redes' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
+                                                                            'bg-rose-50 text-rose-700 border-rose-200'
+                                                                }`}>
+                                                                {service.type}
+                                                            </span>
+                                                            <span className={`text-sm font-bold tracking-tight ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>#{service.folio}</span>
+                                                        </div>
+                                                        {/* Client Name */}
+                                                        <p className={`font-semibold text-sm truncate max-w-[200px] ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
+                                                            {service.cliente}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Button & Evidence Indicator */}
+                                                <div className="flex items-center gap-2">
+                                                    {service.hasPhotos && (
+                                                        <div className="bg-blue-100/50 p-1 rounded-full border border-blue-200/50" title="Tiene evidencia fotográfica">
+                                                            <Image className="w-3.5 h-3.5 text-blue-600" />
+                                                        </div>
+                                                    )}
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedServiceForActions(service); setShowActionsModal(true); }}
+                                                        className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                                                        title="Más acciones"
+                                                    >
+                                                        <MoreVertical className="w-5 h-5" />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
 
-                                    <div className="space-y-2">
-                                        <div>
-                                            <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Cliente</p>
-                                            <p className={`font-medium text-lg ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>{service.cliente}</p>
-                                        </div>
+                                            {/* Expanded Content */}
+                                            {isExpanded && (
+                                                <div className={`p-3 pt-0 border-t ${darkMode ? 'border-slate-700' : 'border-slate-100'} bg-slate-50/50 dark:bg-slate-900/20 animate-in slide-in-from-top-2 fade-in duration-200`}>
+                                                    <div className="grid grid-cols-2 gap-3 mt-3">
+                                                        <div>
+                                                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Fecha</p>
+                                                            <p className={`text-xs ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                                            <p className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</p>
+                                                        </div>
+                                                    </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Fecha</p>
-                                                <p className={`text-sm ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{formatServiceDate(service.fecha)}</p>
-                                            </div>
-                                            <div>
-                                                <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
-                                                <p className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>${formatCurrency(service.total)}</p>
-                                            </div>
-                                        </div>
+                                                    <div className="mt-3">
+                                                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Estado</p>
+                                                        <div onClick={(e) => e.stopPropagation()}>
+                                                            <StatusDropdown
+                                                                service={service.original}
+                                                                darkMode={darkMode}
+                                                                onStatusChange={fetchAllServices}
+                                                                tableName={service.tableName}
+                                                            />
+                                                        </div>
+                                                    </div>
 
-                                        <div>
-                                            <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Estado</p>
-                                            <StatusDropdown
-                                                service={service.original}
-                                                darkMode={darkMode}
-                                                onStatusChange={fetchAllServices}
-                                                tableName={service.tableName}
-                                            />
+                                                    {/* Direct Action Buttons Inside Accordion */}
+                                                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed dark:border-slate-700 border-slate-200" onClick={(e) => e.stopPropagation()}>
+                                                        <button onClick={() => handleViewServiceUnified(service)} className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${darkMode ? 'bg-slate-700 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                                                            <Eye className="w-4 h-4" />
+                                                            <span className="text-xs font-semibold">Ver Todo</span>
+                                                        </button>
+                                                        <button onClick={() => handleEditServiceUnifiedLocal(service)} className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                                                            <Edit2 className="w-4 h-4" />
+                                                            <span className="text-xs font-semibold">Editar</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                </div>
-                            ))}
+                                    );
+                                })}
 
                             {/* Mobile Pagination Controls */}
                             {itemsPerPage !== -1 && totalPages > 1 && (

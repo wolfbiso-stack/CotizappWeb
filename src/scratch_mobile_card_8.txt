@@ -1,0 +1,82 @@
+{/* Mobile Cards View */}
+                        <div className="md:hidden flex flex-col gap-3 p-3 pb-24">
+                            {sortedServices.map((service) => (
+                                <div
+                                    key={`mobile-network-${service.id}`}
+                                    className={`rounded-2xl p-4 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800 mb-2">
+                                                #{service.orden_numero}
+                                            </span>
+                                            <h3 className={`text-lg font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                                                {service.cliente_nombre}
+                                            </h3>
+                                            <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                {formatServiceDate(service.fecha)}
+                                            </p>
+                                        </div>
+                                        <StatusDropdown
+                                            service={service}
+                                            darkMode={darkMode}
+                                            onStatusChange={fetchServices}
+                                            tableName="servicios_redes"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
+                                        <div>
+                                            <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                            <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                                ${formatCurrency(service.total)}
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleShowQR(service)}
+                                                className="p-2.5 bg-purple-50 text-purple-600 rounded-xl"
+                                            >
+                                                <QrCode className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleShowReceipt(service)}
+                                                className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                            >
+                                                <ScrollText className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onShowNotaVenta({ ...service, type: 'Redes', tableName: 'servicios_redes', original: service })}
+                                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl"
+                                                title="Generar Nota de Venta"
+                                            >
+                                                <FileText className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onViewService(service)}
+                                                className="p-2.5 bg-cyan-50 text-cyan-600 rounded-xl"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => onEdit(service)}
+                                                className="p-2.5 bg-slate-50 text-slate-400 rounded-xl"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(service.id)}
+                                                className="p-2.5 bg-red-50 text-red-400 rounded-xl"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            

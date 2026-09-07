@@ -1,0 +1,64 @@
+{/* Mobile Cards View */}
+                    <div className="md:hidden space-y-4">
+                        {paginatedQuotations.map((quotation) => (
+                            <div
+                                key={quotation.id}
+                                className={`p-5 rounded-2xl border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} ${deletingId === quotation.id ? 'opacity-0 transform translate-x-8' : 'opacity-100'} transition-all duration-300`}
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md mb-2">
+                                            #{quotation.folio}
+                                        </span>
+                                        <h3 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            {quotation.nombre_cliente}
+                                        </h3>
+                                        <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {quotation.fecha}
+                                        </p>
+                                    </div>
+                                    <QuotationStatusToggle
+                                        quotation={quotation}
+                                        onStatusChange={onStatusChange}
+                                        darkMode={darkMode}
+                                    />
+                                </div>
+
+                                <div className="flex justify-between items-end border-t border-díashed pt-4 border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                                        <p className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                            ${formatCurrency(quotation.total)}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => onView(quotation)}
+                                            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onEdit(quotation)}
+                                            className="p-2.5 bg-slate-50 text-slate-600 rounded-xl"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDuplicate(quotation)}
+                                            className="p-2.5 bg-green-50 text-green-600 rounded-xl"
+                                        >
+                                            <Copy className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(quotation.id)}
+                                            className="p-2.5 bg-red-50 text-red-600 rounded-xl"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+
+                        
