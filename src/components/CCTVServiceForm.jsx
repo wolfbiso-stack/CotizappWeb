@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PartsList from './PartsList';
 import { createPortal } from 'react-dom';
 import { X, Save, User, Video, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, ShieldCheck, Layout, FolderOpen } from 'lucide-react';
 import QuoteSelector from './QuoteSelector';
@@ -408,134 +409,12 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     </div>
 
                     {/* Parts List Section */}
-                    <div className={`p-8 rounded-3xl border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700' : 'bg-gray-50/50 border-slate-100'}`}>
-                        <div className="flex flex-col justify-start items-start gap-4 mb-6 w-full">
-                              <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-xl ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
-                                    <ShoppingCart className="w-5 h-5" />
-                                </div>
-                                <h3 className="font-bold uppercase text-xs tracking-widest">Equipos y Materiales</h3>
-                            </div>
-                            <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-2">
-                                <button
-                                      type="button"
-                                      onClick={addPart}
-                                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${darkMode ? 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-                                >
-                                    <Plus className="w-4 h-4" /> Agregar Ítem
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowQuoteSelector(true)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${darkMode ? 'bg-purple-900/40 text-purple-300 hover:bg-purple-900/60' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'}`}
-                                >
-                                    <FolderOpen className="w-4 h-4" /> Desde Cotización
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            {parts.map((part) => (
-
-                                <div key={part.id} className={`p-4 rounded-2xl border transition-all ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-                                    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
-                                        
-                                        {/* Mobile: Top Row for Producto (full width) */}
-                                        <div className="flex-1 w-full">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <label className="block text-[10px] uppercase font-black text-slate-400 ml-1">Producto / Material</label>
-                                                {/* Trash icon only shows on mobile here, aligned with label */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removePart(part.id)}
-                                                    className="lg:hidden p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={part.producto}
-                                                onChange={(e) => updatePart(part.id, 'producto', e.target.value)}
-                                                className={inputClass}
-                                                placeholder="Descripción completa del artículo..."
-                                            />
-                                        </div>
-
-                                        {/* Mobile: Grid for numbers, Desktop: Row */}
-                                        <div className="grid grid-cols-2 lg:flex lg:flex-row w-full lg:w-auto gap-3 lg:items-end">
-                                            <div className="w-full lg:w-20">
-                                                <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 ml-1 lg:text-center">Cant.</label>
-                                                <input
-                                                    type="number"
-                                                    value={part.cantidad}
-                                                    onChange={(e) => updatePart(part.id, 'cantidad', e.target.value)}
-                                                    className={`${inputClass} text-center px-1`}
-                                                    min="0"
-                                                />
-                                            </div>
-                                            
-                                            <div className="w-full lg:w-32">
-                                                <label className="block text-[10px] uppercase font-black text-rose-400 mb-1 ml-1">C. Empresa</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={part.costoEmpresa}
-                                                        onChange={(e) => updatePart(part.id, 'costoEmpresa', e.target.value)}
-                                                        className={`${inputClass} pl-6 border-rose-100 focus:border-rose-300`}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="w-full lg:w-32">
-                                                <label className="block text-[10px] uppercase font-black text-blue-400 mb-1 ml-1">C. Público</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={part.costoPublico}
-                                                        onChange={(e) => updatePart(part.id, 'costoPublico', e.target.value)}
-                                                        className={`${inputClass} pl-6 border-blue-100 focus:border-blue-300`}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="w-full lg:w-32">
-                                                <label className="block text-[10px] uppercase font-black text-green-500 mb-1 ml-1">Subtotal</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
-                                                    <input
-                                                        type="text"
-                                                        value={((parseFloat(part.cantidad) || 0) * (parseFloat(part.costoPublico) || 0)).toFixed(2)}
-                                                        readOnly
-                                                        className={`${inputClass} pl-6 bg-slate-50 font-bold text-slate-600`}
-                                                    />
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Trash icon only shows on desktop here */}
-                                            <div className="hidden lg:block lg:w-auto flex justify-end">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removePart(part.id)}
-                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors mb-1"
-                                                    title="Eliminar Item"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            {parts.length === 0 && (
-                                <div className={`text-center py-8 border-2 border-dashed rounded-3xl ${darkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                                    No hay equipos o materiales registrados
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                      <PartsList 
+                          parts={parts} 
+                          setParts={setParts} 
+                          darkMode={darkMode} 
+                          setShowQuoteSelector={setShowQuoteSelector} 
+                      />
 
                     {/* Photos Section */}
                     <div className="space-y-4">

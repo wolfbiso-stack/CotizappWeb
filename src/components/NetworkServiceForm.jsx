@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PartsList from './PartsList';
 import { createPortal } from 'react-dom';
 import { X, Save, User, Wifi, Settings, ShoppingCart, Calendar, Plus, Trash2, Image, Activity, ArrowDown, ArrowUp, Router, FolderOpen } from 'lucide-react';
 import QuoteSelector from './QuoteSelector';
