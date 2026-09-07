@@ -8723,6 +8723,14 @@ const App = () => {
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, []);
+
+    // RELOAD GLOBAL SERVICES ON TRIGGER
+    useEffect(() => {
+        if (session?.user?.id && servicesRefreshTrigger > 0) {
+            fetchAllServices(session.user.id);
+        }
+    }, [servicesRefreshTrigger, session?.user?.id]);
+
     // CAPACITOR DEEP LINK - Google OAuth callback
     useEffect(() => {
         const handleAppUrl = async ({ url }) => {
@@ -9102,9 +9110,19 @@ const App = () => {
                     cliente_direccion: payloadData.cliente_direccion || '',
                     tecnico_nombre: payloadData.tecnico_nombre,
                     tecnico_celular: payloadData.tecnico_celular || '',
-                    tipo_servicio: 'CCTV',
-                    marca_principal: payloadData.sistema_modelo,
-                    tipo_grabador: payloadData.sistema_tipo,
+                    tipo_servicio: payloadData.tipo_servicio || 'CCTV',
+                    marca_principal: payloadData.marca_principal,
+                    tipo_grabador: payloadData.tipo_grabador,
+                    tipos_camaras: payloadData.tipos_camaras ? payloadData.tipos_camaras.split(',').map(s => s.trim()) : [],
+                    ip_grabador: payloadData.ip_grabador,
+                    usuario: payloadData.usuario,
+                    contrasena: payloadData.contrasena,
+                    id_nube_p2p: payloadData.id_nube_p2p,
+                    dominio_ddns: payloadData.dominio_ddns,
+                    garantia_aplica: payloadData.garantia_aplica,
+                    garantia_fecha_inicio: payloadData.garantia_fecha_inicio,
+                    garantia_fecha_vencimiento: payloadData.garantia_fecha_vencimiento,
+                    garantia_detalles: payloadData.garantia_detalles,
                     materiales: payloadData.repuestos_costo,
                     inventario_materiales: typeof payloadData.repuestos_descripcion === 'string' ? payloadData.repuestos_descripcion : JSON.stringify(payloadData.repuestos_descripcion),
                     total: payloadData.total,
@@ -9138,8 +9156,19 @@ const App = () => {
                     cliente_direccion: payloadData.cliente_direccion || '',
                     tecnico_nombre: payloadData.tecnico_nombre,
                     tecnico_celular: payloadData.tecnico_celular || '',
-                    marca_principal: payloadData.sistema_modelo,
-                    tipo_grabador: payloadData.sistema_tipo,
+                    tipo_servicio: payloadData.tipo_servicio || 'CCTV',
+                    marca_principal: payloadData.marca_principal,
+                    tipo_grabador: payloadData.tipo_grabador,
+                    tipos_camaras: payloadData.tipos_camaras ? payloadData.tipos_camaras.split(',').map(s => s.trim()) : [],
+                    ip_grabador: payloadData.ip_grabador,
+                    usuario: payloadData.usuario,
+                    contrasena: payloadData.contrasena,
+                    id_nube_p2p: payloadData.id_nube_p2p,
+                    dominio_ddns: payloadData.dominio_ddns,
+                    garantia_aplica: payloadData.garantia_aplica,
+                    garantia_fecha_inicio: payloadData.garantia_fecha_inicio,
+                    garantia_fecha_vencimiento: payloadData.garantia_fecha_vencimiento,
+                    garantia_detalles: payloadData.garantia_detalles,
                     materiales: payloadData.repuestos_costo,
                     inventario_materiales: typeof payloadData.repuestos_descripcion === 'string' ? payloadData.repuestos_descripcion : JSON.stringify(payloadData.repuestos_descripcion),
                     total: payloadData.total,

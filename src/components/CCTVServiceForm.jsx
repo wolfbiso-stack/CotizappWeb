@@ -21,6 +21,21 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         sistema_modelo: '',
         cantidad_camaras: 1,
         ubicacion_instalacion: '',
+        
+        // Nuevos campos DB
+        tipo_servicio: 'Instalacion',
+        marca_principal: '',
+        tipo_grabador: 'NVR',
+        tipos_camaras: '', // string for input, will be parsed to array on save
+        ip_grabador: '',
+        usuario: '',
+        contrasena: '',
+        id_nube_p2p: '',
+        dominio_ddns: '',
+        garantia_aplica: false,
+        garantia_fecha_inicio: '',
+        garantia_fecha_vencimiento: '',
+        garantia_detalles: '',
 
         // Técnico
         tecnico_nombre: '',
@@ -97,6 +112,7 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                 ...formData,
                 ...service,
                 fecha: formatDateForInput(service.servicio_fecha || service.fecha),
+                tipos_camaras: Array.isArray(service.tipos_camaras) ? service.tipos_camaras.join(', ') : (service.tipos_camaras || ''),
                 mano_obra: service.mano_obra || 0,
                 repuestos_costo: service.materiales || service.repuestos_costo || 0,
                 anticipo: service.anticipo || 0,
@@ -320,18 +336,63 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         </div>
                     </div>
 
+                    {/* Access Section */}
+                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-blue-50/30 border-blue-100'}`}>
+                        <div className="flex items-center gap-2 mb-6 text-blue-600">
+                            <ShieldCheck className="w-5 h-5" />
+                            <h3 className="font-bold uppercase text-xs tracking-widest">Accesos y Configuración Red</h3>
+                        </div>
+                        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 mb-4">
+                            <div>
+                                <label className={labelClass}>IP Grabador / Dominio</label>
+                                <input type="text" name="ip_grabador" value={formData.ip_grabador} onChange={handleChange} className={inputClass} placeholder="Ej: 192.168.1.64" />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Usuario</label>
+                                <input type="text" name="usuario" value={formData.usuario} onChange={handleChange} className={inputClass} placeholder="Ej: admin" />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Contraseña</label>
+                                <input type="text" name="contrasena" value={formData.contrasena} onChange={handleChange} className={inputClass} placeholder="Contraseña de acceso" />
+                            </div>
+                            <div>
+                                <label className={labelClass}>ID P2P / Nube</label>
+                                <input type="text" name="id_nube_p2p" value={formData.id_nube_p2p} onChange={handleChange} className={inputClass} placeholder="Código Cloud / SN" />
+                            </div>
+                        </div>
+                        <div className="flex flex-col lg:grid lg:grid-cols-1 gap-6">
+                            <div>
+                                <label className={labelClass}>Dominio DDNS</label>
+                                <input type="text" name="dominio_ddns" value={formData.dominio_ddns} onChange={handleChange} className={inputClass} placeholder="Ej: micam.ddns.net" />
+                            </div>
+                        </div>
+                    </div>
+
                     {/* System Specs Section */}
                     <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-indigo-50/30 border-indigo-100'}`}>
                         <div className="flex items-center gap-2 mb-6 text-indigo-600">
                             <Layout className="w-5 h-5" />
                             <h3 className="font-bold uppercase text-xs tracking-widest">Detalles del Sistema</h3>
                         </div>
-                        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
+                        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 mb-6">
+                            <div>
+                                <label className={labelClass}>Tipo de Servicio</label>
+                                <select name="tipo_servicio" value={formData.tipo_servicio} onChange={handleChange} className={inputClass}>
+                                    <option value="Instalacion">Instalación</option>
+                                    <option value="Mantenimiento">Mantenimiento</option>
+                                    <option value="Reparacion">Reparación</option>
+                                    <option value="Revision">Revisión</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClass}>Marca Principal</label>
+                                <input type="text" name="marca_principal" value={formData.marca_principal} onChange={handleChange} className={inputClass} placeholder="Ej: Hikvision, Dahua" />
+                            </div>
                             <div>
                                 <label className={labelClass}>Tipo de Grabador</label>
                                 <select
-                                    name="sistema_tipo"
-                                    value={formData.sistema_tipo}
+                                    name="tipo_grabador"
+                                    value={formData.tipo_grabador}
                                     onChange={handleChange}
                                     className={inputClass}
                                 >
@@ -340,21 +401,35 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     <option value="XVR">XVR (Híbrido)</option>
                                     <option value="Cámara Wi-Fi">Cámara Wi-Fi</option>
                                     <option value="Otro">Otro</option>
+                                    <option value="N/A">N/A</option>
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClass}>Marca / Modelo</label>
+                                <label className={labelClass}>Modelo Grabador</label>
                                 <input
                                     type="text"
                                     name="sistema_modelo"
                                     value={formData.sistema_modelo}
                                     onChange={handleChange}
                                     className={inputClass}
-                                    placeholder="Ej: Hikvision 7208"
+                                    placeholder="Ej: 7208HQHI"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
+                            <div>
+                                <label className={labelClass}>Tipos de Equipos (Cámaras)</label>
+                                <input
+                                    type="text"
+                                    name="tipos_camaras"
+                                    value={formData.tipos_camaras}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                    placeholder="Ej: ptz, ip, domo, bala"
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Cant. Cámaras</label>
+                                <label className={labelClass}>Num. Cámaras</label>
                                 <input
                                     type="number"
                                     name="cantidad_camaras"
@@ -421,6 +496,34 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 ></textarea>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Garantia Section */}
+                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-emerald-50/30 border-emerald-100'}`}>
+                        <div className="flex items-center gap-2 mb-6 text-emerald-600">
+                            <ShieldCheck className="w-5 h-5" />
+                            <h3 className="font-bold uppercase text-xs tracking-widest">Información de Garantía</h3>
+                        </div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <input type="checkbox" id="garantia_aplica" name="garantia_aplica" checked={formData.garantia_aplica} onChange={handleChange} className="w-5 h-5 text-emerald-600 rounded" />
+                            <label htmlFor="garantia_aplica" className={labelClass + " mb-0 cursor-pointer"}>Aplica Garantía</label>
+                        </div>
+                        {formData.garantia_aplica && (
+                            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 mb-4">
+                                <div>
+                                    <label className={labelClass}>Fecha de Inicio</label>
+                                    <input type="date" name="garantia_fecha_inicio" value={formData.garantia_fecha_inicio} onChange={handleChange} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Fecha de Vencimiento</label>
+                                    <input type="date" name="garantia_fecha_vencimiento" value={formData.garantia_fecha_vencimiento} onChange={handleChange} className={inputClass} />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className={labelClass}>Detalles de Garantía</label>
+                                    <textarea name="garantia_detalles" value={formData.garantia_detalles} onChange={handleChange} className={`${inputClass} min-h-[60px] resize-y`} placeholder="Condiciones de la garantía..."></textarea>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Parts List Section */}

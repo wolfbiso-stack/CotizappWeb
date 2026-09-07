@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
-import { X, Download, Printer, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Download, Printer, CheckCircle2, Lock, ShieldCheck, Check } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { downloadPDF, downloadImageBase64 } from '../utils/downloadHelper';
+import { downloadPDF } from '../utils/downloadHelper';
 
 const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkMode }) => {
     const reportRef = useRef(null);
@@ -42,8 +42,6 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
 
         try {
             const element = reportRef.current;
-
-            // Clone and adjust styles for capture
             const clone = element.cloneNode(true);
             Object.assign(clone.style, {
                 position: 'fixed',
@@ -74,7 +72,6 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
 
             const pageHeight = pdf.internal.pageSize.getHeight();
 
-            // Fixed scaling based on manual selection
             if (pdfHeight > pageHeight) {
                 const shouldFitOnePage = pdfHeight < pageHeight * 1.3 || reportScale < 1.0;
 
@@ -83,15 +80,12 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                     const imgWidthScaled = pdfWidth * scaleFactor;
                     const imgHeightScaled = pdfHeight * scaleFactor;
                     const xOffset = (pdfWidth - imgWidthScaled) / 2;
-
                     pdf.addImage(imgData, 'JPEG', xOffset, 0, imgWidthScaled, imgHeightScaled);
                 } else {
                     let heightLeft = pdfHeight;
                     let position = 0;
-
                     pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
                     heightLeft -= pageHeight;
-
                     while (heightLeft >= 0) {
                         position = heightLeft - pdfHeight;
                         pdf.addPage();
@@ -106,7 +100,7 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 pdf.addImage(imgData, 'JPEG', xOffset, 0, imgWidthScaled, imgHeightScaled);
             }
 
-            await downloadPDF(pdf, `Reporte-PC-${service.orden_numero || service.folio}.pdf`);
+            await downloadPDF(pdf, `Reporte-CCTV-${service.servicio_numero || service.folio}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error al generar el PDF');
@@ -127,14 +121,17 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     };
 
     const getParts = () => {
-        if (!service.repuestos_descripcion) return [];
+        if (!service.inventario_materiales && !service.repuestos_descripcion) return [];
         try {
-            if (typeof service.repuestos_descripcion === 'string' && service.repuestos_descripcion.trim().startsWith('[')) {
-                return JSON.parse(service.repuestos_descripcion).map(p => ({
+            const src = service.inventario_materiales || service.repuestos_descripcion;
+            if (typeof src === 'string' && src.trim().startsWith('[')) {
+                return JSON.parse(src).map(p => ({
                     cantidad: p.cantidad || 1,
                     descripcion: p.producto || p.descripcion || 'Sin descripción',
                     costo: p.costoPublico || p.precio_publico || 0
                 }));
+            } else if (Array.isArray(src)) {
+                return src;
             }
         } catch (e) {
             console.error("Error parsing parts:", e);
@@ -151,10 +148,15 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
 
     const parts = getParts();
     const manoObra = parseFloat(service.mano_obra || 0);
-    const totalRepuestos = parts.reduce((acc, part) => acc + (parseFloat(part.costo) * (parseFloat(part.cantidad) || 1)), 0);
+    const totalRepuestos = parts.reduce((acc, part) => acc + (parseFloat(part.costoPublico || part.costo || 0) * (parseFloat(part.cantidad) || 1)), 0);
     const subtotal = manoObra + totalRepuestos;
-    const ivaValue = service.incluir_iva ? subtotal * 0.16 : 0;
-    const totalFinal = subtotal + ivaValue;
+    const anticipo = parseFloat(service.anticipo || 0);
+    const totalFinal = parseFloat(service.total || subtotal);
+    
+    let tiposCamarasFormatted = service.tipos_camaras || '';
+    if (Array.isArray(tiposCamarasFormatted)) {
+        tiposCamarasFormatted = tiposCamarasFormatted.join(', ');
+    }
 
     return (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
@@ -163,11 +165,10 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 {/* Modal Actions - NO PRINT */}
                 <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 z-10 flex-none no-print ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                     <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                        Vista Previa de Reporte
+                        Vista Previa de Reporte CCTV
                     </h3>
 
                     <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4 w-full sm:w-auto">
-                        {/* Scale Control */}
                         <div className="hidden lg:flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-1.5 dark:bg-slate-800">
                             <span className={`text-xs font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>ESCALA: {Math.round(reportScale * 100)}%</span>
                             <input
@@ -212,238 +213,185 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 {/* Report Content Container */}
                 <div className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-10 min-h-0 flex flex-col items-center">
                     <div className="relative w-full max-w-4xl flex justify-center py-4">
-                        {/* Visual Page Break Indicators - Carta (1056px) - NO PRINT / NO CAPTURE */}
-                        <div className="absolute left-0 right-0 top-[1056px] border-b-2 border-díashed border-red-400 z-[60] no-print flex justify-end pointer-events-none">
-                            <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 font-bold rounded-l-md uppercase shadow-sm">Fin Hoja 1 (Carta)</span>
-                        </div>
-
-                        <div className="absolute left-0 right-0 top-[2112px] border-b-2 border-díashed border-red-400 z-[60] no-print flex justify-end pointer-events-none">
-                            <span className="bg-red-400 text-white text-[10px] px-2 py-0.5 font-bold rounded-l-md uppercase shadow-sm">Fin Hoja 2 (Carta)</span>
-                        </div>
-
                         <div
                             ref={reportRef}
                             id="report-paper"
-                            className="relative max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden print:shadow-none print:border print:border-gray-200 transition-transform origin-top"
+                            className="relative max-w-4xl w-full bg-white shadow-xl overflow-hidden print:shadow-none transition-transform origin-top"
                             style={{ transform: `scale(${reportScale})` }}
                         >
-                            {/* 1. Encabezado e Información General */}
-                            <header className="p-6 md:p-10 bg-indigo-50">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                                    {/* Logo y Nombre de la Empresa */}
-                                    <div className="flex items-start mb-4 md:mb-0 max-w-[60%]">
-                                        <div className="flex-none h-20 w-auto mr-6 flex items-center justify-center">
+                            {/* 1. Encabezado */}
+                            <header className="p-8 bg-[#0ea5e9] text-white">
+                                <div className="flex flex-col md:flex-row justify-between items-center">
+                                    {/* Logo y Datos de Empresa */}
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center p-2 shadow-lg overflow-hidden">
                                             {company?.logo_uri ? (
-                                                <img src={company.logo_uri} alt="Logo" className="max-h-full w-auto object-contain" />
+                                                <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
                                             ) : (
-                                                <div className="w-16 h-16 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </div>
+                                                <span className="text-xl font-bold text-gray-400">LOGO</span>
                                             )}
                                         </div>
-                                        <div className="flex flex-col justify-center h-20">
-                                            <h1 className="text-2xl font-black text-indigo-900 leading-none mb-2 uppercase tracking-tighter">{company?.nombre || 'Tu Empresa Tech'}</h1>
-                                            <div className="space-y-0.5">
-                                                {company?.direccion && <p className="text-[10px] text-gray-400 font-bold uppercase leading-none">{company.direccion}</p>}
-                                                <div className="flex gap-2">
-                                                    {company?.telefono && <p className="text-[10px] text-gray-400 font-medium leading-none">Tel: {company.telefono}</p>}
-                                                    {company?.correo && <p className="text-[10px] text-gray-400 font-medium leading-none">| {company.correo}</p>}
-                                                </div>
-                                            </div>
+                                        <div>
+                                            <h1 className="text-3xl font-black tracking-tight mb-1 uppercase">{company?.nombre || 'Mi Empresa'}</h1>
+                                            <p className="text-sm text-blue-100 uppercase font-medium">{company?.direccion}</p>
+                                            <p className="text-sm text-blue-100 uppercase font-medium">{company?.telefono}</p>
+                                            <p className="text-sm text-blue-100">{company?.correo}</p>
                                         </div>
                                     </div>
-
-                                    {/* Info del Reporte */}
-                                    <div className="text-left md:text-right">
-                                        <h2 className="text-3xl font-extrabold text-indigo-700">Reporte de Servicio</h2>
-                                        <p className="text-gray-600 font-medium">Orden N°: <span className="font-normal">{service.orden_numero || service.folio}</span></p>
-                                        <p className="text-gray-600 font-medium">Fecha: <span className="font-normal">{formatDate(service.fecha || new Date())}</span></p>
+                                    
+                                    {/* Titulo Reporte */}
+                                    <div className="text-right mt-6 md:mt-0">
+                                        <h2 className="text-3xl font-black mb-2 uppercase">Reporte Técnico<br/>CCTV</h2>
+                                        <div className="bg-white/20 inline-block px-4 py-2 rounded-lg backdrop-blur-sm">
+                                            <p className="text-sm font-semibold uppercase tracking-wider text-blue-100 mb-1">Folio</p>
+                                            <p className="text-xl font-bold">{service.servicio_numero || service.folio}</p>
+                                        </div>
+                                        <p className="text-sm font-semibold mt-2 text-blue-100">FECHA: {formatDate(service.servicio_fecha || service.fecha)}</p>
                                     </div>
                                 </div>
                             </header>
 
-                            <main className="p-6 md:p-10">
+                            <main className="p-8 space-y-6">
                                 {/* 2. Información Cliente y Técnico */}
-                                <section className="grid grid-cols-1 md:grid-cols-2 gap-8 print-section">
+                                <div className="grid grid-cols-2 gap-8 border-b-2 border-gray-100 pb-6 print-section">
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Información del Cliente</h3>
-                                        <div className="space-y-2 text-gray-700">
-                                            <p><strong>Nombre:</strong> {service.cliente_nombre}</p>
-                                            {service.cliente_telefono && <p><strong>Teléfono:</strong> {service.cliente_telefono}</p>}
-                                            {service.cliente_correo && <p><strong>Correo:</strong> {service.cliente_correo}</p>}
-                                        </div>
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cliente</h3>
+                                        <p className="text-lg font-bold text-gray-800 uppercase">{service.cliente_nombre}</p>
+                                        <p className="text-sm text-gray-600">{service.cliente_telefono}</p>
+                                        <p className="text-sm text-gray-600">{service.cliente_direccion}</p>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Información del Técnico</h3>
-                                        <div className="space-y-2 text-gray-700">
-                                            <p><strong>Técnico Asignado:</strong> {service.tecnico_nombre || 'N/A'}</p>
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Técnico Responsable</h3>
+                                        <p className="text-lg font-bold text-gray-800 uppercase">{service.tecnico_nombre}</p>
+                                        <p className="text-sm text-gray-600">{service.tecnico_celular}</p>
+                                    </div>
+                                </div>
+
+                                {/* 3. Detalles del Servicio (Tarjeta 1) */}
+                                <div className="border border-gray-200 rounded-xl overflow-hidden print-section">
+                                    <div className="bg-gray-50 p-4 border-b border-gray-200 flex flex-wrap gap-6 items-center">
+                                        <div className="flex-1">
+                                            <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Tipo</span>
+                                            <span className="inline-block bg-[#0ea5e9] text-white text-xs font-bold px-3 py-1 rounded-full uppercase">{service.tipo_servicio || 'CCTV'}</span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Marca</span>
+                                            <span className="text-gray-800 font-bold uppercase">{service.marca_principal || service.sistema_modelo || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-[200px]">
+                                            <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Equipos Instalados</span>
+                                            <span className="text-gray-800 font-bold uppercase">{tiposCamarasFormatted || 'N/A'}</span>
                                         </div>
                                     </div>
-                                </section>
-
-                                {/* 3. Detalles del Equipo */}
-                                <section className="mt-10 print-section">
-                                    <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Detalles del Equipo</h3>
-                                      <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                                          <div>
-                                              <span className="text-sm text-gray-500 block">Tipo de Servicio</span>
-                                              <strong className="text-gray-900">CCTV / Seguridad</strong>
-                                          </div>
-                                          <div>
-                                              <span className="text-sm text-gray-500 block">Número de Cámaras</span>
-                                              <strong className="text-gray-900">{service.num_camaras || 'N/A'}</strong>
-                                          </div>
-                                          <div>
-                                              <span className="text-sm text-gray-500 block">Modelo DVR / NVR</span>
-                                              <strong className="text-gray-900">{service.dvr_nvr || 'N/A'}</strong>
-                                          </div>
-                                          <div>
-                                              <span className="text-sm text-gray-500 block">Disco Duro</span>
-                                              <strong className="text-gray-900">{service.disco_duro || 'N/A'}</strong>
-                                          </div>
-                                          <div>
-                                              <span className="text-sm text-gray-500 block">Ubicación</span>
-                                              <strong className="text-gray-900">{service.ubicacion || 'N/A'}</strong>
-                                          </div>
-                                          <div className="col-span-2 md:col-span-3">
-                                              <span className="text-sm text-gray-500 block">Estado Físico</span>
-                                              <strong className="text-gray-900">{service.estado_fisico || 'N/A'}</strong>
-                                          </div>
-                                      </div>
-                                  </section>
-
-                                {/* 4. Problema Reportado y Diagnóstico */}
-                                {(service.problema_reportado || service.diagnostico_tecnico) && (
-                                    <section className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 print-section">
-                                        {service.problema_reportado && (
-                                            <div className="bg-blue-50 border-l-4 border-blue-400 p-5 rounded-r-lg">
-                                                <h3 className="text-lg font-bold text-blue-800 mb-2">Problema Reportado por el Cliente</h3>
-                                                <p className="text-gray-700 italic">"{service.problema_reportado}"</p>
-                                            </div>
-                                        )}
-                                        {service.diagnostico_tecnico && (
-                                            <div className="bg-green-50 border-l-4 border-green-400 p-5 rounded-r-lg">
-                                                <h3 className="text-lg font-bold text-green-800 mb-2">Diagnóstico Técnico</h3>
-                                                <p className="text-gray-700">{service.diagnostico_tecnico}</p>
-                                            </div>
-                                        )}
-                                    </section>
-                                )}
-
-                                {/* 5. Trabajo Realizado */}
-                                <section className="mt-10 print-section">
-                                    <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Trabajo Realizado y Solución</h3>
-                                    <div className="space-y-3">
-                                        {service.trabajo_realizado ? (
-                                            String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '').map((line, idx) => (
-                                                <div key={idx} className="flex items-center gap-3">
-                                                    <CheckCircle2 className="w-5 h-5 text-green-500 flex-none fill-green-500/20" strokeWidth={2.5} />
-                                                    <p className="text-gray-700 leading-relaxed font-medium">{line.trim()}</p>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-gray-400 italic">Pendiente de registrar descripción detallada.</p>
-                                        )}
-                                    </div>
-                                </section>
-
-                                {/* 6. Repuestos y Costos */}
-                                <section className="mt-10 grid grid-cols-1 md:grid-cols-5 gap-8 print-section">
-                                    <div className="md:col-span-3">
-                                        <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Repuestos Utilizados</h3>
-                                        <div className="overflow-x-auto rounded-lg border border-gray-200">
-                                            <table className="w-full text-left">
-                                                <thead className="bg-gray-100">
-                                                    <tr>
-                                                        <th className="p-3 font-semibold text-gray-700">Cant.</th>
-                                                        <th className="p-3 font-semibold text-gray-700">Descripción</th>
-                                                        <th className="p-3 font-semibold text-gray-700">Costo Unit.</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100">
-                                                    {parts.length > 0 ? (
-                                                        parts.map((item, idx) => (
-                                                            <tr key={idx}>
-                                                                <td className="p-3 text-gray-700">{item.cantidad}</td>
-                                                                <td className="p-3 text-gray-700">{item.descripcion}</td>
-                                                                <td className="p-3 text-gray-700">$ {formatCurrency(item.costo)}</td>
-                                                            </tr>
-                                                        ))
-                                                    ) : (
-                                                        <tr>
-                                                            <td colSpan="3" className="p-3 text-gray-400 italic text-center">No se utilizaron repuestos adicionales.</td>
-                                                        </tr>
-                                                    )}
-                                                    {parts.length < 2 && (
-                                                        <tr>
-                                                            <td className="p-3 text-gray-700">&nbsp;</td>
-                                                            <td className="p-3 text-gray-700"></td>
-                                                            <td className="p-3 text-gray-700"></td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-indigo-100 pb-2">Resumen de Costos</h3>
-                                        <div className="bg-indigo-50 rounded-lg p-5 space-y-3">
-                                            <div className="flex justify-between text-gray-700">
-                                                <span>Mano de Obra</span>
-                                                <span className="font-medium">$ {formatCurrency(manoObra)}</span>
-                                            </div>
-                                            <div className="flex justify-between text-gray-700">
-                                                <span>Total Repuestos</span>
-                                                <span className="font-medium">$ {formatCurrency(totalRepuestos)}</span>
-                                            </div>
-                                            <div className="flex justify-between text-gray-700">
-                                                <span>Subtotal</span>
-                                                <span className="font-medium">$ {formatCurrency(subtotal)}</span>
-                                            </div>
-                                            {ivaValue > 0 && (
-                                                <div className="flex justify-between text-gray-700">
-                                                    <span>IVA (16%)</span>
-                                                    <span className="font-medium">$ {formatCurrency(ivaValue)}</span>
-                                                </div>
+                                    <div className="p-6 bg-white">
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Actividades Realizadas (Checklist)</h3>
+                                        <div className="space-y-3">
+                                            {service.trabajo_realizado ? (
+                                                String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '').map((line, idx) => (
+                                                    <div key={idx} className="flex items-start gap-3">
+                                                        <Check className="w-5 h-5 text-green-500 mt-0.5 flex-none" strokeWidth={3} />
+                                                        <p className="text-gray-700 font-medium">{line.trim()}</p>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-gray-400 italic">No se detallaron actividades.</p>
                                             )}
-                                            <div className="border-t border-indigo-200 pt-3 mt-3">
-                                                <div className="flex justify-between text-indigo-800">
-                                                    <span className="font-bold text-xl uppercase italic">Total a Pagar</span>
-                                                    <span className="font-bold text-xl">$ {formatCurrency(totalFinal)}</span>
-                                                </div>
-                                                <p className="text-[10px] text-gray-400 text-right mt-1 font-bold">MONEDA: MXN</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 4. Accesos (Tarjeta 2) */}
+                                <div className="border border-gray-200 rounded-xl overflow-hidden flex print-section">
+                                    <div className="bg-[#0ea5e9] w-12 flex flex-col justify-center items-center py-4">
+                                        <Lock className="w-6 h-6 text-white mb-2" />
+                                        <div className="text-white text-xs font-bold tracking-widest uppercase" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                                            ACCESOS
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 bg-sky-50/50 p-6 grid grid-cols-2 gap-6">
+                                        <div>
+                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">IP / Dominio</span>
+                                            <span className="text-gray-800 font-bold">{service.ip_grabador || service.dominio_ddns || 'N/A'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">Usuario</span>
+                                            <span className="text-gray-800 font-bold">{service.usuario || 'N/A'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">Contraseña</span>
+                                            <span className="text-gray-800 font-bold">{service.contrasena || 'N/A'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">ID P2P / Nube</span>
+                                            <span className="text-gray-800 font-bold">{service.id_nube_p2p || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 5. Totales y Garantía */}
+                                <div className="grid grid-cols-2 gap-6 print-section">
+                                    {/* Garantia */}
+                                    <div className="border border-gray-200 rounded-xl p-6 flex flex-col justify-center bg-gray-50">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <ShieldCheck className={`w-8 h-8 ${service.garantia_aplica ? 'text-green-500' : 'text-gray-400'}`} />
+                                            <div>
+                                                <h3 className="text-sm font-bold text-gray-800 uppercase">Garantía del Servicio</h3>
+                                                <p className={`text-xs font-bold uppercase ${service.garantia_aplica ? 'text-green-600' : 'text-gray-400'}`}>
+                                                    {service.garantia_aplica ? 'Activa / Aplica' : 'No Aplica / Expirada'}
+                                                </p>
                                             </div>
                                         </div>
+                                        {service.garantia_aplica && (
+                                            <div className="grid grid-cols-2 gap-4 mt-2">
+                                                <div>
+                                                    <span className="text-xs text-gray-400 uppercase font-bold block">Inicio</span>
+                                                    <span className="text-gray-800 font-bold text-sm">{formatDate(service.garantia_fecha_inicio)}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-gray-400 uppercase font-bold block">Fin</span>
+                                                    <span className="text-gray-800 font-bold text-sm">{formatDate(service.garantia_fecha_vencimiento)}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </section>
 
-                                {/* 7. Observaciones y Recomendaciones */}
-                                <section className="mt-10 print-section">
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-lg">
-                                        <h3 className="text-lg font-bold text-yellow-800 mb-2">Observaciones y Recomendaciones</h3>
-                                        <p className="text-gray-700 italic">
-                                            {service.observaciones || 'Se recomienda realizar una limpieza física interna cada 12 meses para evitar sobrecalentamiento.'}
-                                        </p>
-                                    </div>
-                                </section>
-
-                                {/* 8. Garantía y Cierre */}
-                                <footer className="mt-12 pt-6 border-t border-gray-200 text-sm text-gray-500 print-section">
-                                    <p className="mb-2"><strong>Garantía:</strong> El servicio de mano de obra cuenta con 30 días de garantía. Componentes de hardware cuentan con garantía según fabricante.</p>
-
-                                    <div className="flex flex-col md:flex-row justify-between items-center mt-10 gap-8">
-                                        <div className="w-full md:w-1/2">
-                                            <p className="text-center">Recibí de conformidad</p>
-                                            <div className="border-b-2 border-dotted border-gray-400 mt-12"></div>
-                                            <p className="text-center font-medium text-gray-700 mt-2">{service.cliente_nombre || 'Cliente'}</p>
+                                    {/* Totales */}
+                                    <div className="bg-[#0ea5e9]/10 rounded-xl p-6 border border-[#0ea5e9]/20">
+                                        <div className="space-y-2 mb-4 text-sm font-medium text-gray-600">
+                                            <div className="flex justify-between">
+                                                <span>Mano de Obra</span>
+                                                <span>$ {formatCurrency(manoObra)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Artículos / Materiales</span>
+                                                <span>$ {formatCurrency(totalRepuestos)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Anticipo Recibido</span>
+                                                <span className="text-red-500">- $ {formatCurrency(anticipo)}</span>
+                                            </div>
                                         </div>
-                                        <div className="w-full md:w-1/2">
-                                            <p className="text-center">Entregado por</p>
-                                            <div className="border-b-2 border-dotted border-gray-400 mt-12"></div>
-                                            <p className="text-center font-medium text-gray-700 mt-2">{service.tecnico_nombre || 'Técnico'}</p>
+                                        <div className="border-t border-[#0ea5e9]/20 pt-4 flex justify-between items-end">
+                                            <span className="text-sm font-bold text-[#0ea5e9] uppercase">Total</span>
+                                            <span className="text-3xl font-black text-[#0ea5e9]">$ {formatCurrency(totalFinal)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 6. Footer y Firmas */}
+                                <footer className="mt-12 pt-8 print-section">
+                                    <p className="text-xs text-gray-500 text-center mb-16 italic">
+                                        "El cliente declara recibir a su entera satisfacción los trabajos descritos en el presente reporte, así como los equipos en las condiciones señaladas."
+                                    </p>
+
+                                    <div className="flex justify-between items-end px-12">
+                                        <div className="w-64 text-center">
+                                            <div className="border-b-2 border-gray-800 mb-2"></div>
+                                            <p className="text-sm font-bold text-gray-800 uppercase">Firma del Técnico</p>
+                                        </div>
+                                        <div className="w-64 text-center">
+                                            <div className="border-b-2 border-gray-800 mb-2"></div>
+                                            <p className="text-sm font-bold text-gray-800 uppercase">Aceptación del Cliente</p>
                                         </div>
                                     </div>
                                 </footer>
@@ -452,7 +400,6 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                     </div>
                 </div>
 
-                {/* Print Styles Injection */}
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     @media print {
@@ -479,39 +426,12 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                             size: A4;
                             margin: 0;
                         }
-                        #report-paper {
-                            transform: scale(${reportScale * 0.95});
-                            transform-origin: top center;
-                        }
                         .no-print {
                             display: none !important;
-                        }
-                        .print-card {
-                            box-shadow: none !important;
-                            border: 1px solid #e5e7eb !important;
                         }
                         .print-section {
                             page-break-inside: avoid;
                         }
-                        header {
-                            background-color: #f5f3ff !important; /* bg-indigo-50 */
-                        }
-                        .bg-indigo-50 { background-color: #f5f3ff !important; }
-                        .bg-indigo-600 { background-color: #4f46e5 !important; }
-                        .bg-gray-50 { background-color: #f9fafb !important; }
-                        .bg-blue-50 { background-color: #eff6ff !important; }
-                        .bg-green-50 { background-color: #f0fdf4 !important; }
-                        .bg-yellow-50 { background-color: #fefce8 !important; }
-                        .bg-gray-100 { background-color: #f3f4f6 !important; }
-                        .text-indigo-800 { color: #3730a3 !important; }
-                        .text-indigo-700 { color: #4338ca !important; }
-                        .text-blue-800 { color: #1e40af !important; }
-                        .text-green-800 { color: #166534 !important; }
-                        .text-yellow-800 { color: #854d0e !important; }
-                        .border-indigo-100 { border-color: #e0e7ff !important; }
-                        .border-blue-400 { border-color: #60a5fa !important; }
-                        .border-green-400 { border-color: #4ade80 !important; }
-                        .border-yellow-400 { border-color: #facc15 !important; }
                     }
                 `}} />
             </div>
