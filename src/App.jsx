@@ -5023,58 +5023,32 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                     className={`rounded-2xl p-6 border shadow-sm ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'
                                         }`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex flex-col gap-1">
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit ${service.type === 'CCTV' ? 'bg-blue-100 text-blue-800' :
-                                                service.type === 'PC' ? 'bg-indigo-100 text-indigo-800' :
-                                                    service.type === 'Impresora' ? 'bg-purple-100 text-purple-800' :
-                                                        service.type === 'Redes' ? 'bg-cyan-100 text-cyan-800' :
-                                                            'bg-rose-100 text-rose-800'
-                                                }`}>
-                                                {service.type}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-lg font-bold text-blue-600">#{service.folio}</span>
-                                                {service.hasPhotos && (
-                                                    <div className="bg-blue-100 p-1 rounded-full" title="Tiene evidencia fotográfica">
-                                                        <Image className="w-4 h-4 text-blue-600" />
-                                                    </div>
-                                                )}
+                                    {/* Top Header: Badge and Action Buttons */}
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit shadow-sm border ${service.type === 'CCTV' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                            service.type === 'PC' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                                service.type === 'Impresora' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                    service.type === 'Redes' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
+                                                        'bg-rose-50 text-rose-700 border-rose-200'
+                                            }`}>
+                                            {service.type}
+                                        </span>
+                                        <div className="flex gap-1">
+                                            <button onClick={() => handleViewServiceUnified(service)} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-blue-400 hover:bg-slate-700' : 'text-blue-600 hover:bg-blue-50'}`} title="Ver Servicio"><Eye className="w-4 h-4" /></button>
+                                            <button onClick={() => handleEditServiceUnifiedLocal(service)} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`} title="Editar Servicio"><Edit2 className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDelete(service)} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-red-400 hover:bg-slate-700' : 'text-red-600 hover:bg-red-50'}`} title="Eliminar Servicio"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={() => { setSelectedServiceForActions(service); setShowActionsModal(true); }} className={`p-1.5 rounded-lg transition-colors ${darkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Más acciones"><MoreVertical className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* ID and Photo Evidence */}
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <span className={`text-2xl font-black whitespace-nowrap tracking-tight ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>#{service.folio}</span>
+                                        {service.hasPhotos && (
+                                            <div className="bg-blue-100/50 p-1.5 rounded-full border border-blue-200/50" title="Tiene evidencia fotográfica">
+                                                <Image className="w-4 h-4 text-blue-600" />
                                             </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleViewServiceUnified(service)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Ver Servicio"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleEditServiceUnifiedLocal(service)}
-                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                                title="Editar Servicio"
-                                            >
-                                                <Edit2 className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(service)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Eliminar Servicio"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedServiceForActions(service);
-                                                    setShowActionsModal(true);
-                                                }}
-                                                className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
-                                                title="Más acciones"
-                                            >
-                                                <MoreVertical className="w-5 h-5" />
-                                            </button>
-                                        </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-4">
