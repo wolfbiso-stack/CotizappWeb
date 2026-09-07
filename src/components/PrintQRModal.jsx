@@ -75,7 +75,7 @@ const PrintQRModal = ({ service, onClose, darkMode }) => {
             <div className={`relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl transition-all flex flex-col ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
                 
                 {/* Toolbar */}
-                <div className={`p-4 border-b flex justify-between items-center z-10 ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 z-10 ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
                     <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                         <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
                             <QrCodeIcon className="w-5 h-5" />

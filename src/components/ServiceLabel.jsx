@@ -85,7 +85,7 @@ const ServiceLabel = ({ service, user, company: companyProp, onClose, darkMode }
             <div className={`relative w-full max-w-4xl max-h-[95vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl transition-all ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
 
                 {/* Toolbar */}
-                <div className={`p-4 border-b flex justify-between items-center z-10 flex-none ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 z-10 flex-none ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
                     <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                         <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
                             <FileText className="w-5 h-5" />
@@ -93,7 +93,7 @@ const ServiceLabel = ({ service, user, company: companyProp, onClose, darkMode }
                         Etiqueta de Servicio (Tarjeta)
                     </h3>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
                         <button
                             onClick={handleDownloadPDF}
                             disabled={isGenerating}

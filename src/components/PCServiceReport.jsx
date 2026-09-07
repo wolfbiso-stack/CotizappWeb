@@ -161,12 +161,12 @@ const PCServiceReport = ({ service, user, company: companyProp, onClose, darkMod
             <div className={`relative w-full max-w-5xl max-h-[95vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl transition-all ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
 
                 {/* Modal Actions - NO PRINT */}
-                <div className={`p-4 border-b flex justify-between items-center z-10 flex-none no-print ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 z-10 flex-none no-print ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                     <h3 className={`font-bold text-lg flex items-center gap-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
                         Vista Previa de Reporte
                     </h3>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4 w-full sm:w-auto">
                         {/* Scale Control */}
                         <div className="hidden lg:flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-1.5 dark:bg-slate-800">
                             <span className={`text-xs font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>ESCALA: {Math.round(reportScale * 100)}%</span>

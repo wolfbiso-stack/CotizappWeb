@@ -11405,13 +11405,13 @@ const App = () => {
                                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                                         <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
                                             {/* Modal Header */}
-                                            <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                            <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                                                 <h3 className={`font-bold text-lg flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                                                     <Eye className="w-5 h-5 text-blue-500" /> Vista Previa del Documento
                                                 </h3>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={generatePDF}
+                                                <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+                                                      <button
+                                                          onClick={generatePDF}
                                                         disabled={isGenerating}
                                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
                                                     >
@@ -11484,13 +11484,13 @@ const App = () => {
                                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                                         <div className={`rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
                                             {/* Modal Header */}
-                                            <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                            <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                                                 <h3 className={`font-bold text-lg flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                                                     <FileText className="w-5 h-5 text-blue-500" /> Vista Previa: Nota de Venta
                                                 </h3>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={generateNotaPDF}
+                                                <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+                                                      <button
+                                                          onClick={generateNotaPDF}
                                                         disabled={isGenerating}
                                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
                                                     >

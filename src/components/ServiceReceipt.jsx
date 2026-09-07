@@ -59,9 +59,9 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Modal Header - No Print */}
-                <div className={`p-4 border-b flex justify-between items-center no-print ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                <div className={`p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 no-print ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                     <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>Vista Previa del Ticket</h3>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
                         <button
                             onClick={handlePrint}
                             className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
