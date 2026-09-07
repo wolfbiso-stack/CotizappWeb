@@ -9,6 +9,11 @@ import { supabase } from '../utils/supabase';
 import PublicRepairTracking from './components/PublicRepairTracking';
 import QRServiceTicket from './components/QRServiceTicket';
 import PCServiceReport from './components/PCServiceReport';
+import PhoneServiceReport from './components/PhoneServiceReport';
+import PrinterServiceReport from './components/PrinterServiceReport';
+import NetworkServiceReport from './components/NetworkServiceReport';
+import CCTVServiceReport from './components/CCTVServiceReport';
+
 import ServiceReceipt from './components/ServiceReceipt';
 import ServiceLabel from './components/ServiceLabel';
 import PrintQRModal from './components/PrintQRModal';
@@ -4370,8 +4375,8 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [statusFilter, setStatusFilter] = useState('Todas');
     const [showActionsModal, setShowActionsModal] = useState(false);
     const [selectedServiceForActions, setSelectedServiceForActions] = useState(null);
-    const [showPCReport, setShowPCReport] = useState(false);
-    const [selectedServiceForPCReport, setSelectedServiceForPCReport] = useState(null);
+    const [showTechnicalReport, setShowTechnicalReport] = useState(false);
+    const [selectedServiceForReport, setSelectedServiceForReport] = useState(null);
     const [showServiceLabel, setShowServiceLabel] = useState(false);
     const [selectedServiceForLabel, setSelectedServiceForLabel] = useState(null);
     const [showPrintQRModal, setShowPrintQRModal] = useState(false);
@@ -5255,16 +5260,16 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 )
             }
 
-            {/* PC Report Modal */}
+            {/* Technical Report Modal */}
             {
-                showPCReport && selectedServiceForPCReport && (
+                showTechnicalReport && selectedServiceForReport && (
                     <PCServiceReport
-                        service={selectedServiceForPCReport}
+                        service={selectedServiceForReport}
                         user={user}
                         company={company}
                         onClose={() => {
-                            setShowPCReport(false);
-                            setSelectedServiceForPCReport(null);
+                            setShowTechnicalReport(false);
+                            setSelectedServiceForReport(null);
                         }}
                         darkMode={darkMode}
                     />
@@ -5312,21 +5317,19 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                             <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Imprimir QR</span>
                                         </button>
 
-                                        {selectedServiceForActions.type === 'PC' && (
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedServiceForPCReport(selectedServiceForActions);
-                                                    setShowPCReport(true);
-                                                    setShowActionsModal(false);
-                                                }}
-                                                className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-indigo-500 hover:bg-white'}`}
-                                            >
-                                                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                                    <FileText className="w-5 h-5" />
-                                                </div>
-                                                <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Reporte Técnico PC</span>
-                                            </button>
-                                        )}
+                                                                                <button
+                                            onClick={() => {
+                                                setSelectedServiceForReport(selectedServiceForActions);
+                                                setShowTechnicalReport(true);
+                                                setShowActionsModal(false);
+                                            }}
+                                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-indigo-500 hover:bg-white'}`}
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Reporte TǸcnico</span>
+                                        </button>
 
                                         <button
                                             onClick={() => {
