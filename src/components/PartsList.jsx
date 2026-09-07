@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Plus, FolderOpen, Trash2, Edit2, ChevronUp } from 'lucide-react';
 
-export default function PartsList({ parts, setParts, darkMode, setShowQuoteSelector }) {
+export default function PartsList({ parts, setParts, darkMode, setShowQuoteSelector, setIsDirty }) {
     const [expandedPartId, setExpandedPartId] = useState(null);
 
     const addPart = () => {
+        if (setIsDirty) setIsDirty(true);
         const newId = Date.now();
         setParts([...parts, {
             id: newId,
@@ -18,10 +19,12 @@ export default function PartsList({ parts, setParts, darkMode, setShowQuoteSelec
     };
 
     const removePart = (id) => {
+        if (setIsDirty) setIsDirty(true);
         setParts(parts.filter(p => p.id !== id));
     };
 
     const updatePart = (id, field, value) => {
+        if (setIsDirty) setIsDirty(true);
         setParts(parts.map(p => p.id === id ? { ...p, [field]: value } : p));
     };
 

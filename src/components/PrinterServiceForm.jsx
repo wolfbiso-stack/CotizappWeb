@@ -61,6 +61,17 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
     // Quote Selector State
     const [showQuoteSelector, setShowQuoteSelector] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+    const handleClose = () => {
+        if (isDirty) {
+            if (window.confirm("Hay datos sin guardar. ¿Estás seguro que quieres salir?")) {
+                onCancel();
+            }
+        } else {
+            onCancel();
+        }
+    };
+
 
     useEffect(() => {
         if (service) {
@@ -180,6 +191,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     }, [parts, formData.mano_obra, formData.incluir_iva]);
 
     const handleChange = (e) => {
+        setIsDirty(true);
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -188,6 +200,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     };
 
     const handleNumberChange = (e) => {
+        setIsDirty(true);
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -224,12 +237,14 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
     };
 
     const handleFileChange = (e) => {
+        setIsDirty(true);
         if (e.target.files) {
             setFiles(prev => [...prev, ...Array.from(e.target.files)]);
         }
     };
 
     const removeFile = (index) => {
+        setIsDirty(true);
         setFiles(prev => prev.filter((_, i) => i !== index));
     };
 
@@ -326,7 +341,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             </p>
                         </div>
                     </div>
-                    <button onClick={onCancel} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}>
+                    <button onClick={handleClose} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}>
                         <X className="w-5 h-5 md:w-6 md:h-6 text-slate-400" />
                     </button>
                 </div>
@@ -542,12 +557,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                     </div>
 
                     {/* Parts List Section */}
-                      <PartsList 
-                          parts={parts} 
-                          setParts={setParts} 
-                          darkMode={darkMode} 
-                          setShowQuoteSelector={setShowQuoteSelector} 
-                      />
+                      <PartsList parts={parts} setParts={setParts} darkMode={darkMode} setShowQuoteSelector={setShowQuoteSelector} setIsDirty={setIsDirty} />
 
                     {/* Photos Section */}
                     <div className="space-y-4">
@@ -651,7 +661,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                         <span className={`text-[9px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>IVA</span>
                                         <button
                                             type="button"
-                                            onClick={() => setFormData(prev => ({ ...prev, incluir_iva: !prev.incluir_iva }))}
+                                            onClick={() => { setFormData(prev => ({ ...prev, incluir_iva: !prev.incluir_iva })); setIsDirty(true); }}
                                             className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${formData.incluir_iva ? 'bg-blue-600' : 'bg-slate-300'}`}
                                         >
                                             <span className={`inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform ${formData.incluir_iva ? 'translate-x-4' : 'translate-x-0.5'}`} />
