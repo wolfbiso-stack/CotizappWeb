@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, Download, QrCode as QrCodeIcon, Printer } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { downloadPDF, downloadImageBase64 } from '../utils/downloadHelper';
 
 const PrintQRModal = ({ service, onClose, darkMode }) => {
     const qrRef = useRef(null);
@@ -24,10 +25,8 @@ const PrintQRModal = ({ service, onClose, darkMode }) => {
                 logging: false,
             });
 
-            const link = document.createElement('a');
-            link.download = `QR-${service.orden_numero || service.folio}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            const dataUrl = canvas.toDataURL('image/png');
+            await downloadImageBase64(dataUrl, `QR-${service.orden_numero || service.folio}.png`);
         } catch (error) {
             console.error('Error generating QR image:', error);
             alert('Error al generar la imagen del QR');

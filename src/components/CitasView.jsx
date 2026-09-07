@@ -3,6 +3,7 @@ import { Calendar, Plus, Search, Eye, Edit2, CheckCircle, XCircle, FileText, Dow
 import { supabase } from '../../utils/supabase'; // Will adjust import depth if needed
 import { jsPDF } from 'jspdf';
 import { formatCurrency, formatServiceDate, formatDateForInput, dateToAndroidString } from '../utils/format';
+import { downloadPDF, downloadImageBase64 } from '../utils/downloadHelper';
 
 const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
     // Basic Boilerplate for structure
@@ -151,7 +152,7 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
         }
     };
 
-    const handleExportPDF = () => {
+    const handleExportPDF = async () => {
         if (!selectedCita) return;
         const doc = new jsPDF();
 
@@ -210,7 +211,7 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
             { label: 'Notas', value: selectedCita.notas }
         ]);
 
-        doc.save(`Cita_${selectedCita.folio}_${selectedCita.cliente_nombre}.pdf`);
+        await downloadPDF(doc, `Cita_${selectedCita.folio}_${selectedCita.cliente_nombre}.pdf`);
     };
 
     return (

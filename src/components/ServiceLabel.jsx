@@ -3,6 +3,7 @@ import { X, Download, MapPin, Phone, Mail, FileText } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { downloadPDF, downloadImageBase64 } from '../utils/downloadHelper';
 
 const ServiceLabel = ({ service, user, company: companyProp, onClose, darkMode }) => {
     const labelRef = useRef(null);
@@ -69,7 +70,7 @@ const ServiceLabel = ({ service, user, company: companyProp, onClose, darkMode }
             // Standard business card size: 85x55 mm, landscape ('l')
             const pdf = new jsPDF('l', 'mm', [85, 55]);
             pdf.addImage(imgData, 'JPEG', 0, 0, 85, 55, undefined, 'FAST');
-            pdf.save(`Etiqueta-${service.orden_numero || service.folio}.pdf`);
+            await downloadPDF(pdf, `Etiqueta-${service.orden_numero || service.folio}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error al generar el PDF');

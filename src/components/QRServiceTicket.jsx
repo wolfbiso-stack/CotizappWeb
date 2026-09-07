@@ -4,6 +4,7 @@ import { X, Download, MapPin, Phone, Mail, QrCode as QrCodeIcon } from 'lucide-r
 import { supabase } from '../../utils/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { downloadPDF, downloadImageBase64 } from '../utils/downloadHelper';
 
 const QRServiceTicket = ({ service, user, company: companyProp, onClose, darkMode }) => {
     const ticketRef = useRef(null);
@@ -114,7 +115,7 @@ const QRServiceTicket = ({ service, user, company: companyProp, onClose, darkMod
             const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
             // Use 'FAST' compression for JPEG
             pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-            pdf.save(`Ticket-${service.orden_numero}.pdf`);
+            await downloadPDF(pdf, `Ticket-${service.orden_numero}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error al generar el PDF');

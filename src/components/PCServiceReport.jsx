@@ -3,6 +3,7 @@ import { supabase } from '../../utils/supabase';
 import { X, Download, Printer, FileText, CheckCircle2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { downloadPDF, downloadImageBase64 } from '../utils/downloadHelper';
 
 const PCServiceReport = ({ service, user, company: companyProp, onClose, darkMode }) => {
     const reportRef = useRef(null);
@@ -105,7 +106,7 @@ const PCServiceReport = ({ service, user, company: companyProp, onClose, darkMod
                 pdf.addImage(imgData, 'JPEG', xOffset, 0, imgWidthScaled, imgHeightScaled);
             }
 
-            pdf.save(`Reporte-PC-${service.orden_numero || service.folio}.pdf`);
+            await downloadPDF(pdf, `Reporte-PC-${service.orden_numero || service.folio}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error al generar el PDF');
