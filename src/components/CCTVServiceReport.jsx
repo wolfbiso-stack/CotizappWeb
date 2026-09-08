@@ -184,7 +184,24 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     const trabajoRealizado = service.trabajo_realizado || dynamicContentParsed.trabajo_realizado || '';
     const problemaReportado = service.problema_reportado || dynamicContentParsed.problema_reportado || '';
 
-    const checklistItems = trabajoRealizado ? String(trabajoRealizado).split('\n').filter(line => line.trim() !== '') : [];
+    let checklistItems = [];
+    if (trabajoRealizado) {
+        checklistItems = String(trabajoRealizado).split('\n').filter(line => line.trim() !== '');
+    } else if (Array.isArray(dynamicContentParsed)) {
+        checklistItems = dynamicContentParsed.map(item => String(item));
+    } else if (typeof dynamicContentParsed === 'object' && dynamicContentParsed !== null) {
+        const fallbacks = [];
+        for (const [key, value] of Object.entries(dynamicContentParsed)) {
+            if (['cantidad_camaras', 'ubicacion_instalacion', 'problema_reportado', 'diagnostico_tecnico', 'trabajo_realizado', 'observaciones'].includes(key)) continue;
+            
+            if (value === true) fallbacks.push(key);
+            else if (typeof value === 'string' && value.trim() !== '') fallbacks.push(value);
+            else if (Array.isArray(value)) fallbacks.push(...value.map(String));
+        }
+        if (fallbacks.length > 0) {
+            checklistItems = fallbacks;
+        }
+    }
 
     return (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">

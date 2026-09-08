@@ -108,9 +108,18 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
             }
             setParts(loadedParts);
 
+            let parsedDynamic = {};
+            if (service.contenido_dinamico) {
+                try {
+                    parsedDynamic = typeof service.contenido_dinamico === 'string' ? JSON.parse(service.contenido_dinamico) : service.contenido_dinamico;
+                } catch(e) { console.error("Error parsing dynamic content", e); }
+            }
+            if (Array.isArray(parsedDynamic)) parsedDynamic = {}; // fallback if old record is array
+
             setFormData({
                 ...formData,
                 ...service,
+                ...parsedDynamic,
                 fecha: formatDateForInput(service.servicio_fecha || service.fecha),
                 tipos_camaras: Array.isArray(service.tipos_camaras) ? service.tipos_camaras.join(', ') : (service.tipos_camaras || ''),
                 mano_obra: service.mano_obra || 0,
