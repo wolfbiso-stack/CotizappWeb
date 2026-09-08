@@ -12,6 +12,22 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     const [reportScale, setReportScale] = useState(1.0);
 
     useEffect(() => {
+        const handleResize = () => {
+            const screenWidth = window.innerWidth;
+            if (screenWidth < 850) {
+                // 816px is approx letter width, padding included
+                setReportScale(Math.max(0.3, (screenWidth - 40) / 816));
+            } else {
+                setReportScale(1.0);
+            }
+        };
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
         if (!companyProp) {
             fetchCompany();
         }
@@ -116,6 +132,7 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
         return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
@@ -157,7 +174,17 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
         tiposCamarasFormatted = tiposCamarasFormatted.join(', ');
     }
 
-    const checklistItems = service.trabajo_realizado ? String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '') : [];
+    let dynamicContentParsed = {};
+    try {
+        dynamicContentParsed = typeof service.contenido_dinamico === 'string' ? JSON.parse(service.contenido_dinamico) : (service.contenido_dinamico || {});
+    } catch (e) {
+        console.error("Error parsing contenido_dinamico:", e);
+    }
+    
+    const trabajoRealizado = service.trabajo_realizado || dynamicContentParsed.trabajo_realizado || '';
+    const problemaReportado = service.problema_reportado || dynamicContentParsed.problema_reportado || '';
+
+    const checklistItems = trabajoRealizado ? String(trabajoRealizado).split('\n').filter(line => line.trim() !== '') : [];
 
     return (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
@@ -212,13 +239,15 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 </div>
 
                 {/* Report Content Container */}
-                <div className="flex-1 overflow-y-auto bg-gray-200 p-4 md:p-8 min-h-0 flex flex-col items-center">
-                    <div className="relative w-full max-w-4xl flex justify-center pb-8">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-200 p-4 md:p-8 min-h-0 flex flex-col items-center">
+                    <div 
+                        className="relative flex justify-center pb-8 origin-top"
+                        style={{ transform: `scale(${reportScale})`, transformOrigin: 'top center' }}
+                    >
                         <div
                             ref={reportRef}
                             id="report-paper"
-                            className="relative max-w-4xl w-full bg-white shadow-xl overflow-hidden print:shadow-none transition-transform origin-top text-gray-800"
-                            style={{ transform: `scale(${reportScale})` }}
+                            className="relative w-[816px] min-w-[816px] shrink-0 bg-white shadow-xl overflow-hidden print:shadow-none text-gray-800"
                         >
                             {/* 1. Encabezado */}
                             <header className="bg-[#f0f6ff] px-10 py-8">
@@ -292,17 +321,17 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                                         <div className="grid grid-cols-2 gap-8">
                                             <div>
                                                 <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">FALLA REPORTADA</h3>
-                                                <p className="text-gray-700 italic">"{service.problema_reportado || 'N/A'}"</p>
+                                                <p className="text-gray-700 italic">"{problemaReportado || 'N/A'}"</p>
                                             </div>
                                             <div>
                                                 <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">SOLUCIÓN APLICADA</h3>
-                                                <p className="text-gray-700 whitespace-pre-line">{service.trabajo_realizado || 'N/A'}</p>
+                                                <p className="text-gray-700 whitespace-pre-line">{trabajoRealizado || 'N/A'}</p>
                                             </div>
                                         </div>
                                     ) : service.tipo_servicio === 'Otro' ? (
                                         <div>
                                             <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">DETALLES DEL SERVICIO</h3>
-                                            <p className="text-gray-700 whitespace-pre-line">{service.trabajo_realizado || 'N/A'}</p>
+                                            <p className="text-gray-700 whitespace-pre-line">{trabajoRealizado || 'N/A'}</p>
                                         </div>
                                     ) : (
                                         <div>
