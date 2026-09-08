@@ -5308,16 +5308,68 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
             {/* Technical Report Modal */}
             {
                 showTechnicalReport && selectedServiceForReport && (
-                    <PCServiceReport
-                        service={selectedServiceForReport}
-                        user={user}
-                        company={company}
-                        onClose={() => {
-                            setShowTechnicalReport(false);
-                            setSelectedServiceForReport(null);
-                        }}
-                        darkMode={darkMode}
-                    />
+                    <>
+                        {selectedServiceForReport.type === 'PC' && (
+                            <PCServiceReport
+                                service={selectedServiceForReport}
+                                user={user}
+                                company={company}
+                                onClose={() => {
+                                    setShowTechnicalReport(false);
+                                    setSelectedServiceForReport(null);
+                                }}
+                                darkMode={darkMode}
+                            />
+                        )}
+                        {selectedServiceForReport.type === 'CCTV' && (
+                            <CCTVServiceReport
+                                service={selectedServiceForReport}
+                                user={user}
+                                company={company}
+                                onClose={() => {
+                                    setShowTechnicalReport(false);
+                                    setSelectedServiceForReport(null);
+                                }}
+                                darkMode={darkMode}
+                            />
+                        )}
+                        {selectedServiceForReport.type === 'Celular' && (
+                            <PhoneServiceReport
+                                service={selectedServiceForReport}
+                                user={user}
+                                company={company}
+                                onClose={() => {
+                                    setShowTechnicalReport(false);
+                                    setSelectedServiceForReport(null);
+                                }}
+                                darkMode={darkMode}
+                            />
+                        )}
+                        {selectedServiceForReport.type === 'Impresora' && (
+                            <PrinterServiceReport
+                                service={selectedServiceForReport}
+                                user={user}
+                                company={company}
+                                onClose={() => {
+                                    setShowTechnicalReport(false);
+                                    setSelectedServiceForReport(null);
+                                }}
+                                darkMode={darkMode}
+                            />
+                        )}
+                        {selectedServiceForReport.type === 'Redes' && (
+                            <NetworkServiceReport
+                                service={selectedServiceForReport}
+                                user={user}
+                                company={company}
+                                onClose={() => {
+                                    setShowTechnicalReport(false);
+                                    setSelectedServiceForReport(null);
+                                }}
+                                darkMode={darkMode}
+                            />
+                        )}
+                    </>
                 )
             }
 
