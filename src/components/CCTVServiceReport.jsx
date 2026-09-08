@@ -63,10 +63,11 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 position: 'fixed',
                 top: '-10000px',
                 left: '0',
-                width: '1024px',
+                width: '816px',
                 height: 'auto',
                 overflow: 'visible',
-                zIndex: '-1000'
+                zIndex: '-1000',
+                transform: 'none'
             });
             document.body.appendChild(clone);
 
@@ -75,7 +76,7 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 useCORS: true,
                 backgroundColor: '#ffffff',
                 logging: false,
-                windowWidth: 1024
+                windowWidth: 816
             });
 
             document.body.removeChild(clone);
@@ -89,10 +90,10 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
             const pageHeight = pdf.internal.pageSize.getHeight();
 
             if (pdfHeight > pageHeight) {
-                const shouldFitOnePage = pdfHeight < pageHeight * 1.3 || reportScale < 1.0;
+                const shouldFitOnePage = pdfHeight < pageHeight * 1.3;
 
                 if (shouldFitOnePage) {
-                    const scaleFactor = Math.min(pageHeight / pdfHeight, reportScale);
+                    const scaleFactor = Math.min(pageHeight / pdfHeight, 1.0);
                     const imgWidthScaled = pdfWidth * scaleFactor;
                     const imgHeightScaled = pdfHeight * scaleFactor;
                     const xOffset = (pdfWidth - imgWidthScaled) / 2;
@@ -110,8 +111,8 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                     }
                 }
             } else {
-                const imgWidthScaled = pdfWidth * reportScale;
-                const imgHeightScaled = pdfHeight * reportScale;
+                const imgWidthScaled = pdfWidth;
+                const imgHeightScaled = pdfHeight;
                 const xOffset = (pdfWidth - imgWidthScaled) / 2;
                 pdf.addImage(imgData, 'JPEG', xOffset, 0, imgWidthScaled, imgHeightScaled);
             }
