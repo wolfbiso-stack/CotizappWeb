@@ -173,17 +173,17 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
     
     let ordenesEnProceso = 0;
     let ordenesListas = 0;
-    let ordenesEntregadías = 0;
-    let ordenesFallidías = 0;
+    let ordenesEntregadas = 0;
+    let ordenesFallidas = 0;
 
     services.forEach(s => {
         const st = normalizeStatus(s.status);
         if (st === 'entregado') {
-            ordenesEntregadías++;
+            ordenesEntregadas++;
         } else if (st === 'listo_para_entregar' || st === 'listo_para_entrega' || st === 'pendiente_de_entrega') {
             ordenesListas++;
         } else if (st === 'no_reparable' || st === 'no_fue_posible_reparar' || st === 'cancelado' || st === 'cancelada') {
-            ordenesFallidías++;
+            ordenesFallidas++;
         } else {
             // Treat anything else (recibido, diagnosticado, pendiente, en_proceso, revisado, reparado) as En Proceso
             ordenesEnProceso++;
@@ -194,9 +194,9 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
 
     // Cotizaciones Metrics
     const cotPendientes = quotations.filter(q => (q.aceptada_rechazada || 'pendiente').toLowerCase() === 'pendiente').length;
-    const cotAceptadías = quotations.filter(q => (q.aceptada_rechazada || '').toLowerCase() === 'aceptada').length;
-    const cotRechazadías = quotations.filter(q => (q.aceptada_rechazada || '').toLowerCase() === 'rechazada').length;
-    const tasaConversionCot = quotations.length ? Math.round((cotAceptadías / quotations.length) * 100) + '%' : '0%';
+    const cotAceptadas = quotations.filter(q => (q.aceptada_rechazada || '').toLowerCase() === 'aceptada').length;
+    const cotRechazadas = quotations.filter(q => (q.aceptada_rechazada || '').toLowerCase() === 'rechazada').length;
+    const tasaConversionCot = quotations.length ? Math.round((cotAceptadas / quotations.length) * 100) + '%' : '0%';
 
     // Productos Metrics
     const conStock = products.filter(p => (Number(p.stock) || 0) > 0).length;
@@ -248,10 +248,10 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
                     mainStats={[
                         { label: 'En Proceso', value: ordenesEnProceso, colorClass: 'text-blue-500' },
                         { label: 'P. Entrega', value: ordenesListas, colorClass: 'text-amber-500' },
-                        { label: 'Entregadías', value: ordenesEntregadías, colorClass: 'text-emerald-500' }
+                        { label: 'Entregadas', value: ordenesEntregadas, colorClass: 'text-emerald-500' }
                     ]}
                     subStats={[
-                        { label: 'No Rep/Canc', value: ordenesFallidías },
+                        { label: 'No Rep/Canc', value: ordenesFallidas },
                         { label: 'Total Servicios', value: services.length },
                         { label: 'Ingresos Hist.', value: formatCurrency(ingresosTotales) }
                     ]}
@@ -269,13 +269,13 @@ const InicioView = ({ services = [], savedClients = [], quotations = [], product
                     iconColor="text-purple-500"
                     mainStats={[
                         { label: 'Pendientes', value: cotPendientes, colorClass: 'text-purple-500' },
-                        { label: 'Aceptadías', value: cotAceptadías, colorClass: 'text-emerald-500' },
-                        { label: 'Rechazadías', value: cotRechazadías, colorClass: 'text-rose-500' }
+                        { label: 'Aceptadas', value: cotAceptadas, colorClass: 'text-emerald-500' },
+                        { label: 'Rechazadas', value: cotRechazadas, colorClass: 'text-rose-500' }
                     ]}
                     subStats={[
-                        { label: 'Total Emitidías', value: quotations.length },
+                        { label: 'Total Emitidas', value: quotations.length },
                         { label: 'Tasa Conversión', value: tasaConversionCot },
-                        { label: 'Destacadías', value: '0' }
+                        { label: 'Destacadas', value: '0' }
                     ]}
                 />
 

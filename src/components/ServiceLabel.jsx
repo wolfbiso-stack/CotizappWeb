@@ -171,7 +171,7 @@ const ServiceLabel = ({ service, user, company: companyProp, onClose, darkMode }
                             </h2>
                             
                             {/* Blank Space for QR */}
-                            <div className="w-64 h-64 bg-white rounded-2xl shadow-inner border-2 border-díashed border-gray-300 flex items-center justify-center z-10 relative">
+                            <div className="w-64 h-64 bg-white rounded-2xl shadow-inner border-2 border-dashed border-gray-300 flex items-center justify-center z-10 relative">
                                 <div className="text-center opacity-30">
                                     <div className="w-16 h-16 border-4 border-gray-400 rounded-lg mx-auto mb-2 relative">
                                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-400"></div>

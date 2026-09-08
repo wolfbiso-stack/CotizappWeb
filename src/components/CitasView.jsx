@@ -378,7 +378,7 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                 {filteredCitas.length === 0 && (
                     <div className={`text-center py-12 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                         <Calendar className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <p className="font-medium">No hay citas registradías para mostrar.</p>
+                        <p className="font-medium">No hay citas registradas para mostrar.</p>
                     </div>
                 )}
             </div>
@@ -456,7 +456,7 @@ const CitasView = ({ citas = [], fetchCitas, user, darkMode = false }) => {
                                     </div>
                                     <div>
                                         <label className={`block text-xs font-bold mb-1.5 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Ubicación / Coordenadías</label>
-                                        <input type="text" disabled={isViewMode} placeholder="Opcional. Link de Maps o coordenadías" value={formData.cliente_ubicacion} onChange={(e) => setFormData({ ...formData, cliente_ubicacion: e.target.value })} className={inputClass} />
+                                        <input type="text" disabled={isViewMode} placeholder="Opcional. Link de Maps o coordenadas" value={formData.cliente_ubicacion} onChange={(e) => setFormData({ ...formData, cliente_ubicacion: e.target.value })} className={inputClass} />
                                     </div>
                                     <div>
                                         <label className={`block text-xs font-bold mb-1.5 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dirección</label>

@@ -413,7 +413,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             </div>
                         </div>
 
-                        <div className="mt-6 pt-6 border-t border-díashed border-cyan-200/50">
+                        <div className="mt-6 pt-6 border-t border-dashed border-cyan-200/50">
                             <div className="flex items-center gap-2 mb-4 text-cyan-600">
                                 <Activity className="w-5 h-5" />
                                 <h3 className="font-bold uppercase text-xs tracking-widest">Pruebas de Velocidad</h3>
@@ -623,7 +623,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 </div>
                             ))}
                             {parts.length === 0 && (
-                                <div className="text-center py-10 rounded-2xl border-2 border-díashed border-slate-200 text-slate-400">
+                                <div className="text-center py-10 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
                                     No hay materiales agregados aún.
                                 </div>
                             )}
@@ -668,7 +668,7 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             ))}
 
                             {/* Upload Button */}
-                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-díashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-cyan-400 group">
+                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-cyan-400 group">
                                 <Image className="w-8 h-8 text-slate-300 group-hover:text-cyan-400 mb-2" />
                                 <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-cyan-500">Subir Foto</span>
                                 <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />

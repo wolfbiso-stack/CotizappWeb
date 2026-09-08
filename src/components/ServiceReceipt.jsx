@@ -99,7 +99,7 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                         </div>
 
                         {/* Separator */}
-                        <div className="border-b-2 border-díashed border-black my-2"></div>
+                        <div className="border-b-2 border-dashed border-black my-2"></div>
 
                         {/* 2. Ticket ID & Date */}
                         <div className="text-center mb-2">
@@ -190,7 +190,7 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                         </div>
 
                         {/* Separator */}
-                        <div className="border-b-2 border-díashed border-black my-4"></div>
+                        <div className="border-b-2 border-dashed border-black my-4"></div>
 
                         {/* 6. QR Code */}
                         <div className="text-center">
@@ -209,7 +209,7 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
                         {/* Footer Disclaimer */}
                         <div className="mt-4 text-[8px] text-center text-justify">
                             <p>
-                                GARANTÍA: 30 días en mano de obra. No cubre partes mojadías o mal uso.
+                                GARANTÍA: 30 días en mano de obra. No cubre partes mojadas o mal uso.
                                 Equipos sin reclamar causan abandono en 60 días.
                             </p>
                         </div>

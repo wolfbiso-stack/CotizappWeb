@@ -537,7 +537,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     value={formData.trabajo_realizado}
                                     onChange={handleChange}
                                     className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Acciones correctivas aplicadías (separar por comas)..."
+                                    placeholder="Acciones correctivas aplicadas (separar por comas)..."
                                 ></textarea>
                             </div>
                         </div>
@@ -597,7 +597,7 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             ))}
 
                             {/* Upload Button */}
-                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-díashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-purple-400 group">
+                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer transition-all hover:border-purple-400 group">
                                 <Image className="w-8 h-8 text-slate-300 group-hover:text-purple-400 mb-2" />
                                 <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-purple-500">Subir Foto</span>
                                 <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />

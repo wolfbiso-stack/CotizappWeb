@@ -19,14 +19,14 @@ const TrialExpiredView = ({ onSubscribe, darkMode }) => {
                     </h1>
 
                     <p className={`text-lg mb-10 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                        Tu periodo de prueba gratuita de SmartQuote ha llegado a su fin. Para seguir disfrutando de todías nuestras herramientas premium, creadías para escalar tu negocio, necesitas activar una suscripción.
+                        Tu periodo de prueba gratuita de SmartQuote ha llegado a su fin. Para seguir disfrutando de todas nuestras herramientas premium, creadas para escalar tu negocio, necesitas activar una suscripción.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-left">
                         {[
                             { icon: Rocket, text: 'Gestión ilimitada', color: 'text-blue-500' },
                             { icon: Zap, text: 'Informes avanzados', color: 'text-yellow-500' },
-                            { icon: CreditCard, text: 'Cotizaciones ilimitadías', color: 'text-green-500' },
+                            { icon: CreditCard, text: 'Cotizaciones ilimitadas', color: 'text-green-500' },
                             { icon: ShieldAlert, text: 'Backup en la nube', color: 'text-purple-500' },
                         ].map((item, idx) => (
                             <div key={idx} className={`flex items-center gap-3 p-4 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
