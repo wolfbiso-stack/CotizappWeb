@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
-import { X, Download, Printer, CheckCircle2, Lock, ShieldCheck, Check } from 'lucide-react';
+import { X, Download, Printer, Check, Lock, CheckCircle2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { downloadPDF } from '../utils/downloadHelper';
@@ -116,8 +116,7 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return date.toLocaleDateString('es-ES', options);
+        return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
     const getParts = () => {
@@ -140,7 +139,7 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     };
 
     const formatCurrency = (amount) => {
-        return parseFloat(amount || 0).toLocaleString('es-MX', {
+        return parseFloat(amount || 0).toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
@@ -157,6 +156,8 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
     if (Array.isArray(tiposCamarasFormatted)) {
         tiposCamarasFormatted = tiposCamarasFormatted.join(', ');
     }
+
+    const checklistItems = service.trabajo_realizado ? String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '') : [];
 
     return (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
@@ -211,20 +212,20 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                 </div>
 
                 {/* Report Content Container */}
-                <div className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-10 min-h-0 flex flex-col items-center">
-                    <div className="relative w-full max-w-4xl flex justify-center py-4">
+                <div className="flex-1 overflow-y-auto bg-gray-200 p-4 md:p-8 min-h-0 flex flex-col items-center">
+                    <div className="relative w-full max-w-4xl flex justify-center pb-8">
                         <div
                             ref={reportRef}
                             id="report-paper"
-                            className="relative max-w-4xl w-full bg-white shadow-xl overflow-hidden print:shadow-none transition-transform origin-top"
+                            className="relative max-w-4xl w-full bg-white shadow-xl overflow-hidden print:shadow-none transition-transform origin-top text-gray-800"
                             style={{ transform: `scale(${reportScale})` }}
                         >
                             {/* 1. Encabezado */}
-                            <header className="p-8 bg-[#0ea5e9] text-white">
-                                <div className="flex flex-col md:flex-row justify-between items-center">
+                            <header className="bg-[#f0f6ff] px-10 py-8">
+                                <div className="flex justify-between items-start">
                                     {/* Logo y Datos de Empresa */}
-                                    <div className="flex items-center gap-6">
-                                        <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center p-2 shadow-lg overflow-hidden">
+                                    <div className="flex gap-4 items-center">
+                                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center p-2 shadow-sm overflow-hidden">
                                             {company?.logo_uri ? (
                                                 <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
                                             ) : (
@@ -232,83 +233,86 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                                             )}
                                         </div>
                                         <div>
-                                            <h1 className="text-3xl font-black tracking-tight mb-1 uppercase">{company?.nombre || 'Mi Empresa'}</h1>
-                                            <p className="text-sm text-blue-100 uppercase font-medium">{company?.direccion}</p>
-                                            <p className="text-sm text-blue-100 uppercase font-medium">{company?.telefono}</p>
-                                            <p className="text-sm text-blue-100">{company?.correo}</p>
+                                            <h1 className="text-2xl font-bold text-[#1a365d] mb-1">{company?.nombre || 'CUBI Servicios'}</h1>
+                                            <p className="text-[#3b82f6] text-sm">{company?.direccion}</p>
+                                            <p className="text-[#3b82f6] text-sm">
+                                                Tel: {company?.telefono} | {company?.correo}
+                                            </p>
                                         </div>
                                     </div>
                                     
                                     {/* Titulo Reporte */}
-                                    <div className="text-right mt-6 md:mt-0">
-                                        <h2 className="text-3xl font-black mb-2 uppercase">Reporte Técnico<br/>CCTV</h2>
-                                        <div className="bg-white/20 inline-block px-4 py-2 rounded-lg backdrop-blur-sm">
-                                            <p className="text-sm font-semibold uppercase tracking-wider text-blue-100 mb-1">Folio</p>
-                                            <p className="text-xl font-bold">{service.servicio_numero || service.folio}</p>
-                                        </div>
-                                        <p className="text-sm font-semibold mt-2 text-blue-100">FECHA: {formatDate(service.servicio_fecha || service.fecha)}</p>
+                                    <div className="text-right">
+                                        <h2 className="text-3xl font-bold text-[#374151] mb-2">Reporte Técnico CCTV</h2>
+                                        <p className="text-[#6b7280] text-sm">
+                                            Folio: <span className="font-bold text-[#3b82f6]">{service.servicio_numero || service.folio}</span>
+                                        </p>
+                                        <p className="text-[#6b7280] text-sm mt-1">{formatDate(service.servicio_fecha || service.fecha)}</p>
                                     </div>
                                 </div>
                             </header>
 
-                            <main className="p-8 space-y-6">
+                            <main className="px-10 py-8">
                                 {/* 2. Información Cliente y Técnico */}
-                                <div className="grid grid-cols-2 gap-8 border-b-2 border-gray-100 pb-6 print-section">
+                                <div className="flex justify-between items-start mb-8 print-section">
                                     <div>
-                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cliente</h3>
-                                        <p className="text-lg font-bold text-gray-800 uppercase">{service.cliente_nombre}</p>
-                                        <p className="text-sm text-gray-600">{service.cliente_telefono}</p>
-                                        <p className="text-sm text-gray-600">{service.cliente_direccion}</p>
+                                        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">CLIENTE</h3>
+                                        <p className="text-lg font-bold text-gray-800">{service.cliente_nombre}</p>
+                                        <p className="text-gray-500 text-sm mt-1">{service.cliente_telefono}</p>
                                     </div>
-                                    <div>
-                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Técnico Responsable</h3>
-                                        <p className="text-lg font-bold text-gray-800 uppercase">{service.tecnico_nombre}</p>
-                                        <p className="text-sm text-gray-600">{service.tecnico_celular}</p>
+                                    <div className="text-right">
+                                        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">TÉCNICO RESPONSABLE</h3>
+                                        <p className="text-lg font-bold text-gray-800">{service.tecnico_nombre}</p>
+                                        <p className="text-gray-500 text-sm mt-1">{service.tecnico_celular}</p>
                                     </div>
                                 </div>
 
+                                <h2 className="text-xl font-bold text-gray-800 mb-4 print-section">Detalles del Servicio</h2>
+
                                 {/* 3. Detalles del Servicio (Tarjeta 1) */}
-                                <div className="border border-gray-200 rounded-xl overflow-hidden print-section">
-                                    <div className="bg-gray-50 p-4 border-b border-gray-200 flex flex-wrap gap-6 items-center">
-                                        <div className="flex-1">
-                                            <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Tipo</span>
-                                            <span className="inline-block bg-[#0ea5e9] text-white text-xs font-bold px-3 py-1 rounded-full uppercase">{service.tipo_servicio || 'CCTV'}</span>
+                                <div className="border border-gray-200 rounded-xl p-6 mb-6 print-section bg-gray-50/30">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                        <div>
+                                            <span className="text-[11px] text-gray-500 uppercase font-bold block mb-2">TIPO</span>
+                                            <span className="inline-block bg-white border border-gray-200 text-gray-800 font-semibold px-4 py-1.5 rounded-lg shadow-sm">
+                                                {service.tipo_servicio || 'CCTV'}
+                                            </span>
                                         </div>
-                                        <div className="flex-1">
-                                            <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Marca</span>
-                                            <span className="text-gray-800 font-bold uppercase">{service.marca_principal || service.sistema_modelo || 'N/A'}</span>
+                                        <div>
+                                            <span className="text-[11px] text-gray-500 uppercase font-bold block mb-2">MARCA</span>
+                                            <span className="text-gray-800 font-bold">{service.marca_principal || service.sistema_modelo || '---'}</span>
                                         </div>
-                                        <div className="flex-1 min-w-[200px]">
-                                            <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Equipos Instalados</span>
-                                            <span className="text-gray-800 font-bold uppercase">{tiposCamarasFormatted || 'N/A'}</span>
+                                        <div>
+                                            <span className="text-[11px] text-gray-500 uppercase font-bold block mb-2">EQUIPOS INSTALADOS</span>
+                                            <span className="text-gray-800 font-bold">{tiposCamarasFormatted || '---'}</span>
                                         </div>
                                     </div>
+                                    
                                     {['Mantenimiento', 'Diagnostico', 'Revision'].includes(service.tipo_servicio) ? (
-                                        <div className="p-6 bg-white space-y-6">
-                                            {service.problema_reportado && (
-                                                <div>
-                                                    <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">Falla Reportada</h3>
-                                                    <p className="text-gray-700 italic border-l-4 border-amber-400 pl-3 py-1 bg-amber-50/50">"{service.problema_reportado}"</p>
-                                                </div>
-                                            )}
-                                            {service.trabajo_realizado && (
-                                                <div>
-                                                    <h3 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">Solución Aplicada</h3>
-                                                    <p className="text-gray-700 whitespace-pre-line">{service.trabajo_realizado}</p>
-                                                </div>
-                                            )}
+                                        <div className="grid grid-cols-2 gap-8">
+                                            <div>
+                                                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">FALLA REPORTADA</h3>
+                                                <p className="text-gray-700 italic">"{service.problema_reportado || 'N/A'}"</p>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">SOLUCIÓN APLICADA</h3>
+                                                <p className="text-gray-700 whitespace-pre-line">{service.trabajo_realizado || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    ) : service.tipo_servicio === 'Otro' ? (
+                                        <div>
+                                            <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">DETALLES DEL SERVICIO</h3>
+                                            <p className="text-gray-700 whitespace-pre-line">{service.trabajo_realizado || 'N/A'}</p>
                                         </div>
                                     ) : (
-                                        <div className="p-6 bg-white">
-                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
-                                                {service.tipo_servicio === 'Otro' ? 'Detalles del Servicio' : 'Actividades Realizadas (Checklist)'}
-                                            </h3>
-                                            <div className="space-y-3">
-                                                {service.trabajo_realizado ? (
-                                                    String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '').map((line, idx) => (
-                                                        <div key={idx} className="flex items-start gap-3">
-                                                            <Check className="w-5 h-5 text-green-500 mt-0.5 flex-none" strokeWidth={3} />
-                                                            <p className="text-gray-700 font-medium">{line.trim()}</p>
+                                        <div>
+                                            <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-3">ACTIVIDADES REALIZADAS (CHECKLIST)</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8">
+                                                {checklistItems.length > 0 ? (
+                                                    checklistItems.map((line, idx) => (
+                                                        <div key={idx} className="flex items-center gap-2">
+                                                            <Check className="w-5 h-5 text-emerald-500 flex-none" strokeWidth={3} />
+                                                            <p className="text-gray-700">{line.trim()}</p>
                                                         </div>
                                                     ))
                                                 ) : (
@@ -320,97 +324,103 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                                 </div>
 
                                 {/* 4. Accesos (Tarjeta 2) */}
-                                <div className="border border-gray-200 rounded-xl overflow-hidden flex print-section">
-                                    <div className="bg-[#0ea5e9] w-12 flex flex-col justify-center items-center py-4">
+                                <div className="border border-blue-100 rounded-xl overflow-hidden flex mb-6 print-section bg-[#f4f8fc]">
+                                    <div className="bg-[#2563eb] w-32 flex flex-col justify-center items-center py-6">
                                         <Lock className="w-6 h-6 text-white mb-2" />
-                                        <div className="text-white text-xs font-bold tracking-widest uppercase" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                                        <div className="text-white text-xs font-bold tracking-widest uppercase">
                                             ACCESOS
                                         </div>
                                     </div>
-                                    <div className="flex-1 bg-sky-50/50 p-6 grid grid-cols-2 gap-6">
-                                        <div>
-                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">IP / Dominio</span>
-                                            <span className="text-gray-800 font-bold">{service.ip_grabador || service.dominio_ddns || 'N/A'}</span>
+                                    <div className="flex-1 p-6">
+                                        <div className="grid grid-cols-3 gap-6 mb-6">
+                                            <div>
+                                                <span className="text-[11px] text-gray-500 uppercase font-bold block mb-1">IP / DOMINIO</span>
+                                                <span className="text-gray-800 font-semibold">{service.ip_grabador || service.dominio_ddns || '---'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[11px] text-gray-500 uppercase font-bold block mb-1">USUARIO</span>
+                                                <span className="text-gray-800 font-semibold">{service.usuario || '---'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[11px] text-gray-500 uppercase font-bold block mb-1">CONTRASEÑA</span>
+                                                <span className="inline-block bg-white border border-gray-200 text-[#2563eb] font-semibold px-4 py-1.5 rounded-lg shadow-sm">
+                                                    {service.contrasena || '---'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">Usuario</span>
-                                            <span className="text-gray-800 font-bold">{service.usuario || 'N/A'}</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">Contraseña</span>
-                                            <span className="text-gray-800 font-bold">{service.contrasena || 'N/A'}</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-xs text-gray-400 uppercase font-bold block mb-1">ID P2P / Nube</span>
-                                            <span className="text-gray-800 font-bold">{service.id_nube_p2p || 'N/A'}</span>
+                                        <div className="border-t border-blue-100/50 pt-4">
+                                            <span className="text-[11px] text-gray-500 uppercase font-bold block mb-1">ID P2P / NUBE</span>
+                                            <span className="text-gray-800 font-bold text-lg">{service.id_nube_p2p || '---'}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* 5. Totales y Garantía */}
-                                <div className="grid grid-cols-2 gap-6 print-section">
+                                <div className="grid grid-cols-2 gap-6 print-section items-end">
                                     {/* Garantia */}
-                                    <div className="border border-gray-200 rounded-xl p-6 flex flex-col justify-center bg-gray-50">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <ShieldCheck className={`w-8 h-8 ${service.garantia_aplica ? 'text-green-500' : 'text-gray-400'}`} />
-                                            <div>
-                                                <h3 className="text-sm font-bold text-gray-800 uppercase">Garantía del Servicio</h3>
-                                                <p className={`text-xs font-bold uppercase ${service.garantia_aplica ? 'text-green-600' : 'text-gray-400'}`}>
-                                                    {service.garantia_aplica ? 'Activa / Aplica' : 'No Aplica / Expirada'}
-                                                </p>
-                                            </div>
+                                    <div className="border border-gray-200 rounded-xl p-6 bg-gray-50/50 self-start w-full">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <CheckCircle2 className={`w-5 h-5 ${service.garantia_aplica ? 'text-blue-500' : 'text-gray-400'}`} />
+                                            <h3 className="text-xs font-bold text-gray-700 uppercase">GARANTÍA</h3>
                                         </div>
-                                        {service.garantia_aplica && (
-                                            <div className="grid grid-cols-2 gap-4 mt-2">
-                                                <div>
-                                                    <span className="text-xs text-gray-400 uppercase font-bold block">Inicio</span>
-                                                    <span className="text-gray-800 font-bold text-sm">{formatDate(service.garantia_fecha_inicio)}</span>
+                                        {service.garantia_aplica ? (
+                                            <>
+                                                <p className="text-gray-800 font-medium mb-4 text-sm leading-relaxed">
+                                                    {service.garantia_detalles || 'Garantía 3 meses en mano de obra. 1 año en Componentes con fabricante.'}
+                                                </p>
+                                                <div className="border-t border-gray-200 pt-4 flex justify-between">
+                                                    <div className="flex gap-2">
+                                                        <span className="text-[11px] text-gray-500 uppercase">Inicio:</span>
+                                                        <span className="text-[11px] font-bold text-gray-800">{formatDate(service.garantia_fecha_inicio)}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="text-[11px] text-gray-500 uppercase">Fin:</span>
+                                                        <span className="text-[11px] font-bold text-gray-800">{formatDate(service.garantia_fecha_vencimiento)}</span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className="text-xs text-gray-400 uppercase font-bold block">Fin</span>
-                                                    <span className="text-gray-800 font-bold text-sm">{formatDate(service.garantia_fecha_vencimiento)}</span>
-                                                </div>
-                                            </div>
+                                            </>
+                                        ) : (
+                                            <p className="text-gray-500 text-sm">Sin garantía aplicable.</p>
                                         )}
                                     </div>
 
                                     {/* Totales */}
-                                    <div className="bg-[#0ea5e9]/10 rounded-xl p-6 border border-[#0ea5e9]/20">
-                                        <div className="space-y-2 mb-4 text-sm font-medium text-gray-600">
+                                    <div className="bg-[#f0f6ff] rounded-xl p-6 border border-blue-100 self-start w-full">
+                                        <div className="space-y-3 mb-4 text-sm text-gray-600">
                                             <div className="flex justify-between">
                                                 <span>Mano de Obra</span>
-                                                <span>$ {formatCurrency(manoObra)}</span>
+                                                <span className="font-medium">${formatCurrency(manoObra)}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>Artículos / Materiales</span>
-                                                <span>$ {formatCurrency(totalRepuestos)}</span>
+                                                <span>Artículos</span>
+                                                <span className="font-medium">${formatCurrency(totalRepuestos)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span>Anticipo Recibido</span>
-                                                <span className="text-red-500">- $ {formatCurrency(anticipo)}</span>
+                                                <span className="text-red-500 font-medium">-${formatCurrency(anticipo)}</span>
                                             </div>
                                         </div>
-                                        <div className="border-t border-[#0ea5e9]/20 pt-4 flex justify-between items-end">
-                                            <span className="text-sm font-bold text-[#0ea5e9] uppercase">Total</span>
-                                            <span className="text-3xl font-black text-[#0ea5e9]">$ {formatCurrency(totalFinal)}</span>
+                                        <div className="border-t border-blue-200 pt-4 flex justify-between items-center">
+                                            <span className="text-sm font-bold text-gray-800 uppercase">TOTAL</span>
+                                            <span className="text-2xl font-black text-[#1e40af]">${formatCurrency(totalFinal)}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* 6. Footer y Firmas */}
-                                <footer className="mt-12 pt-8 print-section">
-                                    <p className="text-xs text-gray-500 text-center mb-16 italic">
-                                        "El cliente declara recibir a su entera satisfacción los trabajos descritos en el presente reporte, así como los equipos en las condiciones señaladas."
+                                <footer className="mt-10 pt-4 print-section">
+                                    <p className="text-[9px] text-gray-400 text-center mb-16 leading-relaxed">
+                                        El cliente declara recibir a su entera satisfacción el servicio y/o equipos, aceptando el costo y condiciones. {service.garantia_aplica ? 'La garantía de equipos es del fabricante. La garantía de instalación es de 3 Meses y no cubre daños por variaciones de voltaje, vandalismo o mala operación.' : ''}
                                     </p>
 
                                     <div className="flex justify-between items-end px-12">
                                         <div className="w-64 text-center">
-                                            <div className="border-b-2 border-gray-800 mb-2"></div>
-                                            <p className="text-sm font-bold text-gray-800 uppercase">Firma del Técnico</p>
+                                            <div className="border-b border-dashed border-gray-400 mb-2"></div>
+                                            <p className="text-xs font-semibold text-gray-600">Firma del Técnico</p>
                                         </div>
                                         <div className="w-64 text-center">
-                                            <div className="border-b-2 border-gray-800 mb-2"></div>
-                                            <p className="text-sm font-bold text-gray-800 uppercase">Aceptación del Cliente</p>
+                                            <div className="border-b border-dashed border-gray-400 mb-2"></div>
+                                            <p className="text-xs font-semibold text-gray-600">Aceptación del Cliente</p>
                                         </div>
                                     </div>
                                 </footer>
@@ -442,7 +452,7 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                             print-color-adjust: exact;
                         }
                         @page {
-                            size: A4;
+                            size: letter;
                             margin: 0;
                         }
                         .no-print {
