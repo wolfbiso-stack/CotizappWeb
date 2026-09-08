@@ -155,6 +155,27 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         }));
     };
 
+    const checklistOptions = [
+        "Se explicó funcionamiento",
+        "Se configuró app movil",
+        "Se verificó grabación",
+        "Se enseñó a exportar",
+        "Se explicó garantia",
+        "Se revisaron angulos",
+        "Se entregaron credenciales"
+    ];
+
+    const handleChecklistChange = (option, checked) => {
+        setIsDirty(true);
+        let current = formData.trabajo_realizado ? formData.trabajo_realizado.split('\n').map(s => s.trim()).filter(Boolean) : [];
+        if (checked) {
+            if (!current.includes(option)) current.push(option);
+        } else {
+            current = current.filter(item => item !== option);
+        }
+        setFormData(prev => ({ ...prev, trabajo_realizado: current.join('\n') }));
+    };
+
     const addPart = () => {
         setParts([...parts, {
             id: Date.now(),
@@ -306,6 +327,17 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 placeholder="WhatsApp / Celular"
                             />
                         </div>
+                        <div className="col-span-3">
+                            <label className={labelClass}>Dirección</label>
+                            <input
+                                type="text"
+                                name="cliente_direccion"
+                                value={formData.cliente_direccion || ''}
+                                onChange={handleChange}
+                                className={inputClass}
+                                placeholder="Dirección completa"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
@@ -378,10 +410,12 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                             <div>
                                 <label className={labelClass}>Tipo de Servicio</label>
                                 <select name="tipo_servicio" value={formData.tipo_servicio} onChange={handleChange} className={inputClass}>
-                                    <option value="Instalacion">Instalación</option>
+                                    <option value="Instalacion">Instalación Nueva</option>
+                                    <option value="Ampliacion">Ampliación</option>
+                                    <option value="Configuracion">Configuración</option>
                                     <option value="Mantenimiento">Mantenimiento</option>
-                                    <option value="Reparacion">Reparación</option>
-                                    <option value="Revision">Revisión</option>
+                                    <option value="Diagnostico">Diagnóstico / Revisión</option>
+                                    <option value="Otro">Otro</option>
                                 </select>
                             </div>
                             <div>
@@ -439,63 +473,110 @@ const CCTVServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                     min="0"
                                 />
                             </div>
-                            <div>
-                                <label className={labelClass}>Ubicación</label>
-                                <input
-                                    type="text"
-                                    name="ubicacion_instalacion"
-                                    value={formData.ubicacion_instalacion}
-                                    onChange={handleChange}
-                                    className={inputClass}
-                                    placeholder="Ej: Bodega / Oficina"
-                                />
-                            </div>
                         </div>
                     </div>
 
                     {/* Report Section */}
-                    <div className="space-y-6">
-                        <div>
-                            <div className="flex items-center gap-2 mb-4 text-amber-500">
-                                <Settings className="w-5 h-5" />
-                                <h3 className="font-bold uppercase text-xs tracking-widest">Solicitud del Cliente</h3>
-                            </div>
-                            <textarea
-                                name="problema_reportado"
-                                value={formData.problema_reportado}
-                                onChange={handleChange}
-                                className={`${inputClass} h-24 resize-none`}
-                                placeholder="Falla reportada o requerimiento..."
-                            ></textarea>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                                    <Settings className="w-5 h-5" />
-                                    <h3 className="font-bold uppercase text-xs tracking-widest">Diagnóstico / Hallazgos</h3>
-                                </div>
-                                <textarea
-                                    name="diagnostico_tecnico"
-                                    value={formData.diagnostico_tecnico}
-                                    onChange={handleChange}
-                                    className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Estado actual del sistema..."
-                                ></textarea>
-                            </div>
-                            <div>
+                    <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-rose-50/30 border-rose-100'}`}>
+                        {['Instalacion', 'Ampliacion', 'Configuracion'].includes(formData.tipo_servicio) ? (
+                            <div className="space-y-6">
                                 <div className="flex items-center gap-2 mb-4 text-emerald-500">
                                     <Settings className="w-5 h-5" />
-                                    <h3 className="font-bold uppercase text-xs tracking-widest">Trabajo Realizado</h3>
+                                    <h3 className="font-bold uppercase text-xs tracking-widest">Checklist de Actividades</h3>
                                 </div>
-                                <textarea
-                                    name="trabajo_realizado"
-                                    value={formData.trabajo_realizado}
-                                    onChange={handleChange}
-                                    className={`${inputClass} h-32 resize-none`}
-                                    placeholder="Configuración, cableado, etc..."
-                                ></textarea>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {checklistOptions.map(option => {
+                                        const isChecked = (formData.trabajo_realizado || '').includes(option);
+                                        return (
+                                            <label key={option} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${darkMode ? 'border-slate-700 hover:bg-slate-800' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={(e) => handleChecklistChange(option, e.target.checked)}
+                                                    className="w-5 h-5 text-emerald-600 rounded"
+                                                />
+                                                <span className={`${labelClass} !mb-0 cursor-pointer`}>{option}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-6">
+                                    <label className={labelClass}>Observaciones Adicionales</label>
+                                    <textarea
+                                        name="observaciones"
+                                        value={formData.observaciones}
+                                        onChange={handleChange}
+                                        className={`${inputClass} h-24 resize-none`}
+                                        placeholder="Notas extras o detalles adicionales..."
+                                    ></textarea>
+                                </div>
                             </div>
-                        </div>
+                        ) : ['Mantenimiento', 'Diagnostico', 'Revision'].includes(formData.tipo_servicio) ? (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4 text-amber-500">
+                                            <Settings className="w-5 h-5" />
+                                            <h3 className="font-bold uppercase text-xs tracking-widest">Falla Reportada</h3>
+                                        </div>
+                                        <textarea
+                                            name="problema_reportado"
+                                            value={formData.problema_reportado}
+                                            onChange={handleChange}
+                                            className={`${inputClass} h-32 resize-none`}
+                                            placeholder="¿Qué falla presenta el equipo?"
+                                        ></textarea>
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4 text-emerald-500">
+                                            <Settings className="w-5 h-5" />
+                                            <h3 className="font-bold uppercase text-xs tracking-widest">Solución Aplicada</h3>
+                                        </div>
+                                        <textarea
+                                            name="trabajo_realizado"
+                                            value={formData.trabajo_realizado}
+                                            onChange={handleChange}
+                                            className={`${inputClass} h-32 resize-none`}
+                                            placeholder="Trabajo realizado para solucionarlo..."
+                                        ></textarea>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Observaciones Adicionales</label>
+                                    <textarea
+                                        name="observaciones"
+                                        value={formData.observaciones}
+                                        onChange={handleChange}
+                                        className={`${inputClass} h-20 resize-none`}
+                                    ></textarea>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-4 text-emerald-500">
+                                        <Settings className="w-5 h-5" />
+                                        <h3 className="font-bold uppercase text-xs tracking-widest">Especificar Servicio</h3>
+                                    </div>
+                                    <textarea
+                                        name="trabajo_realizado"
+                                        value={formData.trabajo_realizado}
+                                        onChange={handleChange}
+                                        className={`${inputClass} h-32 resize-none`}
+                                        placeholder="Describe a detalle el servicio realizado..."
+                                    ></textarea>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Observaciones Adicionales</label>
+                                    <textarea
+                                        name="observaciones"
+                                        value={formData.observaciones}
+                                        onChange={handleChange}
+                                        className={`${inputClass} h-20 resize-none`}
+                                    ></textarea>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Garantia Section */}

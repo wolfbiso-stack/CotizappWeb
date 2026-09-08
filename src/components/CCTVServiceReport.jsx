@@ -283,21 +283,40 @@ const CCTVServiceReport = ({ service, user, company: companyProp, onClose, darkM
                                             <span className="text-gray-800 font-bold uppercase">{tiposCamarasFormatted || 'N/A'}</span>
                                         </div>
                                     </div>
-                                    <div className="p-6 bg-white">
-                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Actividades Realizadas (Checklist)</h3>
-                                        <div className="space-y-3">
-                                            {service.trabajo_realizado ? (
-                                                String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '').map((line, idx) => (
-                                                    <div key={idx} className="flex items-start gap-3">
-                                                        <Check className="w-5 h-5 text-green-500 mt-0.5 flex-none" strokeWidth={3} />
-                                                        <p className="text-gray-700 font-medium">{line.trim()}</p>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <p className="text-gray-400 italic">No se detallaron actividades.</p>
+                                    {['Mantenimiento', 'Diagnostico', 'Revision'].includes(service.tipo_servicio) ? (
+                                        <div className="p-6 bg-white space-y-6">
+                                            {service.problema_reportado && (
+                                                <div>
+                                                    <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">Falla Reportada</h3>
+                                                    <p className="text-gray-700 italic border-l-4 border-amber-400 pl-3 py-1 bg-amber-50/50">"{service.problema_reportado}"</p>
+                                                </div>
+                                            )}
+                                            {service.trabajo_realizado && (
+                                                <div>
+                                                    <h3 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">Solución Aplicada</h3>
+                                                    <p className="text-gray-700 whitespace-pre-line">{service.trabajo_realizado}</p>
+                                                </div>
                                             )}
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="p-6 bg-white">
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+                                                {service.tipo_servicio === 'Otro' ? 'Detalles del Servicio' : 'Actividades Realizadas (Checklist)'}
+                                            </h3>
+                                            <div className="space-y-3">
+                                                {service.trabajo_realizado ? (
+                                                    String(service.trabajo_realizado).split('\n').filter(line => line.trim() !== '').map((line, idx) => (
+                                                        <div key={idx} className="flex items-start gap-3">
+                                                            <Check className="w-5 h-5 text-green-500 mt-0.5 flex-none" strokeWidth={3} />
+                                                            <p className="text-gray-700 font-medium">{line.trim()}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-gray-400 italic">No se detallaron actividades.</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* 4. Accesos (Tarjeta 2) */}
