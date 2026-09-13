@@ -49,7 +49,14 @@ const ServiceReceipt = ({ service, onClose, company: companyProp, darkMode }) =>
 
     // Construct Public URL
     const basePath = document.querySelector('base')?.getAttribute('href') || '/CotizappWeb/';
-    const publicUrl = `${window.location.origin}${basePath}#/track/${service.token}`;
+    
+    // Ensure Capacitor/Android apps use the production URL instead of localhost
+    let origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('capacitor')) {
+        origin = 'https://app.cubiservicios.lat';
+    }
+
+    const publicUrl = `${origin}${basePath}#/track/${service.token}`;
 
     const remaining = (service.total || 0) - (service.anticipo || 0);
 

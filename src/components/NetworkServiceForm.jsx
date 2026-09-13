@@ -5,8 +5,20 @@ import { X, Save, User, Wifi, Settings, ShoppingCart, Calendar, Plus, Trash2, Im
 import QuoteSelector from './QuoteSelector';
 import { formatCurrency, formatDateForInput } from '../utils/format';
 import { supabase } from '../../utils/supabase';
+import ClientAutocomplete from './ClientAutocomplete';
 
 const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
+    const [currentUser, setCurrentUser] = useState(null);
+    const [guardarCliente, setGuardarCliente] = useState(false);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setCurrentUser(user);
+        };
+        fetchUser();
+    }, []);
+
     // Initial State derived from service prop or defaults
     const [formData, setFormData] = useState({
         orden_numero: '',
@@ -209,13 +221,26 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
         setExistingPhotos(prev => prev.filter(p => p.id !== photoId));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const totalMO = parseFloat(formData.mano_obra) || 0;
         const totalRC = parseFloat(formData.costo_materiales) || 0;
         const subtotal = totalMO + totalRC;
         const ivaValue = formData.incluir_iva ? subtotal * 0.16 : 0;
         const total = subtotal + ivaValue;
+
+        if (guardarCliente && currentUser && formData.cliente_nombre) {
+            try {
+                await supabase.from('clientes').insert([{
+                    nombre: formData.cliente_nombre,
+                    numero: formData.cliente_telefono,
+                    user_id: currentUser.id,
+                    created_at: new Date()
+                }]);
+            } catch (error) {
+                console.error("Error saving client:", error);
+            }
+        }
 
         const dataToSave = {
             ...formData,
@@ -291,16 +316,23 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                         <div className="col-span-2">
                             <label className={labelClass}>Nombre del Cliente</label>
                             <div className="relative">
-                                <User className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    name="cliente_nombre"
-                                    value={formData.cliente_nombre}
-                                    onChange={handleChange}
-                                    className={`${inputClass} pl-10`}
-                                    placeholder="Nombre completo"
-                                    required
-                                />
+                                <User className="absolute left-3 top-2.5 w-5 h-5 text-slate-400 z-10" />
+                                <div className="pl-10">
+                                    <ClientAutocomplete
+                                        value={formData.cliente_nombre}
+                                        onChange={(val) => setFormData(prev => ({ ...prev, cliente_nombre: val }))}
+                                        onSelect={(client) => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                cliente_nombre: client.nombre,
+                                                cliente_telefono: client.numero || prev.cliente_telefono
+                                            }));
+                                            setIsDirty(true);
+                                        }}
+                                        darkMode={darkMode}
+                                        user={currentUser}
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div>
@@ -313,6 +345,17 @@ const NetworkServiceForm = ({ service, onSave, onCancel, darkMode }) => {
                                 className={inputClass}
                                 placeholder="WhatsApp / Celular"
                             />
+                        </div>
+                        <div className="col-span-3">
+                            <label className={`flex items-center gap-2 cursor-pointer mt-1 text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={guardarCliente} 
+                                    onChange={(e) => setGuardarCliente(e.target.checked)}
+                                    className="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500" 
+                                />
+                                Guardar en Clientes
+                            </label>
                         </div>
                     </div>
 
