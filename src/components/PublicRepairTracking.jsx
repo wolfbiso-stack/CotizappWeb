@@ -7,19 +7,19 @@ const PublicRepairTracking = () => {
     // Modified for Hash Routing compatibility
     const getToken = () => {
         let token = null;
-        
+
         // Priority 1: Check Hash (e.g., #/track/TOKEN)
         // Some mobile browsers might encode the hash or handle it differently
         const hash = decodeURIComponent(window.location.hash);
-        
+
         if (hash.includes('/track/')) {
             // Split by '/track/' and take the last part
             const parts = hash.split('/track/');
             if (parts.length > 1) {
                 token = parts[1];
             }
-        } 
-        
+        }
+
         // Priority 2: Check Pathname (e.g., /track/TOKEN)
         if (!token) {
             const path = decodeURIComponent(window.location.pathname);
@@ -35,14 +35,14 @@ const PublicRepairTracking = () => {
         // Clean token from query params, extra hashes, trailing slashes, and common social media tracking params
         if (token) {
             // Remove query parameters starting with ?
-            token = token.split('?')[0]; 
-            
+            token = token.split('?')[0];
+
             // Remove hash fragments starting with # (if any remain)
-            token = token.split('#')[0]; 
-            
+            token = token.split('#')[0];
+
             // Remove trailing slash
             if (token.endsWith('/')) {
-                token = token.slice(0, -1); 
+                token = token.slice(0, -1);
             }
 
             // Remove common tracking parameters (fbclid, etc.) if they somehow got into the path
@@ -50,10 +50,10 @@ const PublicRepairTracking = () => {
                 token = token.split('&')[0];
             }
         }
-        
+
         // Debugging log (visible in console)
         console.log('Extracted Token:', token);
-        
+
         return token;
     };
 
@@ -90,20 +90,20 @@ const PublicRepairTracking = () => {
                 console.error('RPC Error:', rpcError);
                 // Fallback to direct query if RPC fails (e.g. not deployed yet)
                 const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares'];
-                
+
                 for (const table of tables) {
                     const { data: tableData, error: tableError } = await supabase
                         .from(table)
                         .select('*, user_id')
                         .eq('token', token)
                         .single();
-                    
+
                     if (tableData && !tableError) {
                         serviceData = tableData;
                         break;
                     }
                 }
-                
+
                 if (!serviceData) throw new Error('Servicio no encontrado (Fallback)');
             } else if (!data) {
                 throw new Error('Servicio no encontrado');
@@ -112,7 +112,7 @@ const PublicRepairTracking = () => {
             }
 
             setService(serviceData);
-            
+
             // Fetch company info using the found service data
             if (serviceData && serviceData.user_id) {
                 try {
@@ -138,7 +138,7 @@ const PublicRepairTracking = () => {
                             .from('servicio_fotos')
                             .select('uri')
                             .eq('servicio_id', serviceData.id);
-                        
+
                         if (photosData && !photosError) {
                             setPhotos(photosData.map(p => p.uri));
                         }
@@ -188,7 +188,7 @@ const PublicRepairTracking = () => {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800 mb-2">Servicio No Encontrado</h1>
                     <p className="text-slate-600 mb-8 leading-relaxed">{error || 'No pudimos encontrar la información de este servicio. Verifica que el enlace sea correcto.'}</p>
-                    
+
                     {/* Debugging Section for User */}
                     <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-lg text-left">
                         <p className="text-xs font-bold text-red-800 mb-1">Información de Depuración:</p>
@@ -488,7 +488,7 @@ const PublicRepairTracking = () => {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {service.trabajo_realizado && (
                                     <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-green-100 overflow-hidden relative group">
                                         <div className="absolute left-0 top-0 bottom-0 w-2 bg-green-400 group-hover:w-3 transition-all"></div>
@@ -526,8 +526,8 @@ const PublicRepairTracking = () => {
                                 <div className="p-8">
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                         {photos.map((uri, idx) => (
-                                            <div 
-                                                key={idx} 
+                                            <div
+                                                key={idx}
                                                 className="aspect-square rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md hover:scale-105 transition-all border border-slate-200 bg-slate-100"
                                                 onClick={() => setSelectedPhoto(uri)}
                                             >
@@ -542,7 +542,7 @@ const PublicRepairTracking = () => {
                         {/* Footer Info */}
                         <div className="text-center text-slate-400 text-sm font-medium pt-8 pb-12">
                             <p>Esta es una página pública de seguimiento. No requiere inicio de sesión.</p>
-                            <p className="mt-2 text-xs opacity-60">© {new Date().getFullYear()} CotizApp - Sistema de Gestión</p>
+                            <p className="mt-2 text-xs opacity-60">© {new Date().getFullYear()} Sistema de CUBI Servicios</p>
                         </div>
                     </div>
                 </div>
@@ -550,21 +550,21 @@ const PublicRepairTracking = () => {
 
             {/* Photo Modal */}
             {selectedPhoto && (
-                <div 
+                <div
                     className="fixed inset-0 z-[500] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300"
                     onClick={() => setSelectedPhoto(null)}
                 >
-                    <button 
+                    <button
                         onClick={() => setSelectedPhoto(null)}
                         className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
                     >
                         <X className="w-6 h-6" />
                     </button>
-                    <img 
-                        src={selectedPhoto} 
-                        alt="Evidencia Ampliada" 
+                    <img
+                        src={selectedPhoto}
+                        alt="Evidencia Ampliada"
                         className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-                        onClick={(e) => e.stopPropagation()} 
+                        onClick={(e) => e.stopPropagation()}
                     />
                 </div>
             )}
