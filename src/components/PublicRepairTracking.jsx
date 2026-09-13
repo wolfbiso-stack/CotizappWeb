@@ -242,41 +242,44 @@ const PublicRepairTracking = () => {
                     {/* Decorative top gradient line */}
                     <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
 
-                    <div className="p-5 sm:p-10 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8 relative z-10">
-                        {/* Company Info */}
-                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full md:w-auto text-center sm:text-left">
-                            {company?.logo_uri ? (
-                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-2xl shadow-md p-2 flex items-center justify-center flex-shrink-0 border border-slate-100">
-                                    <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
-                                </div>
-                            ) : (
-                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center flex-shrink-0 text-white">
-                                    <Building2 className="w-8 h-8 sm:w-10 sm:h-10" />
-                                </div>
-                            )}
-                            <div>
-                                <h1 className="text-xl sm:text-3xl font-black text-slate-800 tracking-tight mb-2 leading-tight">{company?.nombre || 'Centro de Reparaciones'}</h1>
-                                <div className="space-y-1 flex flex-col items-center sm:items-start text-sm">
-                                    {company?.telefono && (
-                                        <div className="flex items-center gap-2 text-slate-600 font-medium">
-                                            <div className="p-1 bg-blue-100 rounded-full text-blue-600"><Phone className="w-3 h-3" /></div>
-                                            {company.telefono}
-                                        </div>
-                                    )}
-                                    {company?.correo && (
-                                        <div className="flex items-center gap-2 text-slate-600 font-medium break-all">
-                                            <div className="p-1 bg-blue-100 rounded-full text-blue-600"><Mail className="w-3 h-3" /></div>
-                                            {company.correo}
-                                        </div>
-                                    )}
-                                </div>
+                    <div className="p-6 sm:p-10 flex flex-col items-center relative z-10">
+                        {/* Company Logo */}
+                        {company?.logo_uri ? (
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-3xl shadow-xl p-3 flex items-center justify-center flex-shrink-0 border border-slate-100 mb-5 relative group-hover:scale-105 transition-transform duration-500">
+                                <img src={company.logo_uri} alt="Logo" className="w-full h-full object-contain" />
+                            </div>
+                        ) : (
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl shadow-xl shadow-blue-500/30 flex items-center justify-center flex-shrink-0 text-white mb-5 relative group-hover:scale-105 transition-transform duration-500">
+                                <Building2 className="w-12 h-12 sm:w-16 sm:h-16" />
+                            </div>
+                        )}
+
+                        {/* Company Details */}
+                        <div className="text-center w-full mb-8">
+                            <h1 className="text-2xl sm:text-4xl font-black text-slate-800 tracking-tight leading-tight mb-4">
+                                {company?.nombre || 'Centro de Reparaciones'}
+                            </h1>
+                            
+                            <div className="flex flex-col items-center gap-2 sm:gap-3 text-sm sm:text-base text-slate-600 font-medium">
+                                {company?.direccion && (
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-blue-100 rounded-full text-blue-600"><MapPin className="w-3.5 h-3.5" /></div>
+                                        {company.direccion}
+                                    </div>
+                                )}
+                                {company?.telefono && (
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-blue-100 rounded-full text-blue-600"><Phone className="w-3.5 h-3.5" /></div>
+                                        {company.telefono}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Order Number Badge */}
-                        <div className="bg-slate-50/50 backdrop-blur-md px-6 py-3 sm:px-8 sm:py-5 rounded-xl sm:rounded-2xl border border-slate-200/60 text-center transform transition-transform group-hover:scale-105 duration-300 shadow-sm w-full md:w-auto">
-                            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 sm:mb-2">Orden de Servicio</p>
-                            <p className="text-3xl sm:text-5xl font-black text-slate-800 tracking-tight">#{service.orden_numero}</p>
+                        <div className="bg-slate-50/80 backdrop-blur-md px-8 py-4 sm:px-12 sm:py-6 rounded-2xl border border-slate-200/80 text-center shadow-sm w-full max-w-sm">
+                            <p className="text-[11px] sm:text-sm font-bold text-slate-400 uppercase tracking-widest mb-1 sm:mb-2">Orden de Servicio</p>
+                            <p className="text-4xl sm:text-6xl font-black text-slate-800 tracking-tight">#{service.orden_numero}</p>
                         </div>
                     </div>
                 </div>
