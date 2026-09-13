@@ -275,14 +275,20 @@ const PrinterServiceForm = ({ service, onSave, onCancel, darkMode }) => {
 
         if (guardarCliente && currentUser && formData.cliente_nombre) {
             try {
-                await supabase.from('clientes').insert([{
+                const { error: insertError } = await supabase.from('clientes').insert([{
                     nombre: formData.cliente_nombre,
-                    numero: formData.cliente_telefono,
+                    numero: formData.cliente_telefono || '',
+                    empresa: '',
+                    correo: '',
+                    notas: '',
                     user_id: currentUser.id,
-                    created_at: new Date()
+                    created_at: new Date().toISOString()
                 }]);
+                if (insertError) {
+                    console.error("Error saving client:", insertError);
+                }
             } catch (error) {
-                console.error("Error saving client:", error);
+                console.error("Exception saving client:", error);
             }
         }
 
