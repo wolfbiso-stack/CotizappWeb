@@ -395,14 +395,12 @@ const PublicRepairTracking = () => {
                                         <div className="flex text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-2 mb-2">
                                             <div className="w-16 text-center">Cant</div>
                                             <div className="flex-1">Artículo</div>
-                                            <div className="w-24 text-right">Precio</div>
                                         </div>
                                         <div className="space-y-1">
                                             {JSON.parse(service.repuestos_descripcion).map((part, i) => (
                                                 <div key={i} className="flex items-center text-sm py-2 border-b border-slate-100 last:border-0">
                                                     <div className="w-16 text-center text-slate-500 font-bold">{part.cantidad || 1}</div>
                                                     <div className="flex-1 text-slate-700 font-medium">{part.producto || part.descripcion}</div>
-                                                    <div className="w-24 text-right text-slate-600 font-mono">${formatCurrency(part.costoPublico || part.precio_publico)}</div>
                                                 </div>
                                             ))}
                                         </div>
