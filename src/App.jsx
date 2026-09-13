@@ -949,7 +949,7 @@ const SettingsView = ({ companyData, onCompanyChange, onSave, darkMode, selected
     );
 };
 
-const ClientDetails = ({ client, onBack }) => {
+const ClientDetails = ({ client, onBack, darkMode }) => {
     if (!client) return null;
 
     return (
@@ -1144,7 +1144,7 @@ const ClientsList = ({ onCreateNew, darkMode, clients: sharedClients, onRefresh,
     if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin w-8 h-8 text-blue-600" /></div>;
 
     if (selectedClient) {
-        return <ClientDetails client={selectedClient} onBack={() => setSelectedClient(null)} />;
+        return <ClientDetails client={selectedClient} onBack={() => setSelectedClient(null)} darkMode={darkMode} />;
     }
 
     const sortedClients = [...clients].sort((a, b) => {
