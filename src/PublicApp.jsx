@@ -76,7 +76,7 @@ const PublicApp = () => {
                             e.preventDefault();
                             const hostname = window.location.hostname;
                             
-                            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.includes('vercel.app')) {
                                 window.location.href = '/?app=true';
                             } else if (hostname.includes('github.io')) {
                                 window.location.href = '/CotizappWeb/';

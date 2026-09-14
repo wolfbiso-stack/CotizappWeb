@@ -49,3 +49,19 @@
   scrollbar-width: none;
 }
 }
+
+/* Energy Flow Animations */
+@keyframes energy-flow {
+  to { stroke-dashoffset: -40; }
+}
+@keyframes energy-flow-reverse {
+  to { stroke-dashoffset: 40; }
+}
+.energy-pulse {
+  stroke-dasharray: 10 10;
+  animation: energy-flow 1s linear infinite;
+}
+.energy-pulse-reverse {
+  stroke-dasharray: 10 10;
+  animation: energy-flow-reverse 1s linear infinite;
+}

@@ -30,6 +30,8 @@ import TrialExpiredView from './components/TrialExpiredView';
 import ProductAutocomplete from './components/ProductAutocomplete';
 import InicioView from './components/InicioView';
 import CitasView from './components/CitasView';
+import ConfigCercosView from './components/ConfigCercosView';
+import FenceDesigner from './components/FenceDesigner/FenceDesigner';
 import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
@@ -6362,6 +6364,19 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 </button>
                             </li>
 
+                            {/* Configuración de Cercos Eléctricos */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('cercos')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'cercos' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Zap className="w-4 h-4" />
+                                        <span>Cercos Eléctricos</span>
+                                    </div>
+                                </button>
+                            </li>
+
                             {/* Clients */}
                             <li>
                                 <button
@@ -11316,6 +11331,9 @@ const App = () => {
                                         darkMode={isDark}
                                     />
                                 )}
+                                {activeTab === 'config-cercos' && (
+                                    <ConfigCercosView darkMode={isDark} />
+                                )}
                                 {activeTab === 'configuracion' && (
                                     <SettingsView
                                         companyData={company}
@@ -11607,6 +11625,9 @@ const App = () => {
                                         products={products}
                                         onRefresh={() => fetchProductsInAppAlt(session.user.id)}
                                     />
+                                )}
+                                {activeTab === 'cercos' && (
+                                    <FenceDesigner darkMode={isDark} />
                                 )}
 
                                 {/* Nota de Venta Preview Modal */}

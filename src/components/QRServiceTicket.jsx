@@ -39,13 +39,13 @@ const QRServiceTicket = ({ service, user, company: companyProp, onClose, darkMod
 
     // Get base path from document base or default to /CotizappWeb/
     const basePath = document.querySelector('base')?.getAttribute('href') || '/CotizappWeb/';
-    
+
     // Ensure Capacitor/Android apps use the production URL instead of localhost
     let origin = window.location.origin;
     if (origin.includes('localhost') || origin.includes('capacitor')) {
         origin = 'https://app.cubiservicios.lat';
     }
-    
+
     // Use Hash Routing for GitHub Pages compatibility
     const publicUrl = `${origin}${basePath}#/track/${service.token}`;
 

@@ -21,10 +21,6 @@ const Login = ({ onLogin, currentTheme = 'blue', setTheme }) => {
 
             if (isCapacitor) {
                 redirectUrl = 'cubiservicios://login-callback';
-            } else if (window.location.hostname === 'localhost') {
-                redirectUrl = 'http://localhost:3000';
-            } else if (window.location.hostname.includes('vercel.app')) {
-                redirectUrl = window.location.origin;
             } else if (window.location.hostname === 'wolfbiso-stack.github.io') {
                 redirectUrl = 'https://wolfbiso-stack.github.io/CotizappWeb';
             } else {
