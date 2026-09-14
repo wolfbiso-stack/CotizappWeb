@@ -1,3 +1,5 @@
+import { calculatePathLengthPx, toMeters } from './measurements';
+
 /**
  * Motor de Análisis de Conectividad (V3)
  * Este módulo procesa el estado del diseñador y devuelve un modelo de grafos
@@ -227,16 +229,15 @@ export const analyzeProject = (state) => {
 
   // Calculate Lengths per path
   results.paths.forEach(p => {
-    let totalPx = 0;
-    p.wires.forEach(wId => {
-       const wireEl = wires.find(w => w.id === wId);
-       if (wireEl && wireEl.points && wireEl.points.length >= 2) {
-          const dx = wireEl.points[1].x - wireEl.points[0].x;
-          const dy = wireEl.points[1].y - wireEl.points[0].y;
-          totalPx += Math.sqrt(dx*dx + dy*dy);
-       }
-    });
-    p.lengthMeters = (totalPx / 50).toFixed(2);
+    const px = calculatePathLengthPx(p, state);
+    p.lengthPx = px;
+    
+    if (state.project?.scale?.enabled) {
+        const m = toMeters(px, state.project.scale);
+        p.lengthMeters = m ? m.toFixed(2) : 'N/D';
+    } else {
+        p.lengthMeters = 'N/D';
+    }
   });
 
   // Check global ground continuity

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDesigner } from '../context/DesignerContext';
-import { MousePointer2, Square, Grid3X3, DoorClosed, Type, Hexagon, Component, PenLine, Layers, Cable, Waypoints, LocateFixed, Zap } from 'lucide-react';
+import { MousePointer2, Square, Grid3X3, DoorClosed, Type, Hexagon, Component, PenLine, Layers, Cable, Waypoints, LocateFixed, Zap, Ruler, Scale } from 'lucide-react';
 
 const LAYOUT_TOOLS = [
   { id: 'select', icon: MousePointer2, label: 'Seleccionar' },
@@ -10,6 +10,8 @@ const LAYOUT_TOOLS = [
   { id: 'gate', icon: Component, label: 'Portón' },
   { id: 'door', icon: DoorClosed, label: 'Puerta' },
   { id: 'text', icon: Type, label: 'Texto / Anotación' },
+  { id: 'measure', icon: Ruler, label: 'Medir' },
+  { id: 'calibrate', icon: Scale, label: 'Calibrar Escala' },
 ];
 
 const DESIGN_TOOLS = [
@@ -20,6 +22,8 @@ const DESIGN_TOOLS = [
   { id: 'connect', icon: Waypoints, label: 'Conectar Nodos' },
   { id: 'bridge', icon: Cable, label: 'Puente Libre' },
   { id: 'wire', icon: PenLine, label: 'Hilo Libre' },
+  { id: 'measure', icon: Ruler, label: 'Medir' },
+  { id: 'calibrate', icon: Scale, label: 'Calibrar Escala' },
 ];
 
 const Toolbar = ({ darkMode }) => {

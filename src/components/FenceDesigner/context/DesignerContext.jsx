@@ -7,6 +7,16 @@ const initialState = {
     id: null,
     name: 'Nuevo Proyecto Cerco',
     dimensions: { width: 3000, height: 3000 },
+    settings: {
+       postSpacing: 3, // meters
+       wastePercentage: 5, // %
+    },
+    materialsOverrides: {}, // { materialId: { isManual: boolean, quantity: number } }
+    scale: {
+       enabled: false,
+       pixelsPerMeter: 100, // 1m = 100px by default
+       reference: null // { pxDistance, realDistance, unit }
+    }
   },
   view: {
     zoom: 1,
@@ -76,6 +86,19 @@ function designerReducer(state, action) {
       }
       return saveHistory({ ...state, elements: updatedElements });
       
+    case 'CALIBRATE_SCALE':
+      return {
+         ...state,
+         project: {
+            ...state.project,
+            scale: {
+               enabled: true,
+               pixelsPerMeter: action.payload.pxDistance / action.payload.realDistance,
+               reference: action.payload
+            }
+         }
+      };
+
     case 'SAVE_HISTORY':
       return saveHistory(state);
       
@@ -99,6 +122,31 @@ function designerReducer(state, action) {
 
     case 'HIGHLIGHT_PATH':
       return { ...state, ui: { ...state.ui, highlightedPathId: action.payload, selectedElementIds: [], selectedConnectionIds: [] } };
+
+
+    case 'UPDATE_PROJECT_SETTINGS':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          settings: { ...state.project.settings, ...action.payload }
+        }
+      });
+      
+    case 'SET_MATERIAL_OVERRIDE':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          materialsOverrides: {
+            ...state.project.materialsOverrides,
+            [action.payload.materialId]: {
+              isManual: action.payload.isManual,
+              quantity: action.payload.quantity
+            }
+          }
+        }
+      });
 
     case 'SET_VIEW':
       return { ...state, view: { ...state.view, ...action.payload } };

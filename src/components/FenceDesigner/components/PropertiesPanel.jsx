@@ -2,12 +2,15 @@ import React from 'react';
 import { useDesigner } from '../context/DesignerContext';
 import { Settings, Trash2, Link, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { analyzeProject } from '../utils/connectivity';
+import { generateQuantification } from '../utils/measurements';
+import { Calculator } from 'lucide-react';
+import MaterialsPanel from './MaterialsPanel';
 
 const PropertiesPanel = ({ darkMode }) => {
   const { state, dispatch } = useDesigner();
   const selectedIds = state.ui.selectedElementIds;
   const [activeTab, setActiveTab] = React.useState('properties');
-  const analysisResults = activeTab === 'analysis' ? analyzeProject(state) : null;
+  const analysisResults = (activeTab === 'analysis' || activeTab === 'quantification' || activeTab === 'materials') ? analyzeProject(state) : null;
   
   const inputClass = `w-full px-3 py-2 border rounded text-sm ${darkMode ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-900'}`;
   
@@ -307,15 +310,97 @@ const PropertiesPanel = ({ darkMode }) => {
     );
   };
 
+
+  const renderQuantification = () => {
+    if (!analysisResults) return null;
+    const quant = generateQuantification(state, analysisResults);
+    
+    return (
+      <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
+        <div className={`p-4 rounded border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+           <h3 className="font-bold text-sm mb-4">Resumen del Proyecto</h3>
+           <div className="grid grid-cols-2 gap-y-2 text-xs">
+             <div className="text-slate-500">Escala:</div><div className="font-bold text-right">{quant.scaleInfo}</div>
+             <div className="text-slate-500">Longitud de cerco:</div><div className="font-bold text-right">{quant.fenceLengthFormatted}</div>
+             <div className="text-slate-500">Longitud total de hilos:</div><div className="font-bold text-right">{quant.totalWireLengthFormatted}</div>
+             <div className="text-slate-500">Tramos:</div><div className="font-bold text-right">{quant.counts.segments}</div>
+             <div className="text-slate-500">Hilos (Total):</div><div className="font-bold text-right">{quant.counts.wires}</div>
+             <div className="text-slate-500">Puentes:</div><div className="font-bold text-right">{quant.counts.bridges}</div>
+           </div>
+        </div>
+
+        <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500">Tabla de Hilos (Circuitos)</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+             <thead className={`${darkMode ? 'bg-slate-800' : 'bg-slate-100'} uppercase font-bold text-slate-500`}>
+               <tr>
+                 <th className="p-2">Hilo</th>
+                 <th className="p-2">Tipo</th>
+                 <th className="p-2">Tramos</th>
+                 <th className="p-2">Longitud</th>
+                 <th className="p-2">Estado</th>
+               </tr>
+             </thead>
+             <tbody>
+               {quant.tableHilos.map((h, idx) => (
+                 <tr 
+                    key={h.id} 
+                    className={`border-b ${darkMode ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'} cursor-pointer`}
+                    onClick={() => dispatch({ type: 'HIGHLIGHT_PATH', payload: h.id })}
+                 >
+                   <td className="p-2 font-bold">{h.name}</td>
+                   <td className="p-2">{h.wireTypes.join(', ')}</td>
+                   <td className="p-2 text-center">{h.segmentsCount}</td>
+                   <td className="p-2 font-mono">{h.formattedLength}</td>
+                   <td className="p-2 truncate max-w-[80px]" title={h.status}>{h.status}</td>
+                 </tr>
+               ))}
+             </tbody>
+          </table>
+        </div>
+
+        <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 mt-4">Tabla de Tramos (Físicos)</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+             <thead className={`${darkMode ? 'bg-slate-800' : 'bg-slate-100'} uppercase font-bold text-slate-500`}>
+               <tr>
+                 <th className="p-2">Tramo</th>
+                 <th className="p-2">Longitud</th>
+                 <th className="p-2">Hilos</th>
+                 <th className="p-2">Estado</th>
+               </tr>
+             </thead>
+             <tbody>
+               {quant.tableTramos.map((t, idx) => (
+                 <tr 
+                    key={t.id} 
+                    className={`border-b ${darkMode ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'} cursor-pointer`}
+                    onClick={() => dispatch({ type: 'SELECT_ELEMENT', payload: t.id })}
+                 >
+                   <td className="p-2 font-bold">{t.name}</td>
+                   <td className="p-2 font-mono">{t.formattedLength}</td>
+                   <td className="p-2 text-center">{t.wireCount}</td>
+                   <td className="p-2 text-green-600">{t.status}</td>
+                 </tr>
+               ))}
+             </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`w-72 border-l flex flex-col h-full ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200'}`}>
       {/* Tabs */}
-      <div className={`flex border-b ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
-        <button onClick={() => { setActiveTab('properties'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider ${activeTab === 'properties' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Propiedades</button>
-        <button onClick={() => setActiveTab('analysis')} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider ${activeTab === 'analysis' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Análisis V3</button>
+      <div className={`flex flex-wrap border-b ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+        <button onClick={() => { setActiveTab('properties'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'properties' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Props</button>
+        <button onClick={() => setActiveTab('analysis')} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'analysis' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Análisis</button>
+        <button onClick={() => { setActiveTab('quantification'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'quantification' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Cuantif</button>
+        <button onClick={() => { setActiveTab('materials'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'materials' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Materiales</button>
       </div>
 
-      {activeTab === 'analysis' ? renderAnalysis() : (
+      {activeTab === 'materials' ? <MaterialsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'quantification' ? renderQuantification() : activeTab === 'analysis' ? renderAnalysis() : (
         !selectedElement ? (
           <div className="p-6 flex flex-col items-center justify-center text-center flex-1">
             <Settings className="w-12 h-12 mb-4 opacity-20 text-slate-500" />

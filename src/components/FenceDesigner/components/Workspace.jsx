@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useDesigner } from '../context/DesignerContext';
 import { analyzeProject } from '../utils/connectivity';
+import { formatMeasurement, calculatePolylineLength, toMeters } from '../utils/measurements';
+import { getPhysicalCornerPosts } from '../utils/materials';
 import { v4 as uuidv4 } from 'uuid';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -27,7 +29,32 @@ const Workspace = ({ darkMode }) => {
   const [hasDragged, setHasDragged] = useState(false);
   
   const [connectingAction, setConnectingAction] = useState(null);
+  const [measureAction, setMeasureAction] = useState(null);
+  const [calibrationModal, setCalibrationModal] = useState(null);
+  const [tempRealDistance, setTempRealDistance] = useState('10');
   const clipboardRef = useRef(null);
+
+  useEffect(() => {
+     if (!['measure', 'calibrate'].includes(state.ui.currentTool)) {
+         setMeasureAction(null);
+     }
+  }, [state.ui.currentTool]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+         if (['measure', 'calibrate'].includes(state.ui.currentTool)) {
+             setMeasureAction(null);
+             dispatch({ type: 'SET_TOOL', payload: 'select' });
+         } else if (state.ui.currentTool === 'connect' || state.ui.currentTool === 'bridge') {
+             setConnectingAction(null);
+             dispatch({ type: 'SET_TOOL', payload: 'select' });
+         }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.ui.currentTool]);
 
   const getSVGCoordinates = (e) => {
     const svg = svgRef.current;
@@ -77,6 +104,20 @@ const Workspace = ({ darkMode }) => {
     } else if (['connect', 'bridge'].includes(state.ui.currentTool)) {
        if (e.target === svgRef.current || e.target.tagName === 'rect' && e.target.getAttribute('fill') === 'url(#grid)') {
           setConnectingAction(null);
+       }
+    } else if (['measure', 'calibrate'].includes(state.ui.currentTool)) {
+       if (measureAction) {
+           const newPoints = [...measureAction.points, snappedCoords];
+           if (state.ui.currentTool === 'calibrate' && newPoints.length === 2) {
+               const pxDistance = Math.hypot(newPoints[1].x - newPoints[0].x, newPoints[1].y - newPoints[0].y);
+               setCalibrationModal({ pxDistance });
+               setMeasureAction(null);
+               dispatch({ type: 'SET_TOOL', payload: 'select' });
+           } else {
+               setMeasureAction({ ...measureAction, points: newPoints });
+           }
+       } else {
+           setMeasureAction({ points: [snappedCoords], tempPoint: snappedCoords });
        }
     } else {
       setIsDrawing(true);
@@ -192,6 +233,10 @@ const Workspace = ({ darkMode }) => {
     
     if (connectingAction) {
        setConnectingAction(prev => ({ ...prev, tempPoint: getSVGCoordinates(e) }));
+       return;
+    }
+    if (measureAction) {
+       setMeasureAction(prev => ({ ...prev, tempPoint: getSVGCoordinates(e) }));
        return;
     }
 
@@ -760,7 +805,6 @@ const Workspace = ({ darkMode }) => {
         const ty = length > 0 ? (p2.y - p1.y) / length : 0;
         
         const spacing = el.properties?.spacing || 15;
-        // Padding around the wires
         const padX = 20; 
         const padY = 25; 
         const widthHalf = ((el.wireCount - 1) / 2) * spacing + padY; 
@@ -772,8 +816,43 @@ const Workspace = ({ darkMode }) => {
            ${p1.x - tx*padX - nx*widthHalf},${p1.y - ty*padX - ny*widthHalf}
         `;
         
+        // Calcular postes intermedios
+        const scale = state.project.scale || { enabled: false, pixelsPerMeter: 100 };
+        const postSpacing = state.project.settings?.postSpacing || 3;
+        const pixelsPerMeter = scale.enabled ? scale.pixelsPerMeter : 100;
+        const spacingPx = postSpacing * pixelsPerMeter;
+        
+        const lenM = length / pixelsPerMeter;
+        let numInterPosts = Math.floor(lenM / postSpacing);
+        let remainingM = lenM - (numInterPosts * postSpacing);
+        if (remainingM < (postSpacing * 0.5) && numInterPosts > 0) {
+            numInterPosts -= 1;
+        }
+
+        const visualPosts = [];
+        
+        // Función auxiliar para dibujar un poste de paso (vertical)
+        const renderPost = (px, py, key) => {
+            const strokeColor = darkMode ? '#475569' : '#94a3b8';
+            return (
+               <line key={key} x1={px} y1={py - widthHalf - 15} x2={px} y2={py + widthHalf + 50} stroke={strokeColor} strokeWidth="6" pointerEvents="none" strokeLinecap="round" />
+            );
+        };
+        
+        // Postes intermedios
+        for (let i = 1; i <= numInterPosts; i++) {
+            const fraction = (i * spacingPx) / length;
+            if (fraction >= 1) break; 
+            const px = p1.x + tx * (length * fraction);
+            const py = p1.y + ty * (length * fraction);
+            visualPosts.push(renderPost(px, py, `inter-${i}`));
+        }
+        
         return (
           <g key={el.id}>
+            {/* Visual Posts */}
+            {visualPosts}
+            
             {/* Hit area polygon */}
             <polygon points={polyPoints} fill="transparent" stroke="transparent" strokeWidth="4" onPointerDown={(e) => handleElementPointerDown(e, el)} style={{ cursor }} />
             
@@ -787,7 +866,7 @@ const Workspace = ({ darkMode }) => {
                  <circle cx={p1.x} cy={p1.y} r="8" fill="#fff" stroke="#3b82f6" strokeWidth="2" pointerEvents="none" />
                  <circle cx={p2.x} cy={p2.y} r="8" fill="#fff" stroke="#3b82f6" strokeWidth="2" pointerEvents="none" />
                  
-                 {/* Spacing Resizers (Both sides, made larger 12x12) */}
+                 {/* Spacing Resizers */}
                  <rect x={(p1.x + p2.x)/2 + nx * widthHalf - 6} y={(p1.y + p2.y)/2 + ny * widthHalf - 6} width="12" height="12" fill="#fff" stroke="#f59e0b" strokeWidth="2" style={{cursor: 'pointer'}} onPointerDown={(e) => handleHandlePointerDown(e, el, null, 'spacing')} />
                  <rect x={(p1.x + p2.x)/2 - nx * widthHalf - 6} y={(p1.y + p2.y)/2 - ny * widthHalf - 6} width="12" height="12" fill="#fff" stroke="#f59e0b" strokeWidth="2" style={{cursor: 'pointer'}} onPointerDown={(e) => handleHandlePointerDown(e, el, null, 'spacing')} />
               </>
@@ -1068,6 +1147,21 @@ const Workspace = ({ darkMode }) => {
         <g transform={`translate(${state.view.panX}, ${state.view.panY}) scale(${state.view.zoom})`}>
           <rect width="10000" height="10000" x="-5000" y="-5000" fill="url(#grid)" />
           
+          {/* Global Corner Posts */}
+          {getPhysicalCornerPosts(state).map((post, i) => (
+             <line 
+                 key={`global-corner-${i}`} 
+                 x1={post.x} 
+                 y1={post.minY - 30} 
+                 x2={post.x} 
+                 y2={post.maxY + 50} 
+                 stroke={darkMode ? '#94a3b8' : '#64748b'} 
+                 strokeWidth="10" 
+                 pointerEvents="none" 
+                 strokeLinecap="round" 
+             />
+          ))}
+
           {/* Segments (virtual bounding) - Rendered FIRST so wires are clickable on top */}
           {state.segments.map(seg => renderElement(seg))}
 
@@ -1079,6 +1173,41 @@ const Workspace = ({ darkMode }) => {
           
           {/* Connections & Nodes */}
           {renderConnections()}
+
+          {measureAction && measureAction.points.length > 0 && (
+              <g className="measure-lines">
+                  <polyline 
+                      points={[...measureAction.points, measureAction.tempPoint].map(p => `${p.x},${p.y}`).join(' ')} 
+                      fill="none" 
+                      stroke="#ef4444" 
+                      strokeWidth="2" 
+                      strokeDasharray="5,5" 
+                  />
+                  {[...measureAction.points, measureAction.tempPoint].map((p, i, arr) => {
+                      if (i === 0) return null;
+                      const prev = arr[i-1];
+                      const cx = (p.x + prev.x) / 2;
+                      const cy = (p.y + prev.y) / 2;
+                      const pxLen = Math.hypot(p.x - prev.x, p.y - prev.y);
+                      const text = state.project?.scale?.enabled ? formatMeasurement(pxLen, state.project.scale) : `${pxLen.toFixed(1)} px`;
+                      return (
+                          <g key={i}>
+                              <rect x={cx - 30} y={cy - 10} width="60" height="20" fill="white" stroke="#ef4444" rx="4" />
+                              <text x={cx} y={cy + 4} fontSize="12" fill="#ef4444" textAnchor="middle" fontWeight="bold">{text}</text>
+                          </g>
+                      );
+                  })}
+                  {measureAction.points.length > 1 && (
+                      <g>
+                          <rect x={measureAction.tempPoint.x + 15} y={measureAction.tempPoint.y + 15} width="80" height="24" fill="#ef4444" rx="4" />
+                          <text x={measureAction.tempPoint.x + 55} y={measureAction.tempPoint.y + 31} fontSize="12" fill="white" textAnchor="middle" fontWeight="bold">
+                              Total: {state.project?.scale?.enabled ? formatMeasurement(calculatePolylineLength([...measureAction.points, measureAction.tempPoint]), state.project.scale) : `${calculatePolylineLength([...measureAction.points, measureAction.tempPoint]).toFixed(1)} px`}
+                          </text>
+                      </g>
+                  )}
+              </g>
+          )}
+
           {renderNodes()}
           
           {/* Active Connection Drawing with pointerEvents="none" to prevent blocking */}
@@ -1099,6 +1228,39 @@ const Workspace = ({ darkMode }) => {
       <div className="absolute bottom-4 right-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur px-3 py-1 rounded text-xs font-mono border border-slate-200 dark:border-slate-700 shadow-sm pointer-events-none">
         X: {Math.round(-state.view.panX / state.view.zoom)}, Y: {Math.round(-state.view.panY / state.view.zoom)}
       </div>
+
+      {calibrationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-96 text-slate-900 pointer-events-auto">
+            <h2 className="text-xl font-bold mb-4">Calibrar Escala</h2>
+            <p className="text-sm text-slate-500 mb-4">
+              Distancia en el plano: {calibrationModal.pxDistance.toFixed(2)} px
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Distancia real (metros)</label>
+              <input 
+                type="number" 
+                value={tempRealDistance} 
+                onChange={e => setTempRealDistance(e.target.value)} 
+                className="w-full border border-slate-300 rounded-lg p-2"
+                min="0.1"
+                step="0.1"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setCalibrationModal(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+              <button onClick={() => {
+                  const real = parseFloat(tempRealDistance);
+                  if (real > 0) {
+                      dispatch({ type: 'CALIBRATE_SCALE', payload: { pxDistance: calibrationModal.pxDistance, realDistance: real, unit: 'm' } });
+                      setCalibrationModal(null);
+                  }
+              }} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
