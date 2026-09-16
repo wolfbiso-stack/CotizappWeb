@@ -642,6 +642,55 @@ const Workspace = ({ darkMode }) => {
          }
       }
       
+      // Nudge (Flechas del teclado)
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+         if (state.ui.selectedElementIds.length > 0) {
+            e.preventDefault(); // Evitar scroll
+            const id = state.ui.selectedElementIds[0];
+            const isSegment = state.segments.some(s => s.id === id);
+            const amount = e.shiftKey ? 10 : 1;
+            let dx = 0, dy = 0;
+            if (e.key === 'ArrowUp') dy = -amount;
+            if (e.key === 'ArrowDown') dy = amount;
+            if (e.key === 'ArrowLeft') dx = -amount;
+            if (e.key === 'ArrowRight') dx = amount;
+
+            let updates = {};
+
+            if (isSegment) {
+               const seg = state.segments.find(s => s.id === id);
+               const newPoints = seg.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+               updates.segments = state.segments.map(s => s.id === id ? { ...s, points: newPoints } : s);
+               
+               const relatedWires = state.elements.filter(el => el.properties?.segmentId === id);
+               updates.elements = state.elements.map(el => {
+                   if (el.properties?.segmentId === id) {
+                       return { ...el, points: el.points.map(p => ({ x: p.x + dx, y: p.y + dy })) };
+                   }
+                   return el;
+               });
+               
+               updates.nodes = state.nodes.map(n => n.segmentId === id ? { ...n, x: n.x + dx, y: n.y + dy } : n);
+               
+            } else {
+               const el = state.elements.find(e => e.id === id);
+               if (el) {
+                   if (el.points) {
+                       updates.elements = state.elements.map(e => e.id === id ? { ...e, points: e.points.map(p => ({ x: p.x + dx, y: p.y + dy })) } : e);
+                   } else {
+                       updates.elements = state.elements.map(e => e.id === id ? { ...e, x: e.x + dx, y: e.y + dy } : e);
+                   }
+                   
+                   updates.nodes = state.nodes.map(n => n.wireId === id ? { ...n, x: n.x + dx, y: n.y + dy } : n);
+               }
+            }
+            
+            if (Object.keys(updates).length > 0) {
+                dispatch({ type: 'BATCH_UPDATE', payload: { updates, noHistory: true } });
+            }
+         }
+      }
+      
       // Copiar
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
          if (state.ui.selectedElementIds.length > 0) {

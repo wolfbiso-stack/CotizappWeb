@@ -16,6 +16,16 @@ const initialState = {
        enabled: false,
        pixelsPerMeter: 100, // 1m = 100px by default
        reference: null // { pxDistance, realDistance, unit }
+    },
+    economics: {
+       materialCosts: {}, 
+       labor: [], 
+       additionalCosts: [], 
+       settings: {
+           currency: 'MXN',
+           margin: 25,
+           marginType: 'PERCENTAGE_ON_COST'
+       }
     }
   },
   view: {
@@ -144,6 +154,109 @@ function designerReducer(state, action) {
               isManual: action.payload.isManual,
               quantity: action.payload.quantity
             }
+          }
+        }
+      });
+
+    // V6 Economics Actions
+    case 'UPDATE_ECONOMIC_SETTINGS':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            settings: { ...(state.project.economics?.settings || initialState.project.economics.settings), ...action.payload }
+          }
+        }
+      });
+      
+    case 'SET_MATERIAL_COST':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            materialCosts: {
+              ...(state.project.economics?.materialCosts || {}),
+              [action.payload.materialId]: {
+                unitCost: action.payload.unitCost,
+                isManual: action.payload.isManual !== undefined ? action.payload.isManual : true
+              }
+            }
+          }
+        }
+      });
+
+    case 'ADD_LABOR_ITEM':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            labor: [...(state.project.economics?.labor || []), action.payload]
+          }
+        }
+      });
+
+    case 'UPDATE_LABOR_ITEM':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            labor: (state.project.economics?.labor || []).map(item => item.id === action.payload.id ? { ...item, ...action.payload.updates } : item)
+          }
+        }
+      });
+
+    case 'REMOVE_LABOR_ITEM':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            labor: (state.project.economics?.labor || []).filter(item => item.id !== action.payload)
+          }
+        }
+      });
+
+    case 'ADD_ADDITIONAL_COST':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            additionalCosts: [...(state.project.economics?.additionalCosts || []), action.payload]
+          }
+        }
+      });
+
+    case 'UPDATE_ADDITIONAL_COST':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            additionalCosts: (state.project.economics?.additionalCosts || []).map(item => item.id === action.payload.id ? { ...item, ...action.payload.updates } : item)
+          }
+        }
+      });
+
+    case 'REMOVE_ADDITIONAL_COST':
+      return saveHistory({
+        ...state,
+        project: {
+          ...state.project,
+          economics: {
+            ...(state.project.economics || initialState.project.economics),
+            additionalCosts: (state.project.economics?.additionalCosts || []).filter(item => item.id !== action.payload)
           }
         }
       });

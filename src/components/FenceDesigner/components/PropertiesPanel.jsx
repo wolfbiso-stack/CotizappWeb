@@ -1,16 +1,16 @@
 import React from 'react';
 import { useDesigner } from '../context/DesignerContext';
-import { Settings, Trash2, Link, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Settings, Trash2, Link, AlertTriangle, CheckCircle, XCircle, Calculator } from 'lucide-react';
 import { analyzeProject } from '../utils/connectivity';
 import { generateQuantification } from '../utils/measurements';
-import { Calculator } from 'lucide-react';
 import MaterialsPanel from './MaterialsPanel';
+import EconomicsPanel from './EconomicsPanel';
 
 const PropertiesPanel = ({ darkMode }) => {
   const { state, dispatch } = useDesigner();
   const selectedIds = state.ui.selectedElementIds;
   const [activeTab, setActiveTab] = React.useState('properties');
-  const analysisResults = (activeTab === 'analysis' || activeTab === 'quantification' || activeTab === 'materials') ? analyzeProject(state) : null;
+  const analysisResults = (activeTab === 'analysis' || activeTab === 'quantification' || activeTab === 'materials' || activeTab === 'economics') ? analyzeProject(state) : null;
   
   const inputClass = `w-full px-3 py-2 border rounded text-sm ${darkMode ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-900'}`;
   
@@ -398,9 +398,10 @@ const PropertiesPanel = ({ darkMode }) => {
         <button onClick={() => setActiveTab('analysis')} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'analysis' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Análisis</button>
         <button onClick={() => { setActiveTab('quantification'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'quantification' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Cuantif</button>
         <button onClick={() => { setActiveTab('materials'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'materials' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Materiales</button>
+        <button onClick={() => { setActiveTab('economics'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'economics' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Costos</button>
       </div>
 
-      {activeTab === 'materials' ? <MaterialsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'quantification' ? renderQuantification() : activeTab === 'analysis' ? renderAnalysis() : (
+      {activeTab === 'economics' ? <EconomicsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'materials' ? <MaterialsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'quantification' ? renderQuantification() : activeTab === 'analysis' ? renderAnalysis() : (
         !selectedElement ? (
           <div className="p-6 flex flex-col items-center justify-center text-center flex-1">
             <Settings className="w-12 h-12 mb-4 opacity-20 text-slate-500" />
