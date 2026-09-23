@@ -8575,6 +8575,7 @@ const App = () => {
 
     // Auth State: Folio with COT-YYYY-XXX format
     const [folio, setFolio] = useState('COT-' + new Date().getFullYear() + '-100');
+    const [quotationTitle, setQuotationTitle] = useState('');
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSavingQuotation, setIsSavingQuotation] = useState(false);
@@ -10085,6 +10086,10 @@ const App = () => {
 
     const saveQuotation = async () => {
         if (!session?.user || isSavingQuotation) return;
+        if (!quotationTitle.trim()) {
+            alert('El título de la cotización es obligatorio.');
+            return;
+        }
 
         setIsSavingQuotation(true);
         try {
@@ -10109,6 +10114,7 @@ const App = () => {
 
             const quotationData = {
                 user_id: session.user.id,
+                titulo: quotationTitle.trim(),
                 folio: folio,
                 nombre_cliente: client.name,
                 telefono: client.phone,
@@ -10280,6 +10286,7 @@ const App = () => {
 
     const loadQuotationForEdit = (quotation) => {
         // Load quotation data into editor
+        setQuotationTitle(quotation.titulo || '');
         setFolio(quotation.folio);
         setClient({
             name: quotation.nombre_cliente,
@@ -11193,6 +11200,7 @@ const App = () => {
                                     <QuotationList
                                         quotations={quotations}
                                         onCreateNew={() => {
+                                            setQuotationTitle('');
                                             setClient({ name: '', phone: '', email: '', address: '' });
                                             setItems([]);
                                             setTerms(localStorage.getItem('defaultTerms') || '');
@@ -11280,6 +11288,17 @@ const App = () => {
                                                 <h3 className={`font-bold flex items-center gap-2 mb-4 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                                                     <FileText className="w-5 h-5 text-blue-500" /> Detalles de la Cotización
                                                 </h3>
+                                                <div className="mb-6">
+                                                    <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Título de Cotización (Obligatorio)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={quotationTitle}
+                                                        onChange={(e) => setQuotationTitle(e.target.value)}
+                                                        placeholder="Ej. Instalación de Cámaras de Seguridad"
+                                                        required
+                                                        className={`w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                                    />
+                                                </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     <div>
                                                         <label className={`block text-xs font-bold mb-1 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Folio</label>
