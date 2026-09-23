@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Loader, CheckCircle2, XCircle, Clock, Handshake } from 'lucide-react';
 import { publicQuoteApi } from '../utils/publicQuoteClient';
 import { quoteToken } from '../utils/publicQuote';
 
@@ -9,7 +9,7 @@ const messages = {
     expired: 'Esta cotización ha vencido y ya no admite respuestas. Solicita una nueva versión.',
 };
 const dateTime = value => new Date(value).toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
-const button = 'rounded-xl px-5 py-3 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed';
+const button = 'rounded-xl px-5 py-3 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
 export default function PublicQuote({ api = publicQuoteApi, pathname = window.location.pathname }) {
     const token = quoteToken(pathname);
@@ -136,11 +136,11 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                             {/* Header Section */}
                             <header className="flex flex-col md:flex-row justify-between items-start gap-8 mb-10">
                                 {/* Left Side: Logo and Company Info */}
-                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                                <div className="flex flex-row items-center gap-6">
                                     <div className="w-32 h-20 flex-shrink-0 flex items-center justify-center bg-white p-1">
                                         <img src="/LogoEmpresa.png" alt="CUBI Servicios Logo" className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
                                     </div>
-                                    <div className="text-center sm:text-left mt-2">
+                                    <div className="text-left mt-2">
                                         <h1 className="text-2xl font-bold text-slate-900 mb-1">{q.empresa?.nombre_empresa || 'CUBI Servicios'}</h1>
                                         {q.empresa?.direccion && <p className="text-[13px] text-slate-500 mb-0.5">{q.empresa.direccion}</p>}
                                         {q.empresa?.correo && <p className="text-[13px] text-slate-500 mb-0.5">{q.empresa.correo}</p>}
@@ -281,41 +281,54 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
 
                 {status === 'pending' && (
                     <section className="bg-white rounded-2xl shadow-sm p-6 sm:p-8 border border-slate-200" aria-labelledby="respuesta">
-                        <h2 id="respuesta" className="text-lg font-bold text-slate-800 mb-6 text-center sm:text-left">¿Deseas aceptar esta cotización?</h2>
+                        <div className="flex items-center justify-center sm:justify-start gap-3 mb-6">
+                            <Handshake className="w-6 h-6 text-blue-600" />
+                            <h2 id="respuesta" className="text-lg font-bold text-slate-800 text-center sm:text-left">
+                                ¿Deseas aceptar esta cotización?
+                            </h2>
+                        </div>
                         
                         {!decision ? (
                             <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto sm:mx-0">
-                                <button disabled={sending} onClick={() => setDecision('approved')} className={`${button} bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 transition-all`}>
+                                <button disabled={sending} onClick={() => setDecision('approved')} className={`${button} focus-visible:outline-blue-600 bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 transition-all`}>
                                     Aprobar cotización
                                 </button>
-                                <button disabled={sending} onClick={() => setDecision('rejected')} className={`${button} bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 transition-all`}>
+                                <button disabled={sending} onClick={() => setDecision('rejected')} className={`${button} focus-visible:outline-red-600 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 transition-all`}>
                                     Rechazar cotización
                                 </button>
                             </div>
                         ) : (
-                            <form onSubmit={respond} className="space-y-5 bg-slate-50 p-6 rounded-xl border border-slate-100">
-                                <h3 ref={confirmation} tabIndex={-1} className="font-semibold text-slate-800 text-lg">
-                                    Confirmar {decision === 'approved' ? 'aprobación' : 'rechazo'} (Versión {result.version})
-                                </h3>
-                                <p className="text-sm text-slate-600">Tu decisión quedará registrada y no podrá modificarse desde este enlace.</p>
+                            <form 
+                                onSubmit={respond} 
+                                className={`space-y-5 p-6 rounded-xl border transition-colors ${
+                                    decision === 'approved' 
+                                        ? 'bg-emerald-50 border-emerald-200 shadow-sm shadow-emerald-100/50' 
+                                        : 'bg-red-50 border-red-200 shadow-sm shadow-red-100/50'
+                                }`}
+                            >
+                                <p className="text-sm text-slate-700 mb-2">
+                                    Tu decisión quedará registrada y no podrá modificarse desde este enlace.
+                                </p>
                                 
                                 <label className="block mt-4">
-                                    <span className="text-sm font-medium text-slate-700 mb-2 block">Agregar comentario (opcional)</span>
+                                    <span ref={confirmation} tabIndex={-1} className="text-base font-bold text-slate-800 mb-2 block outline-none">
+                                        Agregar Comentario
+                                    </span>
                                     <textarea 
                                         disabled={sending} 
                                         maxLength={2000} 
                                         value={comment} 
                                         onChange={e => setComment(e.target.value)} 
                                         placeholder={decision === 'approved' ? "Ej. Todo de acuerdo, procedan..." : "Ej. El precio es mayor a lo esperado..."}
-                                        className="block w-full min-h-[120px] rounded-xl border-slate-300 p-4 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm resize-none" 
+                                        className="block w-full min-h-[120px] rounded-xl border-slate-300 p-4 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm resize-none bg-white" 
                                     />
                                 </label>
                                 
                                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                    <button disabled={sending} type="submit" className={`${button} bg-blue-600 text-white flex-1`}>
+                                    <button disabled={sending} type="submit" className={`${button} focus-visible:outline-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 flex-1 shadow-sm shadow-emerald-200`}>
                                         {sending ? 'Registrando respuesta…' : 'Confirmar y enviar respuesta'}
                                     </button>
-                                    <button disabled={sending} type="button" onClick={() => setDecision(null)} className={`${button} bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 flex-1 sm:flex-none`}>
+                                    <button disabled={sending} type="button" onClick={() => setDecision(null)} className={`${button} focus-visible:outline-rose-600 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 flex-1 sm:flex-none`}>
                                         Cancelar
                                     </button>
                                 </div>
