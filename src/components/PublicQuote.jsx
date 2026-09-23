@@ -179,8 +179,8 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                                 <div className="hidden sm:grid grid-cols-[60px_1fr_120px_120px] gap-4 pb-3 border-b-2 border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                     <div>Cant.</div>
                                     <div>Descripción / Producto</div>
-                                    <div className="text-right">Precio Público</div>
-                                    <div className="text-right">Importe</div>
+                                    <div className="text-right">Precio U.</div>
+                                    <div className="text-right">Total</div>
                                 </div>
                                 
                                 <div className="divide-y divide-slate-50">
@@ -191,7 +191,7 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                                             <div className="text-[13px] font-bold text-slate-800 pr-4">
                                                 <div className="sm:hidden text-xs font-normal text-slate-500 mb-1">Cant: {item.cantidad}</div>
                                                 {item.articulo}
-                                                {item.descuento != null && <div className="text-xs font-normal text-amber-600 mt-0.5">Descuento: {item.descuento}%</div>}
+                                                {item.descuento != null && item.descuento > 0 && <div className="text-xs font-normal text-amber-600 mt-0.5">Descuento: {item.descuento}%</div>}
                                                 {item.impuesto_texto && <div className="text-xs font-normal text-slate-400 mt-0.5">{item.impuesto_texto}</div>}
                                             </div>
                                             
@@ -209,17 +209,18 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                                 </div>
                             </section>
 
-                            {/* Footer Info (Terms & Totals) */}
+                            {/* Terms directly below articles */}
+                            {q.terminos && (
+                                <div className="mb-10 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                                    <h3 className="text-[11px] font-bold text-slate-800 mb-2 uppercase tracking-wide">Términos y Condiciones</h3>
+                                    <p className="text-[12px] text-slate-600 whitespace-pre-wrap leading-relaxed">{q.terminos}</p>
+                                </div>
+                            )}
+
+                            {/* Footer Info (Atentamente & Totals) */}
                             <div className="flex flex-col md:flex-row gap-10 md:gap-4 justify-between border-t border-slate-100 pt-8 mt-8">
-                                {/* Left Side: Terms */}
-                                <div className="md:w-[50%]">
-                                    {q.terminos && (
-                                        <div className="mb-8">
-                                            <h3 className="text-[11px] font-bold text-slate-800 mb-2">Términos y Condiciones</h3>
-                                            <p className="text-[12px] text-slate-500 whitespace-pre-wrap leading-relaxed">{q.terminos}</p>
-                                        </div>
-                                    )}
-                                    
+                                {/* Left Side: Atentamente */}
+                                <div className="md:w-[50%] flex items-end pb-4">
                                     <div>
                                         <h3 className="text-[11px] font-bold text-blue-600 uppercase tracking-wide mb-1">Atentamente:</h3>
                                         <p className="text-[14px] font-bold text-blue-700">{q.empresa?.nombre_empresa || 'CUBI Servicios'}</p>
