@@ -39,6 +39,28 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
     }, []);
     useEffect(() => { if (decision) confirmation.current?.focus(); }, [decision]);
 
+    const visit = useRef(null);
+    useEffect(() => {
+        if (loading || !result?.quote || !token || !api.recordView) return;
+        if (visit.current?.token !== token) visit.current = { token, id: crypto.randomUUID(), sent: false };
+        const current = visit.current;
+        let active = true;
+        let retryTimer;
+        let attempts = 0;
+        const record = () => {
+            if (!active || current.sent || document.visibilityState !== 'visible') return;
+            current.sent = true;
+            api.recordView(token, current.id).catch(() => {
+                current.sent = false;
+                if (active && ++attempts < 3) retryTimer = setTimeout(record, 3000);
+            });
+        };
+        record();
+        document.addEventListener('visibilitychange', record);
+        return () => { active = false; clearTimeout(retryTimer); document.removeEventListener('visibilitychange', record); };
+    }, [api, token, loading, Boolean(result?.quote)]);
+
+
     const status = result?.status === 'pending' && Date.parse(result.expires_at) <= now ? 'expired' : result?.status;
     const q = result?.quote;
     const money = value => new Intl.NumberFormat('es-MX', {

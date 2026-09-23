@@ -64,3 +64,13 @@ test('malformed responses do not silently display fabricated prices or enable de
         assert.throws(() => validatePublicQuote(data));
     }
 });
+
+
+test('opening tracking uses a dedicated RPC without sending visitor personal data', async () => {
+    const calls = [];
+    const api = createQuoteApi({ async rpc(name, params) { calls.push({ name, params }); return { data: null }; } });
+    const id = '11111111-1111-4111-8111-111111111111';
+    await api.recordView('bad', id);
+    await api.recordView(token, id);
+    assert.deepEqual(calls, [{ name: 'record_public_quote_view', params: { p_token: token, p_visit_id: id } }]);
+});

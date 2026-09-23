@@ -37,6 +37,12 @@ export function createQuoteApi(client) {
         return validatePublicQuote(data);
     }
     return {
+        async recordView(token, visitId) {
+            if (!TOKEN_PATTERN.test(token || '') || !/^[a-f0-9-]{36}$/i.test(visitId || '')) return;
+            if (!client) return;
+            const { error } = await client.rpc('record_public_quote_view', { p_token: token, p_visit_id: visitId });
+            if (error) throw new Error('Visit could not be recorded');
+        },
         read(token) {
             if (!TOKEN_PATTERN.test(token || '')) return Promise.resolve({ status: 'invalid' });
             return call('get_public_quote', { p_token: token });

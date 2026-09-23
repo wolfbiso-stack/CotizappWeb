@@ -42,6 +42,7 @@ async function respond(token, version = 1, decision = 'approved', comment = null
 before(async () => {
     await db.exec(await readFile(new URL('./fixtures/supabase-schema.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../supabase/migrations/20260923000000_public_quotes.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20260924000000_quote_activity.sql', import.meta.url), 'utf8'));
     await db.query("insert into public.configuracion_empresa(user_id,nombre,direccion) values ($1,'Empresa A','Dirección'),($2,'Empresa B','Dirección B')", [owner, other]);
 });
 after(async () => { await db.close(); });
@@ -166,4 +167,60 @@ test('deleting the mutable source preserves the published evidence and owner acc
     await db.query('delete from public.cotizaciones where id=$1', [id]);
     assert.equal((await rpc('list_quote_publications', [id]))[0].estado, 'aceptada');
     assert.equal((await read(pub.token)).status, 'answered');
+});
+
+
+test('visit recording is idempotent, server-timed and private to the owner', async () => {
+    const quoteId = await seed();
+    const p = await publish(quoteId);
+    const visitId = randomUUID();
+    await role('anon');
+    await rpc('record_public_quote_view', [p.token, visitId], ['text','uuid']);
+    await rpc('record_public_quote_view', [p.token, visitId], ['text','uuid']);
+    await assert.rejects(db.exec('select * from quote_private.quote_views'), /permission denied/);
+    await assert.rejects(rpc('list_quote_activity', [quoteId], ['integer']), /permission denied/);
+    await role('authenticated', other);
+    assert.deepEqual(await rpc('list_quote_activity', [quoteId], ['integer']), []);
+    assert.deepEqual(await rpc('get_quote_decisions', [[quoteId]], ['integer[]']), []);
+    await role('authenticated', owner);
+    const [row] = await rpc('list_quote_activity', [quoteId], ['integer']);
+    assert.equal(row.view_count, 1);
+    assert.equal(row.views.length, 1);
+    assert.equal(row.first_viewed_at, row.last_viewed_at);
+    assert.ok(Number.isFinite(Date.parse(row.first_viewed_at)));
+    assert.equal(row.estado, 'pendiente');
+});
+
+test('tracking exposes immutable response and newest active version controls the thumbs', async () => {
+    const quoteId = await seed();
+    const first = await publish(quoteId);
+    await respond(first.token, 1, 'rejected', 'Cambiar cantidades');
+    await role('authenticated', owner);
+    let rows = await rpc('list_quote_activity', [quoteId], ['integer']);
+    assert.equal(rows[0].estado, 'rechazada');
+    assert.equal(rows[0].comment, 'Cambiar cantidades');
+    assert.ok(rows[0].responded_at);
+    const second = await publish(quoteId);
+    assert.deepEqual(await rpc('get_quote_decisions', [[quoteId]], ['integer[]']), [{ quote_id: quoteId, estado: 'pendiente' }]);
+    await respond(second.token, 2, 'approved', 'Adelante');
+    await role('authenticated', owner);
+    assert.deepEqual(await rpc('get_quote_decisions', [[quoteId]], ['integer[]']), [{ quote_id: quoteId, estado: 'aceptada' }]);
+    rows = await rpc('list_quote_activity', [quoteId], ['integer']);
+    assert.equal(rows[1].comment, 'Cambiar cantidades');
+    await rpc('revoke_quote_publication', [second.publication_id], ['uuid']);
+    assert.deepEqual(await rpc('get_quote_decisions', [[quoteId]], ['integer[]']), [{ quote_id: quoteId, estado: 'rechazada' }]);
+});
+
+test('reads do not count as visits and invalid or revoked tokens cannot add visits', async () => {
+    const id = await seed();
+    const p = await publish(id);
+    await read(p.token);
+    await role('authenticated', owner);
+    assert.equal((await rpc('list_quote_activity', [id], ['integer']))[0].view_count, 0);
+    await rpc('revoke_quote_publication', [p.publication_id], ['uuid']);
+    await role('anon');
+    await rpc('record_public_quote_view', [p.token, randomUUID()], ['text','uuid']);
+    await rpc('record_public_quote_view', ['bad', randomUUID()], ['text','uuid']);
+    await role('authenticated', owner);
+    assert.equal((await rpc('list_quote_activity', [id], ['integer']))[0].view_count, 0);
 });
