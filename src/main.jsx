@@ -1,7 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
 import './index.css'
+
+// Public links do not load the private dashboard or initialize its session client.
+const App = React.lazy(() => import('./App.jsx'));
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -60,7 +62,7 @@ const pathname = window.location.pathname;
 let isAppRoute = false;
 
 // If it's a tracking URL, it must ALWAYS go to PublicApp
-if (hash.includes('#/track/') || pathname.includes('/track/')) {
+if (/^\/cotizacion(?:\/|$)/.test(pathname) || hash.includes('#/track/') || pathname.includes('/track/')) {
     isAppRoute = false;
 } else if (searchParams.get('app') === 'true') {
     isAppRoute = true;
@@ -77,7 +79,9 @@ const MainComponent = isAppRoute ? App : PublicApp;
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <ErrorBoundary>
-            <MainComponent />
+            <React.Suspense fallback={<div role="status" className="min-h-screen bg-slate-50 p-8 text-slate-600">Cargando…</div>}>
+                <MainComponent />
+            </React.Suspense>
         </ErrorBoundary>
     </React.StrictMode>,
 )

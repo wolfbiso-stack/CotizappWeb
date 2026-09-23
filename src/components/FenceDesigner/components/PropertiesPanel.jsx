@@ -6,7 +6,7 @@ import { generateQuantification } from '../utils/measurements';
 import MaterialsPanel from './MaterialsPanel';
 import EconomicsPanel from './EconomicsPanel';
 
-const PropertiesPanel = ({ darkMode }) => {
+const PropertiesPanel = ({ darkMode, onExportToQuotation }) => {
   const { state, dispatch } = useDesigner();
   const selectedIds = state.ui.selectedElementIds;
   const [activeTab, setActiveTab] = React.useState('properties');
@@ -401,7 +401,7 @@ const PropertiesPanel = ({ darkMode }) => {
         <button onClick={() => { setActiveTab('economics'); dispatch({ type: 'HIGHLIGHT_PATH', payload: null }); }} className={`flex-1 min-w-[70px] py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'economics' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400 hover:text-slate-600'}`}>Costos</button>
       </div>
 
-      {activeTab === 'economics' ? <EconomicsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'materials' ? <MaterialsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'quantification' ? renderQuantification() : activeTab === 'analysis' ? renderAnalysis() : (
+      {activeTab === 'economics' ? <EconomicsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} onExportToQuotation={onExportToQuotation} /> : activeTab === 'materials' ? <MaterialsPanel state={state} dispatch={dispatch} analysisResults={analysisResults} darkMode={darkMode} /> : activeTab === 'quantification' ? renderQuantification() : activeTab === 'analysis' ? renderAnalysis() : (
         !selectedElement ? (
           <div className="p-6 flex flex-col items-center justify-center text-center flex-1">
             <Settings className="w-12 h-12 mb-4 opacity-20 text-slate-500" />

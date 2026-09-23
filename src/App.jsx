@@ -10469,6 +10469,71 @@ const App = () => {
         setItems(newItems);
     };
 
+    const handleExportFromFence = (economicsData) => {
+        const newItems = [];
+        let timeSeed = Date.now();
+        
+        // Add materials
+        Object.values(economicsData.groupedMaterials).flat().forEach(mat => {
+            if(mat.quantity > 0) {
+                newItems.push({
+                    id: timeSeed++,
+                    qty: mat.quantity,
+                    desc: mat.name,
+                    price: mat.unitCost || 0,
+                    cost: 0,
+                    discount: 0,
+                    tax: 0
+                });
+            }
+        });
+
+        // Add labor
+        if(economicsData.summary.totalLabor > 0) {
+            newItems.push({
+                id: timeSeed++,
+                qty: 1,
+                desc: "Mano de Obra (Instalación)",
+                price: economicsData.summary.totalLabor,
+                cost: 0,
+                discount: 0,
+                tax: 0
+            });
+        }
+
+        // Add extra costs
+        economicsData.additionalCosts.forEach(extra => {
+            if(extra.subtotal > 0) {
+                newItems.push({
+                    id: timeSeed++,
+                    qty: extra.quantity || 1,
+                    desc: extra.description || 'Costo adicional',
+                    price: extra.unitCost || extra.subtotal,
+                    cost: 0,
+                    discount: 0,
+                    tax: 0
+                });
+            }
+        });
+
+        // Add profit
+        if(economicsData.summary.profit > 0) {
+            newItems.push({
+                id: timeSeed++,
+                qty: 1,
+                desc: "Utilidad del Proyecto",
+                price: economicsData.summary.profit,
+                cost: 0,
+                discount: 0,
+                tax: 0
+            });
+        }
+
+        // Update quotation state
+        setItems(newItems);
+        setActiveTab('cotizaciones-new');
+    };
+
     const generatePDF = async () => {
         setIsGenerating(true);
         setTimeout(async () => {
@@ -11627,7 +11692,7 @@ const App = () => {
                                     />
                                 )}
                                 {activeTab === 'cercos' && (
-                                    <FenceDesigner darkMode={isDark} />
+                                    <FenceDesigner darkMode={isDark} onExportToQuotation={handleExportFromFence} />
                                 )}
 
                                 {/* Nota de Venta Preview Modal */}

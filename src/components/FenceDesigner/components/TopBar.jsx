@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useDesigner } from '../context/DesignerContext';
-import { Save, Download, Undo, Redo, ZoomIn, ZoomOut, Maximize, Loader, FolderOpen, X } from 'lucide-react';
+import { Save, Download, Undo, Redo, ZoomIn, ZoomOut, Maximize, Loader, FolderOpen, X, FileText } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { supabase } from '../../../../utils/supabase';
+import { exportProjectToPDF } from '../utils/exportHelper';
 
 const TopBar = ({ darkMode }) => {
   const { state, dispatch } = useDesigner();
@@ -11,6 +12,7 @@ const TopBar = ({ darkMode }) => {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [projects, setProjects] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(null);
 
   const handleZoom = (amount) => {
     dispatch({ type: 'SET_VIEW', payload: { zoom: Math.max(0.1, state.view.zoom + amount) } });
@@ -37,6 +39,21 @@ const TopBar = ({ darkMode }) => {
       alert("Error al exportar PNG: " + e.message);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    setPdfProgress("Iniciando...");
+    try {
+      await exportProjectToPDF(state, darkMode, (current, total) => {
+        setPdfProgress(`Hoja ${current}/${total}`);
+      });
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setIsExporting(false);
+      setPdfProgress(null);
     }
   };
 
@@ -219,10 +236,18 @@ const TopBar = ({ darkMode }) => {
         <button 
           onClick={exportToPNG}
           disabled={isExporting}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 rounded font-medium text-sm transition-colors disabled:opacity-50"
+        >
+          {isExporting && !pdfProgress ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          Exportar PNG
+        </button>
+        <button 
+          onClick={handleExportPDF}
+          disabled={isExporting}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm transition-colors disabled:opacity-50"
         >
-          {isExporting ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          Exportar PNG
+          {pdfProgress ? <Loader className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+          {pdfProgress ? pdfProgress : "Planos PDF"}
         </button>
       </div>
 

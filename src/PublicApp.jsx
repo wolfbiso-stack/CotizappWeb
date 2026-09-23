@@ -1,11 +1,17 @@
 import React from 'react';
-import PublicRepairTracking from './components/PublicRepairTracking';
+import PublicQuote from './components/PublicQuote';
 import { Rocket, MapPin } from 'lucide-react';
+
+const PublicRepairTracking = React.lazy(() => import('./components/PublicRepairTracking'));
 
 const PublicApp = () => {
     // Determine if we are tracking a repair
     const urlHash = window.location.hash;
     const urlPath = window.location.pathname;
+
+    if (/^\/cotizacion(?:\/|$)/.test(urlPath)) {
+        return <PublicQuote />;
+    }
     
     if (urlHash.includes('#/track/') || urlPath.includes('/track/')) {
         return <PublicRepairTracking />;

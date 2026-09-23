@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "npx vite build",
     "preview": "vite preview",
+    "test:quotes": "node --test tests/publicQuote.test.mjs tests/publicQuote.database.test.mjs",
+    "test:quotes:browser": "node tests/serve-public-quote.mjs",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
@@ -19,7 +21,7 @@
     "@capacitor/status-bar": "^8.0.3",
     "@supabase/supabase-js": "^2.95.3",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^2.5.2",
     "lucide": "^0.474.0",
     "lucide-react": "^0.563.0",
     "qrcode.react": "^4.2.0",
@@ -29,6 +31,7 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
+    "@electric-sql/pglite": "^0.5.8",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",

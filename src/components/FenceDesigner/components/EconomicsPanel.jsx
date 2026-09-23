@@ -14,7 +14,7 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-const EconomicsPanel = ({ state, dispatch, analysisResults, darkMode }) => {
+const EconomicsPanel = ({ state, dispatch, analysisResults, darkMode, onExportToQuotation }) => {
     const [expandedCats, setExpandedCats] = useState(
         Object.values(MATERIAL_CATEGORIES).reduce((acc, cat) => ({ ...acc, [cat]: true }), {})
     );
@@ -363,6 +363,16 @@ const EconomicsPanel = ({ state, dispatch, analysisResults, darkMode }) => {
                             <span className="text-slate-800 dark:text-slate-200">PRECIO SUGERIDO</span>
                             <span className="text-orange-500 dark:text-orange-400 text-xl">{formatCurrency(economics.summary.suggestedPrice)}</span>
                         </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <button 
+                            onClick={() => onExportToQuotation && onExportToQuotation(economics)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5"
+                        >
+                            <Calculator className="w-5 h-5" />
+                            Generar Cotización
+                        </button>
                     </div>
 
                     <div className={`p-4 rounded-lg border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
