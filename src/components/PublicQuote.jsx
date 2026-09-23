@@ -176,7 +176,7 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
 
                             {/* Items Table */}
                             <section className="mb-10">
-                                <div className="hidden sm:grid grid-cols-[60px_1fr_120px_120px] gap-4 pb-3 border-b-2 border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <div className="grid grid-cols-[40px_1fr_75px_85px] sm:grid-cols-[60px_1fr_120px_120px] gap-2 sm:gap-4 pb-3 border-b-2 border-slate-100 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                     <div>Cant.</div>
                                     <div>Descripción / Producto</div>
                                     <div className="text-right">Precio U.</div>
@@ -185,23 +185,20 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                                 
                                 <div className="divide-y divide-slate-50">
                                     {q.articulos.map((item, index) => (
-                                        <div key={index} className="py-4 flex flex-col sm:grid sm:grid-cols-[60px_1fr_120px_120px] gap-2 sm:gap-4 items-start sm:items-center">
-                                            <div className="text-[13px] text-slate-600 font-medium sm:block hidden">{item.cantidad}</div>
+                                        <div key={index} className="py-4 grid grid-cols-[40px_1fr_75px_85px] sm:grid-cols-[60px_1fr_120px_120px] gap-2 sm:gap-4 items-start sm:items-center">
+                                            <div className="text-[12px] sm:text-[13px] text-slate-600 font-medium">{item.cantidad}</div>
                                             
-                                            <div className="text-[13px] font-bold text-slate-800 pr-4">
-                                                <div className="sm:hidden text-xs font-normal text-slate-500 mb-1">Cant: {item.cantidad}</div>
+                                            <div className="text-[12px] sm:text-[13px] font-bold text-slate-800 pr-1 sm:pr-4 break-words">
                                                 {item.articulo}
-                                                {item.descuento != null && item.descuento > 0 && <div className="text-xs font-normal text-amber-600 mt-0.5">Descuento: {item.descuento}%</div>}
-                                                {item.impuesto_texto && <div className="text-xs font-normal text-slate-400 mt-0.5">{item.impuesto_texto}</div>}
+                                                {item.descuento != null && item.descuento > 0 && <div className="text-[10px] sm:text-xs font-normal text-amber-600 mt-0.5">Desc: {item.descuento}%</div>}
+                                                {item.impuesto_texto && <div className="text-[10px] sm:text-xs font-normal text-slate-400 mt-0.5">{item.impuesto_texto}</div>}
                                             </div>
                                             
-                                            <div className="text-[13px] text-slate-500 sm:text-right w-full sm:w-auto">
-                                                <span className="sm:hidden font-medium mr-2">Precio:</span>
+                                            <div className="text-[12px] sm:text-[13px] text-slate-500 text-right">
                                                 {money(item.precioUnitario)}
                                             </div>
                                             
-                                            <div className="text-[13px] font-bold text-slate-800 sm:text-right w-full sm:w-auto">
-                                                <span className="sm:hidden font-medium mr-2">Importe:</span>
+                                            <div className="text-[12px] sm:text-[13px] font-bold text-slate-800 text-right">
                                                 {money(item.total)}
                                             </div>
                                         </div>
