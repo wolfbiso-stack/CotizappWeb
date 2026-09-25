@@ -15,6 +15,7 @@ import PhoneServiceReport from './components/PhoneServiceReport';
 import PrinterServiceReport from './components/PrinterServiceReport';
 import NetworkServiceReport from './components/NetworkServiceReport';
 import CCTVServiceReport from './components/CCTVServiceReport';
+import ElectricFenceServiceReport from './components/ElectricFenceServiceReport';
 
 import ServiceReceipt from './components/ServiceReceipt';
 import ServiceLabel from './components/ServiceLabel';
@@ -24,6 +25,7 @@ import PrinterServiceForm from './components/PrinterServiceForm';
 import NetworkServiceForm from './components/NetworkServiceForm';
 import PhoneServiceForm from './components/PhoneServiceForm';
 import CCTVServiceForm from './components/CCTVServiceForm';
+import ElectricFenceServiceForm from './components/ElectricFenceServiceForm';
 import Products from './components/Products';
 import SubscriptionView from './components/SubscriptionView';
 import TrialExpiredView from './components/TrialExpiredView';
@@ -32,7 +34,7 @@ import InicioView from './components/InicioView';
 import CitasView from './components/CitasView';
 import ConfigCercosView from './components/ConfigCercosView';
 import FenceDesigner from './components/FenceDesigner/FenceDesigner';
-import { STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
+import { STATUS_OPTIONS, ELECTRIC_FENCE_STATUS_OPTIONS, ALL_STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -3463,10 +3465,10 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
         try {
             let idField = 'id';
             let idValue = service.id;
-            const statusField = 'status';
+            const statusField = tableName === 'servicios_cercos_electricos' ? 'estatus' : 'status';
             const updatePayload = { [statusField]: newStatus };
 
-            const tablesToSync = ['servicios_pc', 'servicios_celulares', 'servicios_cctv', 'servicios_impresoras', 'servicios_redes'];
+            const tablesToSync = ['servicios_pc', 'servicios_celulares', 'servicios_cctv', 'servicios_impresoras', 'servicios_redes', 'servicios_cercos_electricos'];
             if (tablesToSync.includes(tableName)) {
                 if (newStatus === 'entregado') {
                     updatePayload.pagado = true;
@@ -3530,7 +3532,9 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
     };
 
     const statusValue = (service.status || 'pendiente').toLowerCase();
-    const currentStatus = STATUS_OPTIONS.find(s => s.value === statusValue);
+    const isElectricFence = service.type === 'Cercos Electricos' || service.tableName === 'servicios_cercos_electricos';
+    const optionsToUse = isElectricFence ? ELECTRIC_FENCE_STATUS_OPTIONS : STATUS_OPTIONS;
+    const currentStatus = ALL_STATUS_OPTIONS.find(s => s.value === statusValue);
     const displayLabel = currentStatus ? currentStatus.label : (statusValue || 'Seleccionar Estado');
     const displayColor = currentStatus ? currentStatus.color : 'gray';
 
@@ -3569,7 +3573,7 @@ const StatusDropdown = ({ service, darkMode, onStatusChange, tableName = 'servic
                 <div
                     className={`absolute z-[200] w-full min-w-[180px] p-1.5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border backdrop-blur-xl ${openUpward ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 ${darkMode ? 'bg-slate-800/95 border-slate-700/50' : 'bg-white/95 border-slate-200/50'}`}
                 >
-                    {STATUS_OPTIONS.map((status) => (
+                    {optionsToUse.map((status) => (
                         <button
                             key={status.value}
                             onClick={() => handleStatusUpdate(status.value)}
@@ -4361,7 +4365,7 @@ const PCServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
 };
 
 
-const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, onShowNotaVenta, user, refreshTrigger, services: sharedServices, pageStyle = 'Redondeados' }) => {
+const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setEditingCCTVService, setEditingPCService, setEditingPhoneService, setEditingPrinterService, setEditingNetworkService, setEditingElectricFenceService, onShowNotaVenta, user, refreshTrigger, services: sharedServices, pageStyle = 'Redondeados' }) => {
     const isMinimalista = pageStyle === 'Minimalista';
     const isCCRoutes = pageStyle === 'CC Routes';
     const [unifiedServices, setUnifiedServices] = useState(sharedServices || []);
@@ -4409,6 +4413,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
         { id: 'celulares', title: 'Celulares', icon: Smartphone, color: 'text-rose-500', bg: 'bg-rose-500/10', implemented: true, table: 'servicios_celular' },
         { id: 'impresoras', title: 'Impresoras', icon: Printer, color: 'text-purple-500', bg: 'bg-purple-500/10', implemented: true, table: 'servicios_impresora' },
         { id: 'redes', title: 'Redes', icon: Wifi, color: 'text-cyan-500', bg: 'bg-cyan-500/10', implemented: true, table: 'servicios_redes' },
+        { id: 'cercos', title: 'Cercos', icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10', implemented: true, table: 'servicios_cercos_electricos' },
     ];
 
     const parseDate = (d) => {
@@ -4436,6 +4441,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 { data: phoneData },
                 { data: printerData },
                 { data: networkData },
+                { data: cercosData },
                 { data: photosData }
             ] = await Promise.all([
                 supabase.from('servicios_cctv').select('*').eq('user_id', user.id),
@@ -4443,6 +4449,7 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 supabase.from('servicios_celulares').select('*').eq('user_id', user.id),
                 supabase.from('servicios_impresoras').select('*').eq('user_id', user.id),
                 supabase.from('servicios_redes').select('*').eq('user_id', user.id),
+                supabase.from('servicios_cercos_electricos').select('*').eq('user_id', user.id),
                 supabase.from('servicio_fotos').select('servicio_id, tipo_servicio').eq('user_id', user.id)
             ]);
 
@@ -4454,7 +4461,8 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 ...(pcData || []).map(s => ({ ...s, original: s, type: 'PC', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_pc', hasPhotos: photosLookup.has(`servicios_pc-${s.id}`) })),
                 ...(phoneData || []).map(s => ({ ...s, original: s, type: 'Celular', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_celulares', hasPhotos: photosLookup.has(`servicios_celulares-${s.id}`) })),
                 ...(printerData || []).map(s => ({ ...s, original: s, type: 'Impresora', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_impresoras', hasPhotos: photosLookup.has(`servicios_impresoras-${s.id}`) })),
-                ...(networkData || []).map(s => ({ ...s, original: s, type: 'Redes', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_redes', hasPhotos: photosLookup.has(`servicios_redes-${s.id}`) }))
+                ...(networkData || []).map(s => ({ ...s, original: s, type: 'Redes', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_redes', hasPhotos: photosLookup.has(`servicios_redes-${s.id}`) })),
+                ...(cercosData || []).map(s => ({ ...s, original: s, type: 'Cercos Electricos', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_cercos_electricos', status: s.estatus, hasPhotos: photosLookup.has(`servicios_cercos_electricos-${s.id}`) }))
             ].sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha));
 
             setUnifiedServices(unified);
@@ -4580,6 +4588,9 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
         } else if (service.type === 'Redes') {
             setSelectedService(service.original);
             onNavigate('services-network-view');
+        } else if (service.type === 'Cercos Electricos') {
+            setSelectedService(service.original);
+            onNavigate('services-electric-fence-view');
         }
     };
 
@@ -4610,6 +4621,13 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
             setEditingPhoneService(null);
             setEditingPrinterService(null);
             setEditingNetworkService(service.original);
+        } else if (service.type === 'Cercos Electricos') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(null);
+            setEditingPrinterService(null);
+            setEditingNetworkService(null);
+            setEditingElectricFenceService(service.original);
         }
     };
 
@@ -4642,6 +4660,13 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
             setEditingPhoneService(null);
             setEditingPrinterService(null);
             setEditingNetworkService('new');
+        } else if (category.id === 'cercos') {
+            setEditingPCService(null);
+            setEditingCCTVService(null);
+            setEditingPhoneService(null);
+            setEditingPrinterService(null);
+            setEditingNetworkService(null);
+            setEditingElectricFenceService('new');
         }
     };
 
@@ -9129,6 +9154,146 @@ const App = () => {
 
     // CCTV SERVICE FORM STATE & HANDLERS
     const [editingCCTVService, setEditingCCTVService] = useState(null);
+    const [editingElectricFenceService, setEditingElectricFenceService] = useState(null);
+    
+    const handleSaveElectricFenceService = async (serviceData, files, photosToDelete) => {
+        try {
+            let data, error;
+            const payload = {
+                user_id: session.user.id,
+                ...serviceData
+            };
+            if (!payload.orden_numero) {
+                const currentYear = new Date().getFullYear();
+                const folioPrefix = `CE-${currentYear}-`;
+                
+                const { data: folioData, error: folioError } = await supabase
+                    .from('servicios_cercos_electricos')
+                    .select('orden_numero')
+                    .eq('user_id', session.user.id)
+                    .like('orden_numero', `${folioPrefix}%`);
+                    
+                if (folioError) throw folioError;
+                
+                if (folioData && folioData.length > 0) {
+                    const numbers = folioData
+                        .map(d => parseInt(d.orden_numero.split('-')[2]))
+                        .filter(n => !isNaN(n) && n < 100000); // Ignorar números aleatorios enormes
+                        
+                    if (numbers.length > 0) {
+                        const maxNumber = Math.max(...numbers);
+                        payload.orden_numero = `${folioPrefix}${Math.max(maxNumber + 1, 100)}`;
+                    } else {
+                        payload.orden_numero = `${folioPrefix}100`;
+                    }
+                } else {
+                    payload.orden_numero = `${folioPrefix}100`;
+                }
+            }
+
+            if (editingElectricFenceService === 'new') {
+                ({ data, error } = await supabase.from('servicios_cercos_electricos').insert([payload]).select().single());
+            } else {
+                ({ data, error } = await supabase.from('servicios_cercos_electricos').update(payload).eq('id', editingElectricFenceService.id).select().single());
+            }
+
+            if (error) throw error;
+
+            // --- PHOTO DELETION LOGIC ---
+            if (photosToDelete && photosToDelete.length > 0) {
+                await deleteSpecificPhotos(photosToDelete);
+            }
+
+            console.log(`Debug ElectricFence: files.length = ${files ? files.length : 0}, data.id = ${data ? data.id : 'null'}`);
+            if (files && files.length > 0 && !data) {
+                alert('Ojo: data es nulo. No se subirán fotos.');
+            }
+            if (!files || files.length === 0) {
+                console.log('Ojo: files está vacío o es nulo.');
+                alert('Ojo: No recibí ninguna foto en el formulario. files está vacío.');
+            }
+
+            // --- PHOTO UPLOAD LOGIC ---
+            if (files && files.length > 0 && data) {
+                console.log('Entrando a lógica de subida de fotos...');
+                const uploadPromises = files.map(async (file) => {
+                    try {
+                        console.log(`Procesando archivo: ${file.name}, tamaño: ${file.size}`);
+                        const hash = await computeFileHash(file);
+                        console.log(`Hash calculado: ${hash}`);
+
+                        const { data: existingPhoto, error: queryErr } = await supabase
+                            .from('servicio_fotos')
+                            .select('id')
+                            .eq('servicio_id', data.id)
+                            .eq('hash', hash)
+                            .eq('tipo_servicio', 'servicios_cercos_electricos')
+                            .maybeSingle();
+
+                        if (queryErr) console.log('Error buscando duplicados:', queryErr);
+
+                        if (existingPhoto) {
+                            console.log('¡Foto duplicada encontrada! Saltando subida.');
+                            return { success: true, skipped: true };
+                        }
+
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const filePath = `${session.user.id}/servicio_${data.id}/${fileName}`;
+                        console.log(`Intentando subir a Storage: ${filePath}`);
+
+                        const { error: uploadError } = await supabase.storage
+                            .from('servicio-files-v2')
+                            .upload(filePath, file);
+
+                        if (uploadError) {
+                            console.error('Storage Upload Error details:', uploadError);
+                            throw new Error(uploadError.message || 'Error en storage.upload');
+                        }
+
+                        console.log('Subida a storage exitosa, obteniendo URL pública...');
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('servicio-files-v2')
+                            .getPublicUrl(filePath);
+
+                        console.log(`Insertando en servicio_fotos: ${publicUrl}`);
+                        const { error: dbError } = await supabase
+                            .from('servicio_fotos')
+                            .insert({
+                                servicio_id: data.id,
+                                user_id: session.user.id,
+                                uri: publicUrl,
+                                tipo_servicio: 'servicios_cercos_electricos',
+                                hash: hash
+                            });
+
+                        if (dbError) {
+                            console.error('Database Insert Error details:', dbError);
+                            throw new Error(dbError.message || 'Error guardando en servicio_fotos');
+                        }
+                        
+                        console.log('¡Proceso completo para:', file.name);
+                    } catch (e) {
+                        console.error('Error procesando archivo:', e);
+                        alert(`Error al subir imagen ${file.name}: ${e.message}`);
+                    }
+                });
+
+                console.log('Esperando a que terminen las subidas...');
+                await Promise.all(uploadPromises);
+                console.log('Subidas terminadas.');
+            }
+
+            setEditingElectricFenceService(null);
+            setServicesRefreshTrigger(prev => prev + 1);
+            if (activeTab === 'services-electric-fence-view' && selectedService?.id === data.id) {
+                setSelectedService(data);
+            }
+        } catch (error) {
+            console.error('Error saving electric fence service:', error);
+            alert('Error al guardar el servicio');
+        }
+    };
 
     const fetchNextCCTVServiceFolio = async (userId) => {
         try {
@@ -10046,6 +10211,7 @@ const App = () => {
                 { data: phoneData },
                 { data: printerData },
                 { data: networkData },
+                { data: cercosData },
                 { data: photosData }
             ] = await Promise.all([
                 supabase.from('servicios_cctv').select('*').eq('user_id', userId),
@@ -10053,6 +10219,7 @@ const App = () => {
                 supabase.from('servicios_celulares').select('*').eq('user_id', userId),
                 supabase.from('servicios_impresoras').select('*').eq('user_id', userId),
                 supabase.from('servicios_redes').select('*').eq('user_id', userId),
+                supabase.from('servicios_cercos_electricos').select('*').eq('user_id', userId),
                 supabase.from('servicio_fotos').select('servicio_id, tipo_servicio').eq('user_id', userId)
             ]);
 
@@ -10075,7 +10242,8 @@ const App = () => {
                 ...(pcData || []).map(s => ({ ...s, original: s, type: 'PC', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_pc', hasPhotos: photosLookup.has(`servicios_pc-${s.id}`) })),
                 ...(phoneData || []).map(s => ({ ...s, original: s, type: 'Celular', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_celulares', hasPhotos: photosLookup.has(`servicios_celulares-${s.id}`) })),
                 ...(printerData || []).map(s => ({ ...s, original: s, type: 'Impresora', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_impresoras', hasPhotos: photosLookup.has(`servicios_impresoras-${s.id}`) })),
-                ...(networkData || []).map(s => ({ ...s, original: s, type: 'Redes', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_redes', hasPhotos: photosLookup.has(`servicios_redes-${s.id}`) }))
+                ...(networkData || []).map(s => ({ ...s, original: s, type: 'Redes', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_redes', hasPhotos: photosLookup.has(`servicios_redes-${s.id}`) })),
+                ...(cercosData || []).map(s => ({ ...s, original: s, type: 'Cercos Electricos', folio: s.orden_numero, cliente: s.cliente_nombre, fecha: s.fecha, tableName: 'servicios_cercos_electricos', status: s.estatus, hasPhotos: photosLookup.has(`servicios_cercos_electricos-${s.id}`) }))
             ].sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha));
 
             setServices(unified);
@@ -11436,6 +11604,7 @@ const App = () => {
                                         savedClients={savedClients}
                                         quotations={quotations}
                                         products={products}
+                                        citas={citas}
                                         darkMode={isDark}
                                         pageStyle={pageStyle}
                                     />
@@ -11461,6 +11630,7 @@ const App = () => {
                                         setEditingPhoneService={setEditingPhoneService}
                                         setEditingPrinterService={setEditingPrinterService}
                                         setEditingNetworkService={setEditingNetworkService}
+                                        setEditingElectricFenceService={setEditingElectricFenceService}
                                         onShowNotaVenta={(service) => {
                                             setSelectedServiceForNota(service);
                                             setShowNotaPreview(true);
@@ -11476,6 +11646,14 @@ const App = () => {
                                         service={selectedService}
                                         onBack={() => setActiveTab('servicios')}
                                         onEdit={(service) => setEditingCCTVService(service)}
+                                        darkMode={isDark}
+                                        company={company}
+                                    />
+                                )}
+                                {activeTab === 'services-electric-fence-view' && (
+                                    <ElectricFenceServiceReport
+                                        service={selectedService}
+                                        onClose={() => setActiveTab('servicios')}
                                         darkMode={isDark}
                                         company={company}
                                     />
@@ -11545,6 +11723,16 @@ const App = () => {
                                         onSave={handleSaveCCTVService}
                                         onCancel={() => setEditingCCTVService(null)}
                                         darkMode={isDark}
+                                    />
+                                )}
+                                
+                                {/* Electric Fence Service Form Modal */}
+                                {editingElectricFenceService && (
+                                    <ElectricFenceServiceForm 
+                                        service={editingElectricFenceService === 'new' ? null : editingElectricFenceService} 
+                                        onSave={handleSaveElectricFenceService} 
+                                        onCancel={() => setEditingElectricFenceService(null)} 
+                                        darkMode={isDark} 
                                     />
                                 )}
 
