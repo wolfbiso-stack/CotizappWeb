@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader, CheckCircle2, XCircle, Clock, Handshake } from 'lucide-react';
+import { Loader, CheckCircle2, XCircle, Clock, Handshake, Download, MessageCircle } from 'lucide-react';
 import { publicQuoteApi } from '../utils/publicQuoteClient';
 import { quoteToken } from '../utils/publicQuote';
+import { useQuoteTracking } from '../hooks/useQuoteTracking';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 const messages = {
     invalid: 'Enlace inválido. Solicita a la empresa un enlace vigente.',
@@ -39,26 +42,36 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
     }, []);
     useEffect(() => { if (decision) confirmation.current?.focus(); }, [decision]);
 
-    const visit = useRef(null);
-    useEffect(() => {
-        if (loading || !result?.quote || !token || !api.recordView) return;
-        if (visit.current?.token !== token) visit.current = { token, id: crypto.randomUUID(), sent: false };
-        const current = visit.current;
-        let active = true;
-        let retryTimer;
-        let attempts = 0;
-        const record = () => {
-            if (!active || current.sent || document.visibilityState !== 'visible') return;
-            current.sent = true;
-            api.recordView(token, current.id).catch(() => {
-                current.sent = false;
-                if (active && ++attempts < 3) retryTimer = setTimeout(record, 3000);
-            });
-        };
-        record();
-        document.addEventListener('visibilitychange', record);
-        return () => { active = false; clearTimeout(retryTimer); document.removeEventListener('visibilitychange', record); };
-    }, [api, token, loading, Boolean(result?.quote)]);
+    const { track, isAdminPreview } = useQuoteTracking(token, Boolean(result?.quote));
+
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+    const handlePdfDownload = async () => {
+        const element = document.getElementById('public-quote-content');
+        if (!element) return;
+        setIsGeneratingPdf(true);
+        try {
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Cotizacion-${q?.folio || ''}.pdf`);
+            track('pdf_downloaded');
+        } catch (error) {
+            console.error('Error al generar PDF:', error);
+            alert('Error al generar el PDF. Por favor intente de nuevo.');
+        } finally {
+            setIsGeneratingPdf(false);
+        }
+    };
+
+    const handleWhatsAppClick = () => {
+        track('whatsapp_clicked');
+        // Open WhatsApp in a new tab immediately
+        window.open(`https://wa.me/529241040806?text=Hola,%20tengo%20una%20duda%20sobre%20la%20cotizaci%C3%B3n%20%23${q?.folio}`, '_blank', 'noopener,noreferrer');
+    };
 
 
     const status = result?.status === 'pending' && Date.parse(result.expires_at) <= now ? 'expired' : result?.status;
@@ -73,7 +86,10 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
         locked.current = true; setSending(true); setError('');
         try {
             const updated = await api.respond(token, result.version, decision, comment);
-            setResult(updated); setDecision(null);
+            setResult(updated);
+            track(decision === 'approved' ? 'approved' : 'rejected', comment ? { has_comment: true } : {});
+            if (comment) track('comment_submitted');
+            setDecision(null);
         } catch {
             setDecision(null);
             try {
@@ -113,6 +129,14 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
         <main className="min-h-screen bg-[#f3f4f6] py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-800">
             <div className="max-w-[850px] mx-auto space-y-6">
                 
+                {/* Preview Banner */}
+                {isAdminPreview && (
+                    <div className="bg-slate-800 text-white rounded-xl shadow-sm p-4 flex items-center justify-center gap-3">
+                        <span className="bg-slate-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Modo Preview</span>
+                        <p className="text-sm font-medium">Vista previa administrativa. Esta visita no afecta las estadísticas.</p>
+                    </div>
+                )}
+
                 {/* Status Messages */}
                 {messages[status] && (
                     <div className="bg-white rounded-xl shadow-sm border-l-4 border-amber-500 p-4 flex items-start gap-3">
@@ -126,9 +150,22 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                     </div>
                 )}
 
+                {/* Toolbar for PDF and WhatsApp */}
+                {q && status !== 'invalid' && (
+                    <div className="flex flex-wrap gap-4 justify-end mb-4">
+                        <button onClick={handleWhatsAppClick} className="flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                            <MessageCircle className="w-4 h-4" /> Consultar por WhatsApp
+                        </button>
+                        <button onClick={handlePdfDownload} disabled={isGeneratingPdf} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-70">
+                            {isGeneratingPdf ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                            {isGeneratingPdf ? 'Generando...' : 'Descargar PDF'}
+                        </button>
+                    </div>
+                )}
+
                 {/* The Document Area */}
                 {q && (
-                    <div className="bg-white shadow-xl shadow-slate-200/50 overflow-hidden relative">
+                    <div id="public-quote-content" className="bg-white shadow-xl shadow-slate-200/50 overflow-hidden relative">
                         {/* Top Gradient Bar */}
                         <div className="h-2 w-full bg-gradient-to-r from-[#4d3df7] via-[#8651f8] to-[#c66efb]"></div>
                         
@@ -288,10 +325,10 @@ export default function PublicQuote({ api = publicQuoteApi, pathname = window.lo
                         
                         {!decision ? (
                             <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto sm:mx-0">
-                                <button disabled={sending} onClick={() => setDecision('approved')} className={`${button} focus-visible:outline-blue-600 bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 transition-all`}>
+                                <button disabled={sending} onClick={() => { setDecision('approved'); track('approve_clicked'); }} className={`${button} focus-visible:outline-blue-600 bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 transition-all`}>
                                     Aprobar cotización
                                 </button>
-                                <button disabled={sending} onClick={() => setDecision('rejected')} className={`${button} focus-visible:outline-red-600 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 transition-all`}>
+                                <button disabled={sending} onClick={() => { setDecision('rejected'); track('reject_clicked'); }} className={`${button} focus-visible:outline-red-600 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 transition-all`}>
                                     Rechazar cotización
                                 </button>
                             </div>

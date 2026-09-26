@@ -56,5 +56,18 @@ export function createQuoteApi(client) {
                 p_token: token, p_version: version, p_decision: decision, p_comment: comment.trim() || null,
             });
         },
+        async trackEvent(token, sessionId, evento, duracionSegundos, dispositivo, metadata = {}) {
+            if (!TOKEN_PATTERN.test(token || '')) return;
+            if (!client) return;
+            const { error } = await client.rpc('registrar_evento_cotizacion_publica', {
+                p_token: token,
+                p_session_id: sessionId,
+                p_evento: evento,
+                p_duracion_segundos: duracionSegundos,
+                p_dispositivo: dispositivo,
+                p_metadata: metadata
+            });
+            if (error) throw error;
+        },
     };
 }
