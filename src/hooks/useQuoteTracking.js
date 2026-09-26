@@ -10,7 +10,10 @@ export function getDeviceType() {
 }
 
 export function useQuoteTracking(token, quoteLoaded) {
-    const sessionId = useRef(crypto.randomUUID());
+    const sessionId = useRef(null);
+    if (!sessionId.current) {
+        sessionId.current = crypto.randomUUID();
+    }
     const deviceType = useRef(getDeviceType());
     const activeTimeMs = useRef(0);
     const lastVisibleTime = useRef(Date.now());
@@ -92,6 +95,7 @@ export function useQuoteTracking(token, quoteLoaded) {
         };
 
         const handleClose = () => {
+            if (!hasTrackedView.current) return; // NO enviar quote_closed si nunca se registró quote_viewed
             if (closedSentRef.current) return;
             closedSentRef.current = true; // Make it idempotent
 

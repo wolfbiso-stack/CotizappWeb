@@ -60,20 +60,5 @@ end $$;
 revoke all on function public.registrar_evento_cotizacion_publica(text,uuid,text,integer,text,jsonb) from public,anon,authenticated;
 grant execute on function public.registrar_evento_cotizacion_publica(text,uuid,text,integer,text,jsonb) to anon,authenticated;
 
-create or replace function public.check_quote_admin(p_token text) returns boolean
-language plpgsql security definer set search_path = '' as $$
-declare
-  v_owner uuid;
-begin
-  if p_token is null or p_token !~ '^[a-f0-9]{64}$' then return false; end if;
-  if auth.uid() is null then return false; end if;
-  select owner_id into v_owner from quote_private.publications 
-    where token_hash=sha256(convert_to(p_token,'UTF8')) and revoked_at is null;
-  return v_owner = auth.uid();
-end $$;
-
-revoke all on function public.check_quote_admin(text) from public,anon,authenticated;
-grant execute on function public.check_quote_admin(text) to authenticated;
-
 notify pgrst,'reload schema';
 commit;
