@@ -133,19 +133,11 @@ const PublicRepairTracking = () => {
                         .select('*')
                         .eq('user_id', serviceData.user_id);
 
-                    if (companyError) {
-                        console.error('Error fetching company:', companyError);
-                        // Truco para ver el error en la vista
-                        setCompany({ nombre: 'Error DB: ' + companyError.message, logo_uri: null });
-                    } else if (companyDataArray && companyDataArray.length > 0) {
+                    if (companyDataArray && companyDataArray.length > 0) {
                         setCompany(companyDataArray[0]);
-                    } else {
-                        // Si viene vacío
-                        setCompany({ nombre: 'Array vacío devuelto por BD', logo_uri: null });
                     }
                 } catch (err) {
                     console.log('No company data available', err);
-                    setCompany({ nombre: 'Error en código: ' + err.message, logo_uri: null });
                 }
 
                 // Fetch photos - Now handled by the updated get_service_by_token RPC!
