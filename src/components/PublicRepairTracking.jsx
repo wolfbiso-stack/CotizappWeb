@@ -121,8 +121,6 @@ const PublicRepairTracking = () => {
                 serviceData.tecnico_nombre = serviceData.tecnico_nombre || serviceData.tecnico || 'Pendiente';
                 // falla_reportada en lugar de problema_reportado
                 serviceData.problema_reportado = serviceData.problema_reportado || serviceData.falla_reportada;
-                // estado_fisico lo podemos mostrar en el area de diagnóstico para que el cliente lo vea
-                serviceData.diagnostico = serviceData.diagnostico || serviceData.estado_fisico;
             }
 
             setService(serviceData);
@@ -470,6 +468,28 @@ const PublicRepairTracking = () => {
                                     <div className="text-slate-700 text-lg leading-relaxed font-medium">
                                         <ul className="list-disc pl-5 space-y-2 marker:text-red-500">
                                             {getFormattedList(service.problema_reportado).map((sentence, idx) => (
+                                                <li key={idx} className="italic">
+                                                    {sentence}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Physical Status */}
+                        {service.estado_fisico && (
+                            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-orange-100 overflow-hidden relative group">
+                                <div className="absolute left-0 top-0 bottom-0 w-2 bg-orange-400 group-hover:w-3 transition-all"></div>
+                                <div className="p-8 pl-10">
+                                    <h3 className="text-sm font-bold text-orange-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <Activity className="w-4 h-4" />
+                                        Estado Físico del Equipo
+                                    </h3>
+                                    <div className="text-slate-700 text-lg leading-relaxed font-medium">
+                                        <ul className="list-disc pl-5 space-y-2 marker:text-orange-500">
+                                            {getFormattedList(service.estado_fisico).map((sentence, idx) => (
                                                 <li key={idx} className="italic">
                                                     {sentence}
                                                 </li>
