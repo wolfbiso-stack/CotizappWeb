@@ -128,16 +128,24 @@ const PublicRepairTracking = () => {
             // Fetch company info using the found service data
             if (serviceData && serviceData.user_id) {
                 try {
-                    const { data: companyDataArray } = await supabase
+                    const { data: companyDataArray, error: companyError } = await supabase
                         .from('configuracion_empresa')
                         .select('*')
                         .eq('user_id', serviceData.user_id);
 
-                    if (companyDataArray && companyDataArray.length > 0) {
+                    if (companyError) {
+                        console.error('Error fetching company:', companyError);
+                        // Truco para ver el error en la vista
+                        setCompany({ nombre: 'Error DB: ' + companyError.message, logo_uri: null });
+                    } else if (companyDataArray && companyDataArray.length > 0) {
                         setCompany(companyDataArray[0]);
+                    } else {
+                        // Si viene vacío
+                        setCompany({ nombre: 'Array vacío devuelto por BD', logo_uri: null });
                     }
                 } catch (err) {
-                    console.log('No company data available');
+                    console.log('No company data available', err);
+                    setCompany({ nombre: 'Error en código: ' + err.message, logo_uri: null });
                 }
 
                 // Fetch photos - Now handled by the updated get_service_by_token RPC!
@@ -272,12 +280,6 @@ const PublicRepairTracking = () => {
                                 {company?.nombre || 'Centro de Reparaciones'}
                             </h1>
                             
-                            {/* Bloque temporal de depuración para ver el user_id */}
-                            <div className="bg-slate-100 text-slate-400 text-xs p-2 rounded-lg inline-block mb-3">
-                                <b>Debug user_id:</b> {service?.user_id || 'NULL o no recibido de la base de datos'} 
-                                {company ? ' (Empresa Encontrada)' : ' (Empresa No Encontrada)'}
-                            </div>
-
                             <div className="flex flex-col items-center gap-2 sm:gap-3 text-sm sm:text-base text-slate-600 font-medium">
                                 {company?.direccion && (
                                     <div className="flex items-center gap-2">
