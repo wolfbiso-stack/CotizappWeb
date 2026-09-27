@@ -111,6 +111,20 @@ const PublicRepairTracking = () => {
                 serviceData = data;
             }
 
+            // Normalización de campos para la tabla 'recepciones' u otras que tengan nombres distintos
+            if (serviceData) {
+                // Si no tiene orden_numero, usa folio o el id
+                serviceData.orden_numero = serviceData.orden_numero || serviceData.folio || serviceData.id || 'N/A';
+                // La tabla recepciones NO tiene columna status. Le asignamos "recibido" por defecto.
+                serviceData.status = serviceData.status || 'recibido';
+                // tecnico viene como 'tecnico' en lugar de 'tecnico_nombre'
+                serviceData.tecnico_nombre = serviceData.tecnico_nombre || serviceData.tecnico || 'Pendiente';
+                // falla_reportada en lugar de problema_reportado
+                serviceData.problema_reportado = serviceData.problema_reportado || serviceData.falla_reportada;
+                // estado_fisico lo podemos mostrar en el area de diagnóstico para que el cliente lo vea
+                serviceData.diagnostico = serviceData.diagnostico || serviceData.estado_fisico;
+            }
+
             setService(serviceData);
 
             // Fetch company info using the found service data
