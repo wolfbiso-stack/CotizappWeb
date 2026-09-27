@@ -89,7 +89,7 @@ const PublicRepairTracking = () => {
             if (rpcError) {
                 console.error('RPC Error:', rpcError);
                 // Fallback to direct query if RPC fails (e.g. not deployed yet)
-                const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares'];
+                const tables = ['servicios_pc', 'servicios_impresoras', 'servicios_celulares', 'recepciones'];
 
                 for (const table of tables) {
                     const { data: tableData, error: tableError } = await supabase
