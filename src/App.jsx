@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock } from 'lucide-react';
+import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock, Receipt } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -34,6 +34,7 @@ import InicioView from './components/InicioView';
 import CitasView from './components/CitasView';
 import ConfigCercosView from './components/ConfigCercosView';
 import FenceDesigner from './components/FenceDesigner/FenceDesigner';
+import NotasDeVentaView from './components/NotasDeVentaView';
 import { STATUS_OPTIONS, ELECTRIC_FENCE_STATUS_OPTIONS, ALL_STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
@@ -6376,6 +6377,19 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 </div>
                             </li>
 
+                            {/* Notas de Venta */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('notas-venta')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'notas-venta' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Receipt className="w-4 h-4" />
+                                        <span>Notas de Venta</span>
+                                    </div>
+                                </button>
+                            </li>
+
                             {/* Citas */}
                             <li>
                                 <button
@@ -11571,6 +11585,14 @@ const App = () => {
                                             <TermsInput value={terms} onChange={setTerms} darkMode={isDark} />
                                         </div>
                                     </div>
+                                )}
+                                {activeTab === 'notas-venta' && (
+                                    <NotasDeVentaView
+                                        user={session?.user}
+                                        company={company}
+                                        darkMode={isDark}
+                                        pageStyle={pageStyle}
+                                    />
                                 )}
                                 {activeTab === 'clientes' && (
                                     <ClientsList clients={savedClients} user={session?.user} onCreateNew={() => alert('Función de crear cliente próximamente...')} darkMode={isDark} />
