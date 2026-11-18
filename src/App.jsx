@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock, Receipt } from 'lucide-react';
+import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock, Receipt, FileCheck } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -35,6 +35,7 @@ import CitasView from './components/CitasView';
 import ConfigCercosView from './components/ConfigCercosView';
 import FenceDesigner from './components/FenceDesigner/FenceDesigner';
 import NotasDeVentaView from './components/NotasDeVentaView';
+import FacturasAdminView from './components/FacturasAdminView';
 import { STATUS_OPTIONS, ELECTRIC_FENCE_STATUS_OPTIONS, ALL_STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
@@ -6390,6 +6391,22 @@ const Sidebar = ({ activeTab, setActiveTab: setTabOriginal, onLogout, userEmail,
                                 </button>
                             </li>
 
+                            {/* Facturas */}
+                            <li>
+                                <button
+                                    onClick={() => setActiveTab('facturas')}
+                                    className={`w-full flex items-center justify-between text-left py-2 px-3 transition-all ${activeTab === 'facturas' ? activeClass : `${inactiveClass} ${textHover}`}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <FileCheck className="w-4 h-4" />
+                                        <span>Facturas</span>
+                                    </div>
+                                    <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                        NUEVO
+                                    </span>
+                                </button>
+                            </li>
+
                             {/* Citas */}
                             <li>
                                 <button
@@ -7578,7 +7595,6 @@ const NetworkServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                                                 try {
                                                     // Try to parse as JSON
                                                     if (service.materiales_descripcion && service.materiales_descripcion.startsWith('[')) {
-                                                        const parts = JSON.parse(service.materiales_descripcion);
                                                         return (
                                                             <div className="w-full">
                                                                 <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
@@ -11592,6 +11608,12 @@ const App = () => {
                                         company={company}
                                         darkMode={isDark}
                                         pageStyle={pageStyle}
+                                    />
+                                )}
+                                {activeTab === 'facturas' && (
+                                    <FacturasAdminView
+                                        user={session?.user}
+                                        darkMode={isDark}
                                     />
                                 )}
                                 {activeTab === 'clientes' && (
