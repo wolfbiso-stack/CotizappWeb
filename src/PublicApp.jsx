@@ -83,30 +83,6 @@ const PublicApp = () => {
 
                     </div>
                 </div>
-
-                <div className="mt-16">
-                    <a
-                        href="#"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            const hostname = window.location.hostname;
-
-                            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.includes('vercel.app')) {
-                                window.location.href = '/?app=true';
-                            } else if (hostname.includes('github.io')) {
-                                window.location.href = '/CotizappWeb/';
-                            } else {
-                                const parts = hostname.split('.');
-                                const rootDomain = parts.slice(-2).join('.');
-                                window.location.href = `https://app.${rootDomain}`;
-                            }
-                        }}
-                        className="px-6 py-3 text-sm font-semibold text-slate-500 hover:text-white transition-colors relative group"
-                    >
-                        <span className="relative z-10">Acceso al Sistema</span>
-                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-500 group-hover:w-1/2 transition-all duration-300"></div>
-                    </a>
-                </div>
             </main>
         </div>
     );
