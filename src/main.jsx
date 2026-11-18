@@ -62,7 +62,7 @@ const pathname = window.location.pathname;
 let isAppRoute = false;
 
 // If it's a tracking, quote or invoice URL, it must ALWAYS go to PublicApp
-if (/^\/(?:cotizacion|factura)(?:\/|$)/.test(pathname) || pathname.includes('/factura') || hash.includes('#/factura') || hash.includes('#/track/') || pathname.includes('/track/')) {
+if (/^\/(?:cotizacion|factura|facturacion)(?:\/|$)/.test(pathname) || pathname.includes('/facturacion') || hash.includes('#/facturacion') || pathname.includes('/factura') || hash.includes('#/factura') || hash.includes('#/track/') || pathname.includes('/track/')) {
     isAppRoute = false;
 } else if (searchParams.get('app') === 'true') {
     isAppRoute = true;

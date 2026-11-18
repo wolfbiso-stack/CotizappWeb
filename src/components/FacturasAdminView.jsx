@@ -219,9 +219,15 @@ Observaciones: ${solicitud.observaciones || 'Ninguna'}`;
         setTimeout(() => setCopiedData(false), 2500);
     };
 
-    // Copiar enlace del portal público
+    // Copiar enlace del portal público para clientes (cubiservicios.lat/facturacion)
     const handleCopyPublicUrl = () => {
-        const url = `${window.location.origin}/factura`;
+        let domain = window.location.hostname;
+        if (domain.startsWith('app.')) {
+            domain = domain.replace(/^app\./, '');
+        }
+        const port = window.location.port ? `:${window.location.port}` : '';
+        const protocol = window.location.protocol;
+        const url = `${protocol}//${domain}${port}/facturacion`;
         navigator.clipboard.writeText(url);
         setCopiedUrl(true);
         setTimeout(() => setCopiedUrl(false), 2500);
@@ -290,11 +296,11 @@ Observaciones: ${solicitud.observaciones || 'Ninguna'}`;
                         title="Copiar enlace del portal público para clientes"
                     >
                         {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-blue-500" />}
-                        <span>{copiedUrl ? '¡Enlace Copiado!' : 'Copiar URL /factura'}</span>
+                        <span>{copiedUrl ? '¡Enlace Copiado!' : 'Copiar URL /facturacion'}</span>
                     </button>
 
                     <a
-                        href="/factura"
+                        href="/facturacion"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${isDark

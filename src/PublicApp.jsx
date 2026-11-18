@@ -14,9 +14,9 @@ const PublicApp = () => {
         return <PublicQuote />;
     }
 
-    if (/^\/factura(?:\/|$)/.test(urlPath) || urlHash.includes('#/factura') || urlPath.includes('/factura')) {
+    if (/^\/(?:facturacion|factura)(?:\/|$)/.test(urlPath) || urlHash.includes('#/facturacion') || urlHash.includes('#/factura') || urlPath.includes('/facturacion') || urlPath.includes('/factura')) {
         return (
-            <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Cargando formulario...</div>}>
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">Cargando formulario...</div>}>
                 <PublicInvoiceRequest />
             </React.Suspense>
         );
