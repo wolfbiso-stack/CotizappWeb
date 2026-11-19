@@ -1,18 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { supabase } from '../../utils/supabase';
-import { 
-    FileText, 
-    CheckCircle2, 
-    AlertCircle, 
-    Copy, 
-    Check, 
-    ArrowLeft, 
+import {
+    CheckCircle2,
+    AlertCircle,
+    Copy,
+    Check,
+    ArrowLeft,
     ChevronDown,
-    Send, 
-    Loader2, 
-    ShieldCheck, 
+    Send,
+    Loader2,
+    ShieldCheck,
     Printer,
-    FileCheck2
+    FileCheck2,
+    Phone,
+    FileText,
+    Mail
 } from 'lucide-react';
 
 // Catálogos oficiales SAT CFDI 4.0
@@ -72,7 +74,6 @@ export const validateRFC = (rawRfc) => {
     }
     const clean = rawRfc.trim().toUpperCase();
 
-    // Genéricos autorizados por el SAT
     if (clean === 'XAXX010101000') {
         return { valid: true, status: 'valid', type: 'Genérico Nacional', message: 'RFC Genérico Nacional (Público en General)' };
     }
@@ -81,23 +82,22 @@ export const validateRFC = (rawRfc) => {
     }
 
     if (clean.length < 12) {
-        return { 
-            valid: false, 
-            status: 'incomplete', 
-            message: `RFC incompleto: tiene ${clean.length} de 12 (moral) o 13 (física) caracteres.` 
+        return {
+            valid: false,
+            status: 'incomplete',
+            message: `RFC incompleto: tiene ${clean.length} de 12 (moral) o 13 (física) caracteres.`
         };
     }
 
     if (clean.length > 13) {
-        return { 
-            valid: false, 
-            status: 'invalid', 
-            message: 'El RFC no debe exceder de 13 caracteres.' 
+        return {
+            valid: false,
+            status: 'invalid',
+            message: 'El RFC no debe exceder de 13 caracteres.'
         };
     }
 
     const isMoral = clean.length === 12;
-    // Regex con captura de año, mes (01-12) y día (01-31)
     const regex = isMoral
         ? /^[A-ZÑ&]{3}([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{3}$/
         : /^[A-ZÑ&]{4}([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{3}$/;
@@ -150,23 +150,18 @@ const PublicInvoiceRequest = () => {
     const [successData, setSuccessData] = useState(null);
     const [copiedFolio, setCopiedFolio] = useState(false);
 
-    // Validación oficial y en tiempo real del RFC
     const rfcValidation = useMemo(() => validateRFC(formData.rfc), [formData.rfc]);
 
-    // Detección de Persona Física / Moral según longitud de RFC
     const cleanRfc = formData.rfc.trim().toUpperCase();
-    const rfcClean = cleanRfc;
     const isPersonaMoral = cleanRfc.length === 12;
     const isPersonaFisica = cleanRfc.length === 13;
 
-    // Filtrar regímenes según tipo de persona
     const availableRegimenes = useMemo(() => {
         if (isPersonaMoral) return REGIMENES_FISCALES.filter(r => r.moral);
         if (isPersonaFisica) return REGIMENES_FISCALES.filter(r => r.fisica);
         return REGIMENES_FISCALES;
     }, [isPersonaMoral, isPersonaFisica]);
 
-    // Filtrar usos de CFDI según tipo de persona
     const availableUsos = useMemo(() => {
         if (isPersonaMoral) return USOS_CFDI.filter(u => u.moral);
         if (isPersonaFisica) return USOS_CFDI.filter(u => u.fisica);
@@ -175,7 +170,7 @@ const PublicInvoiceRequest = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
+
         if (name === 'rfc') {
             const val = value.toUpperCase().replace(/[^A-ZÑ&0-9]/g, '').slice(0, 13);
             setFormData(prev => ({ ...prev, rfc: val }));
@@ -281,7 +276,6 @@ const PublicInvoiceRequest = () => {
                 codigo_postal: formData.codigo_postal,
                 observaciones: formData.observaciones
             });
-
         } catch (err) {
             console.error('Error al registrar solicitud fiscal:', err);
             setErrorMessage(err.message || 'Ocurrió un problema de comunicación al registrar su solicitud. Por favor intente nuevamente.');
@@ -312,410 +306,529 @@ const PublicInvoiceRequest = () => {
         setErrorMessage('');
     };
 
-    return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
-            {/* Barra superior fina de acento azul del logo */}
-            <div className="h-1 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800 w-full" />
+    // Clases base de alto contraste para inputs y selects
+    const baseInputClass =
+        'w-full bg-[#F4F7FA] border-[1.5px] border-slate-300 rounded-lg px-4 py-3 text-[#0F2A47] text-[14.5px] font-medium placeholder:text-slate-400 placeholder:font-normal focus:bg-white focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15 outline-none transition-all';
 
-            {/* Cabecera Principal con Logotipo Grande */}
-            <header className="w-full bg-white border-b border-slate-200/90 px-4 sm:px-8 py-4 sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-                <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-                    {/* Logotipo Grande */}
+    return (
+        <div className="min-h-screen bg-[#E8EEF4] text-[#0F2A47] flex flex-col font-sans selection:bg-[#1982C4]/20 selection:text-[#0F2A47]">
+            {/* Barra de Navegación Superior (Blanca para integración natural del logotipo) */}
+            <header className="w-full bg-white border-b border-slate-300/80 px-4 sm:px-8 py-3.5 sticky top-0 z-30 shadow-[0_2px_10px_rgba(15,42,71,0.05)]">
+                <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="h-16 sm:h-20 w-auto flex items-center justify-center py-1">
-                            <img 
-                                src="LogoEmpresa.png" 
-                                alt="CUBI Servicios Logo" 
-                                className="h-full w-auto max-h-20 object-contain drop-shadow-xs" 
-                            />
-                        </div>
-                        <div className="border-l border-slate-200 pl-3.5 hidden sm:block">
-                            <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">
-                                CUBI Servicios
-                            </h1>
-                            <p className="text-xs text-blue-700 font-medium mt-0.5">
-                                Solicitud de Facturación Electrónica · CFDI 4.0
-                            </p>
-                        </div>
+                        <img
+                            src="LogoEmpresa.png"
+                            alt="CUBI Servicios"
+                            className="h-14 sm:h-16 w-auto object-contain"
+                        />
                     </div>
 
-                    <a 
-                        href="/" 
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-blue-700 px-3.5 py-2 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/50 transition-colors"
+                    <a
+                        href="/"
+                        className="inline-flex items-center gap-2 text-xs sm:text-[13px] font-semibold text-[#0F2A47] hover:text-[#1982C4] px-3.5 py-2 rounded-lg border border-slate-300 hover:border-[#1982C4] bg-slate-50 hover:bg-[#1982C4]/5 transition-colors"
                     >
-                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <ArrowLeft className="w-4 h-4" />
                         <span className="hidden sm:inline">Volver al inicio</span>
                         <span className="sm:hidden">Inicio</span>
                     </a>
                 </div>
             </header>
 
-            {/* Contenedor Principal */}
-            <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-10">
+            {/* Franja Corporativa en Azul Marino del Logotipo (#0F2A47) */}
+            <section className="w-full bg-[#0F2A47] text-white pt-8 pb-20 sm:pt-10 sm:pb-24 px-4 sm:px-8 border-b-4 border-[#1982C4]">
+                <div className="max-w-5xl mx-auto">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-sky-200 mb-3">
+                        <span className="w-2 h-2 rounded-xs bg-[#78B833]" />
+                        <span>Facturación Electrónica · CFDI 4.0</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                        Solicitud de Factura
+                    </h1>
+                    <p className="text-sm sm:text-[15px] text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
+                        Registra tus datos exactamente como aparecen en tu Constancia de Situación Fiscal vigente emitida por el SAT.
+                    </p>
+                </div>
+            </section>
+
+            {/* Contenedor Principal superpuesto suavemente sobre la franja */}
+            <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 -mt-12 sm:-mt-14 pb-12 z-10">
                 {successData ? (
                     /* COMPROBANTE FORMAL DE RECEPCIÓN */
-                    <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6 sm:p-9 animate-in fade-in duration-200">
-                        <div className="text-center pb-6 border-b border-slate-100">
-                            <div className="w-14 h-14 bg-blue-50 text-blue-600 border border-blue-200/80 rounded-full flex items-center justify-center mx-auto mb-3.5">
-                                <CheckCircle2 className="w-8 h-8 text-blue-600" />
-                            </div>
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/90 px-3 py-1 rounded-full border border-blue-200">
-                                Solicitud Registrada con Éxito
-                            </span>
-                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2.5">
-                                Comprobante de Recepción de Datos
-                            </h2>
-                            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-md mx-auto">
-                                Su información ha sido transmitida al departamento administrativo para la emisión de su factura.
-                            </p>
-                        </div>
-
-                        {/* Recuadro de Folio con sutil acento azul */}
-                        <div className="my-6 p-4 sm:p-5 rounded-xl bg-blue-50/40 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div>
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 block">
-                                    Folio de Solicitud
-                                </span>
-                                <span className="text-2xl sm:text-3xl font-bold font-mono text-slate-900 tracking-tight">
-                                    {successData.folio}
-                                </span>
-                                <span className="text-xs text-slate-500 block mt-0.5">
-                                    Fecha: {new Date(successData.created_at || Date.now()).toLocaleDateString('es-MX', {
-                                        day: '2-digit',
-                                        month: 'long',
-                                        year: 'numeric'
-                                    })}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={handleCopyFolio}
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 shadow-2xs transition-colors cursor-pointer"
-                                >
-                                    {copiedFolio ? <Check className="w-3.5 h-3.5 text-blue-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                                    <span>{copiedFolio ? '¡Copiado!' : 'Copiar Folio'}</span>
-                                </button>
-                                <button
-                                    onClick={() => window.print()}
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 shadow-2xs transition-colors cursor-pointer"
-                                >
-                                    <Printer className="w-3.5 h-3.5 text-slate-500" />
-                                    <span>Imprimir</span>
-                                </button>
+                    <div className="max-w-3xl mx-auto bg-white border border-slate-300/90 rounded-2xl shadow-[0_8px_30px_rgba(15,42,71,0.10)] overflow-hidden">
+                        {/* Encabezado del Comprobante */}
+                        <div className="bg-[#F4F7FA] border-b border-slate-200 px-6 sm:px-9 py-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-[#78B833]/15 border border-[#78B833]/40 text-[#4F7D1E] flex items-center justify-center flex-shrink-0">
+                                    <CheckCircle2 className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#4F7D1E]">
+                                        Solicitud Registrada
+                                    </span>
+                                    <h2 className="text-xl font-bold text-[#0F2A47] mt-0.5">
+                                        Comprobante de Recepción
+                                    </h2>
+                                    <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                                        Tus datos fueron enviados al departamento administrativo.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Tabla Resumen */}
-                        <div className="rounded-xl border border-slate-200 overflow-hidden mb-6">
-                            <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2">
-                                <FileCheck2 className="w-4 h-4 text-blue-600" />
-                                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                    Datos Registrados
-                                </h3>
-                            </div>
-                            <div className="divide-y divide-slate-100 text-xs sm:text-sm">
-                                <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
-                                    <span className="text-slate-500 text-xs font-medium">RFC Receptor:</span>
-                                    <span className="sm:col-span-2 font-mono font-bold text-slate-900">{successData.rfc}</span>
-                                </div>
-                                <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-slate-50/50">
-                                    <span className="text-slate-500 text-xs font-medium">Razón Social:</span>
-                                    <span className="sm:col-span-2 font-semibold text-slate-900">{successData.razon_social}</span>
-                                </div>
-                                <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
-                                    <span className="text-slate-500 text-xs font-medium">Código Postal:</span>
-                                    <span className="sm:col-span-2 font-mono text-slate-800">{successData.codigo_postal}</span>
-                                </div>
-                                <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-slate-50/50">
-                                    <span className="text-slate-500 text-xs font-medium">Régimen Fiscal:</span>
-                                    <span className="sm:col-span-2 text-slate-800">
-                                        <span className="font-semibold text-blue-700">{successData.regimen_fiscal}</span> — {REGIMENES_FISCALES.find(r => r.code === successData.regimen_fiscal)?.name || successData.regimen_fiscal}
+                        <div className="p-6 sm:p-9">
+                            {/* Folio Destacado */}
+                            <div className="p-5 rounded-xl bg-[#0F2A47] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+                                <div>
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-sky-300 block">
+                                        Folio de Seguimiento
+                                    </span>
+                                    <span className="text-2xl sm:text-3xl font-bold font-mono tracking-wider block mt-0.5">
+                                        {successData.folio}
+                                    </span>
+                                    <span className="text-xs text-slate-300 block mt-1">
+                                        Registrado el{' '}
+                                        {new Date(successData.created_at || Date.now()).toLocaleDateString('es-MX', {
+                                            day: '2-digit',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })}
                                     </span>
                                 </div>
-                                <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
-                                    <span className="text-slate-500 text-xs font-medium">Uso de CFDI:</span>
-                                    <span className="sm:col-span-2 text-slate-800">
-                                        <span className="font-semibold text-blue-700">{successData.uso_cfdi}</span> — {USOS_CFDI.find(u => u.code === successData.uso_cfdi)?.name || successData.uso_cfdi}
-                                    </span>
-                                </div>
-                                {successData.observaciones && (
-                                    <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-slate-50/50">
-                                        <span className="text-slate-500 text-xs font-medium">Folio / Referencia:</span>
-                                        <span className="sm:col-span-2 font-medium text-slate-900">{successData.observaciones}</span>
-                                    </div>
-                                )}
-                                {successData.correo && (
-                                    <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
-                                        <span className="text-slate-500 text-xs font-medium">Correo Electrónico:</span>
-                                        <span className="sm:col-span-2 font-medium text-slate-900">{successData.correo}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-200">
-                            <button
-                                onClick={handleReset}
-                                className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                            >
-                                Registrar otra solicitud
-                            </button>
-                            <a
-                                href="/"
-                                className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer shadow-sm shadow-blue-500/20 text-center"
-                            >
-                                Concluir y regresar
-                            </a>
+                                <div className="flex items-center gap-2.5">
+                                    <button
+                                        onClick={handleCopyFolio}
+                                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2.5 rounded-lg bg-[#1982C4] hover:bg-[#146CA3] text-white transition-colors cursor-pointer"
+                                    >
+                                        {copiedFolio ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                        <span>{copiedFolio ? '¡Copiado!' : 'Copiar Folio'}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors cursor-pointer"
+                                    >
+                                        <Printer className="w-4 h-4" />
+                                        <span>Imprimir</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Resumen de Datos */}
+                            <div className="rounded-xl border border-slate-300 overflow-hidden mb-7">
+                                <div className="bg-[#F1F5F9] px-5 py-3 border-b border-slate-300 flex items-center gap-2">
+                                    <FileCheck2 className="w-4 h-4 text-[#1982C4]" />
+                                    <h3 className="text-xs font-bold text-[#0F2A47] uppercase tracking-wider">
+                                        Resumen Fiscal Registrado
+                                    </h3>
+                                </div>
+                                <div className="divide-y divide-slate-200 text-sm">
+                                    <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
+                                        <span className="text-slate-600 font-medium text-xs sm:text-sm">RFC Receptor</span>
+                                        <span className="sm:col-span-2 font-mono font-bold text-[#0F2A47]">{successData.rfc}</span>
+                                    </div>
+                                    <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-[#F8FAFC]">
+                                        <span className="text-slate-600 font-medium text-xs sm:text-sm">Razón Social</span>
+                                        <span className="sm:col-span-2 font-semibold text-[#0F2A47]">{successData.razon_social}</span>
+                                    </div>
+                                    <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
+                                        <span className="text-slate-600 font-medium text-xs sm:text-sm">Código Postal</span>
+                                        <span className="sm:col-span-2 font-mono font-semibold text-[#0F2A47]">{successData.codigo_postal}</span>
+                                    </div>
+                                    <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-[#F8FAFC]">
+                                        <span className="text-slate-600 font-medium text-xs sm:text-sm">Régimen Fiscal</span>
+                                        <span className="sm:col-span-2 text-[#0F2A47] font-medium">
+                                            <span className="font-bold text-[#1982C4]">{successData.regimen_fiscal}</span> — {REGIMENES_FISCALES.find(r => r.code === successData.regimen_fiscal)?.name || successData.regimen_fiscal}
+                                        </span>
+                                    </div>
+                                    <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
+                                        <span className="text-slate-600 font-medium text-xs sm:text-sm">Uso de CFDI</span>
+                                        <span className="sm:col-span-2 text-[#0F2A47] font-medium">
+                                            <span className="font-bold text-[#1982C4]">{successData.uso_cfdi}</span> — {USOS_CFDI.find(u => u.code === successData.uso_cfdi)?.name || successData.uso_cfdi}
+                                        </span>
+                                    </div>
+                                    {successData.observaciones && (
+                                        <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-[#F8FAFC]">
+                                            <span className="text-slate-600 font-medium text-xs sm:text-sm">Folio / Referencia</span>
+                                            <span className="sm:col-span-2 font-medium text-[#0F2A47]">{successData.observaciones}</span>
+                                        </div>
+                                    )}
+                                    {successData.correo && (
+                                        <div className="px-5 py-3.5 grid grid-cols-1 sm:grid-cols-3 gap-1 bg-white">
+                                            <span className="text-slate-600 font-medium text-xs sm:text-sm">Correo Electrónico</span>
+                                            <span className="sm:col-span-2 font-medium text-[#1982C4]">{successData.correo}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                                <button
+                                    onClick={handleReset}
+                                    className="w-full sm:w-auto px-5 py-2.5 text-sm font-semibold rounded-lg border-[1.5px] border-slate-300 text-[#0F2A47] hover:bg-slate-100 transition-colors cursor-pointer"
+                                >
+                                    Registrar otra solicitud
+                                </button>
+                                <a
+                                    href="/"
+                                    className="w-full sm:w-auto px-6 py-2.5 text-sm font-semibold rounded-lg bg-[#0F2A47] hover:bg-[#1982C4] text-white transition-colors cursor-pointer text-center"
+                                >
+                                    Finalizar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 ) : (
-                    /* FORMULARIO VERTICAL ORDENADO Y ELEGANTE */
-                    <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-6 sm:p-9">
-                        {/* Cabecera del Formulario */}
-                        <div className="pb-5 mb-6 border-b border-slate-100 flex items-start justify-between gap-3">
-                            <div>
-                                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                                    Datos de Facturación
-                                </h2>
-                                <p className="text-xs sm:text-[13px] text-slate-500 mt-1">
-                                    Complete los campos conforme a su Constancia de Situación Fiscal (SAT)
-                                </p>
-                            </div>
-                            <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200/80 text-blue-700 font-semibold text-[11px] uppercase tracking-wide flex-shrink-0">
-                                CFDI 4.0
-                            </span>
-                        </div>
-
-                        {/* Aviso sutil SAT */}
-                        <div className="bg-blue-50/50 border border-blue-200/60 rounded-xl p-3.5 mb-6 flex items-start gap-2.5 text-xs text-slate-700">
-                            <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                            <div className="leading-relaxed">
-                                <strong className="text-blue-900 font-semibold">Datos obligatorios SAT:</strong> El RFC, Razón Social (sin régimen societario como S.A. de C.V.), Código Postal, Régimen Fiscal y Uso de CFDI deben coincidir con su registro ante el SAT.
-                            </div>
-                        </div>
-
-                        {errorMessage && (
-                            <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-3.5 mb-6 text-xs flex items-start gap-2.5">
-                                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                                <span className="font-medium">{errorMessage}</span>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* 1. RFC */}
-                            <div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label htmlFor="rfc" className="text-[13px] font-semibold text-slate-700">
-                                        1. RFC del Receptor <span className="text-red-500">*</span>
-                                    </label>
-                                    {formData.rfc && (
-                                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border inline-flex items-center gap-1 transition-colors ${
-                                            rfcValidation.valid 
-                                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                                : rfcValidation.status === 'incomplete' 
-                                                    ? 'bg-amber-50 text-amber-800 border-amber-200' 
-                                                    : 'bg-red-50 text-red-800 border-red-200'
-                                        }`}>
-                                            {rfcValidation.valid ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <AlertCircle className="w-3 h-3" />}
-                                            <span>{rfcValidation.type || (rfcValidation.status === 'incomplete' ? 'Incompleto' : 'Inválido')}</span>
+                    /* DISEÑO EDITORIAL DE 2 COLUMNAS (FORMULARIO + GUÍA LATERAL) */
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        {/* Columna Principal: Formulario */}
+                        <div className="lg:col-span-8 bg-white border border-slate-300/90 rounded-2xl shadow-[0_6px_28px_rgba(15,42,71,0.08)] overflow-hidden">
+                            <form onSubmit={handleSubmit}>
+                                {/* Sección 1: Datos Fiscales Obligatorios (SAT) */}
+                                <div className="p-6 sm:p-8">
+                                    <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-1.5 h-6 rounded-full bg-[#1982C4]" />
+                                            <div>
+                                                <h2 className="text-base sm:text-lg font-bold text-[#0F2A47]">
+                                                    Datos Fiscales Obligatorios
+                                                </h2>
+                                                <p className="text-xs text-slate-600">
+                                                    Campos requeridos por el SAT para timbrado CFDI 4.0
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-md hidden sm:inline-block">
+                                            * Obligatorio
                                         </span>
+                                    </div>
+
+                                    {errorMessage && (
+                                        <div className="bg-red-50 border-[1.5px] border-red-300 text-red-900 rounded-xl p-4 mb-6 text-xs sm:text-sm flex items-start gap-3">
+                                            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                            <span className="font-semibold leading-snug">{errorMessage}</span>
+                                        </div>
                                     )}
+
+                                    <div className="space-y-5">
+                                        {/* 1. RFC */}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-1.5 gap-2">
+                                                <label htmlFor="rfc" className="text-[13.5px] font-bold text-[#0F2A47]">
+                                                    1. RFC del Receptor <span className="text-red-600">*</span>
+                                                </label>
+                                                {formData.rfc && (
+                                                    <span
+                                                        className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border inline-flex items-center gap-1.5 ${
+                                                            rfcValidation.valid
+                                                                ? 'bg-[#78B833]/15 text-[#3F6814] border-[#78B833]/40'
+                                                                : rfcValidation.status === 'incomplete'
+                                                                    ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                                                    : 'bg-red-50 text-red-800 border-red-300'
+                                                        }`}
+                                                    >
+                                                        {rfcValidation.valid ? (
+                                                            <CheckCircle2 className="w-3.5 h-3.5 text-[#5D9124]" />
+                                                        ) : (
+                                                            <AlertCircle className="w-3.5 h-3.5" />
+                                                        )}
+                                                        <span>
+                                                            {rfcValidation.type || (rfcValidation.status === 'incomplete' ? 'Incompleto' : 'Inválido')}
+                                                        </span>
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="relative">
+                                                <input
+                                                    id="rfc"
+                                                    type="text"
+                                                    name="rfc"
+                                                    value={formData.rfc}
+                                                    onChange={handleChange}
+                                                    placeholder="Ej. GOME850101AB1 o IMS421231I45"
+                                                    maxLength={13}
+                                                    required
+                                                    className={`w-full rounded-lg px-4 py-3 text-[15px] font-mono font-semibold uppercase placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal outline-none transition-all border-[1.5px] ${
+                                                        !formData.rfc
+                                                            ? 'bg-[#F4F7FA] border-slate-300 text-[#0F2A47] focus:bg-white focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15'
+                                                            : rfcValidation.valid
+                                                                ? 'bg-white border-[#78B833] text-[#0F2A47] focus:ring-4 focus:ring-[#78B833]/15 pr-11'
+                                                                : rfcValidation.status === 'incomplete'
+                                                                    ? 'bg-amber-50/30 border-amber-400 text-[#0F2A47] focus:bg-white focus:ring-4 focus:ring-amber-200/40'
+                                                                    : 'bg-red-50/30 border-red-400 text-red-900 focus:bg-white focus:ring-4 focus:ring-red-200/40'
+                                                    }`}
+                                                />
+                                                {formData.rfc && rfcValidation.valid && (
+                                                    <CheckCircle2 className="w-5 h-5 text-[#5D9124] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                                )}
+                                            </div>
+
+                                            {formData.rfc && !rfcValidation.valid ? (
+                                                <p className="text-xs text-red-700 mt-1.5 flex items-start gap-1.5 font-medium">
+                                                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                                    <span>{rfcValidation.message}</span>
+                                                </p>
+                                            ) : formData.rfc && rfcValidation.valid ? (
+                                                <p className="text-xs text-[#4F7D1E] mt-1.5 flex items-center gap-1.5 font-medium">
+                                                    <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                                                    <span>Estructura de RFC verificada correctamente.</span>
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-slate-600 mt-1.5">
+                                                    12 caracteres para empresas (Persona Moral) o 13 para Persona Física con homoclave.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* 2. Razón Social */}
+                                        <div>
+                                            <label htmlFor="razon_social" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
+                                                2. Razón Social o Nombre Completo <span className="text-red-600">*</span>
+                                            </label>
+                                            <input
+                                                id="razon_social"
+                                                type="text"
+                                                name="razon_social"
+                                                value={formData.razon_social}
+                                                onChange={handleChange}
+                                                placeholder="Ej. COMERCIALIZADORA DEL SUR o JUAN PEREZ LOPEZ"
+                                                required
+                                                className={`${baseInputClass} uppercase`}
+                                            />
+                                            <p className="text-xs text-slate-600 mt-1.5">
+                                                Escríbelo sin régimen societario (omite <strong className="text-[#0F2A47]">S.A. de C.V.</strong>, <strong className="text-[#0F2A47]">S. de R.L.</strong>, etc.).
+                                            </p>
+                                        </div>
+
+                                        {/* 3. Código Postal */}
+                                        <div>
+                                            <label htmlFor="codigo_postal" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
+                                                3. Código Postal Fiscal <span className="text-red-600">*</span>
+                                            </label>
+                                            <input
+                                                id="codigo_postal"
+                                                type="text"
+                                                name="codigo_postal"
+                                                value={formData.codigo_postal}
+                                                onChange={handleChange}
+                                                placeholder="Ej. 96000"
+                                                maxLength={5}
+                                                required
+                                                className={`${baseInputClass} font-mono tracking-wider sm:max-w-xs`}
+                                            />
+                                            <p className="text-xs text-slate-600 mt-1.5">
+                                                5 dígitos del domicilio fiscal registrado en tu constancia del SAT.
+                                            </p>
+                                        </div>
+
+                                        {/* 4. Régimen Fiscal */}
+                                        <div>
+                                            <label htmlFor="regimen_fiscal" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
+                                                4. Régimen Fiscal <span className="text-red-600">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    id="regimen_fiscal"
+                                                    name="regimen_fiscal"
+                                                    value={formData.regimen_fiscal}
+                                                    onChange={handleChange}
+                                                    required
+                                                    className={`w-full bg-[#F4F7FA] border-[1.5px] border-slate-300 rounded-lg px-4 py-3 pr-11 text-[14px] appearance-none focus:bg-white focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15 outline-none transition-all cursor-pointer ${
+                                                        formData.regimen_fiscal ? 'text-[#0F2A47] font-semibold' : 'text-slate-500 font-normal'
+                                                    }`}
+                                                >
+                                                    <option value="" disabled>
+                                                        — Selecciona tu régimen fiscal —
+                                                    </option>
+                                                    {availableRegimenes.map(r => (
+                                                        <option key={r.code} value={r.code} className="text-[#0F2A47] bg-white font-medium">
+                                                            {r.code} — {r.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded bg-[#0F2A47]/5 flex items-center justify-center">
+                                                    <ChevronDown className="w-4 h-4 text-[#0F2A47]" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 5. Uso de CFDI */}
+                                        <div>
+                                            <label htmlFor="uso_cfdi" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
+                                                5. Uso de CFDI <span className="text-red-600">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    id="uso_cfdi"
+                                                    name="uso_cfdi"
+                                                    value={formData.uso_cfdi}
+                                                    onChange={handleChange}
+                                                    required
+                                                    className={`w-full bg-[#F4F7FA] border-[1.5px] border-slate-300 rounded-lg px-4 py-3 pr-11 text-[14px] appearance-none focus:bg-white focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15 outline-none transition-all cursor-pointer ${
+                                                        formData.uso_cfdi ? 'text-[#0F2A47] font-semibold' : 'text-slate-500 font-normal'
+                                                    }`}
+                                                >
+                                                    <option value="" disabled>
+                                                        — Selecciona el uso de CFDI —
+                                                    </option>
+                                                    {availableUsos.map(u => (
+                                                        <option key={u.code} value={u.code} className="text-[#0F2A47] bg-white font-medium">
+                                                            {u.code} — {u.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded bg-[#0F2A47]/5 flex items-center justify-center">
+                                                    <ChevronDown className="w-4 h-4 text-[#0F2A47]" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <input
-                                        id="rfc"
-                                        type="text"
-                                        name="rfc"
-                                        value={formData.rfc}
-                                        onChange={handleChange}
-                                        placeholder="Ej. GOME850101AB1 ó IMS421231I45"
-                                        maxLength={13}
-                                        required
-                                        className={`w-full bg-white border rounded-lg px-3.5 py-2.5 text-slate-900 text-sm font-mono uppercase placeholder-slate-400 outline-none transition-all shadow-2xs ${
-                                            !formData.rfc 
-                                                ? 'border-slate-300 focus:border-blue-600 focus:ring-3 focus:ring-blue-100' 
-                                                : rfcValidation.valid 
-                                                    ? 'border-emerald-500 focus:border-emerald-600 focus:ring-3 focus:ring-emerald-100 pr-10' 
-                                                    : rfcValidation.status === 'incomplete'
-                                                        ? 'border-amber-400 focus:border-amber-500 focus:ring-3 focus:ring-amber-100'
-                                                        : 'border-red-400 focus:border-red-500 focus:ring-3 focus:ring-red-100'
-                                        }`}
-                                    />
-                                    {formData.rfc && rfcValidation.valid && (
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                    )}
+
+                                {/* Sección 2: Datos Opcionales (Fondo suavemente diferenciado) */}
+                                <div className="bg-[#F4F7FA] border-t border-slate-200 p-6 sm:p-8 space-y-5">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="w-1.5 h-5 rounded-full bg-slate-400" />
+                                        <div>
+                                            <h3 className="text-sm sm:text-[15px] font-bold text-[#0F2A47]">
+                                                Referencia y Entrega Digital <span className="text-slate-500 font-normal text-xs">(opcional)</span>
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    {/* 6. Folio de cotización o servicio */}
+                                    <div>
+                                        <label htmlFor="observaciones" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
+                                            Folio de cotización o servicio
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                id="observaciones"
+                                                type="text"
+                                                name="observaciones"
+                                                value={formData.observaciones}
+                                                onChange={handleChange}
+                                                placeholder="Ej. Cotización #1204, Ticket #552 o Nota de Venta"
+                                                className="w-full bg-white border-[1.5px] border-slate-300 rounded-lg pl-10 pr-4 py-3 text-[#0F2A47] text-[14.5px] font-medium placeholder:text-slate-400 placeholder:font-normal focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15 outline-none transition-all"
+                                            />
+                                            <FileText className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                        <p className="text-xs text-slate-600 mt-1.5">
+                                            Ayuda a identificar rápidamente tu pago, servicio o nota de venta.
+                                        </p>
+                                    </div>
+
+                                    {/* 7. Correo electrónico */}
+                                    <div>
+                                        <label htmlFor="correo" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
+                                            Correo electrónico
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                id="correo"
+                                                type="email"
+                                                name="correo"
+                                                value={formData.correo}
+                                                onChange={handleChange}
+                                                placeholder="facturacion@empresa.com"
+                                                className="w-full bg-white border-[1.5px] border-slate-300 rounded-lg pl-10 pr-4 py-3 text-[#0F2A47] text-[14.5px] font-medium lowercase placeholder:text-slate-400 placeholder:font-normal focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15 outline-none transition-all"
+                                            />
+                                            <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                        <p className="text-xs text-slate-600 mt-1.5">
+                                            Enviaremos los archivos <strong className="text-[#0F2A47]">XML y PDF</strong> a esta dirección en cuanto se timbre tu factura.
+                                        </p>
+                                    </div>
+
+                                    {/* Botón de Envío */}
+                                    <div className="pt-3">
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="w-full py-3.5 px-6 rounded-xl bg-[#0F2A47] hover:bg-[#1982C4] active:bg-[#146CA3] text-white font-bold text-[15px] transition-colors shadow-md shadow-[#0F2A47]/15 flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                                                    <span>Registrando solicitud...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="w-4 h-4" />
+                                                    <span>Enviar Datos para Facturación</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
-                                
-                                {formData.rfc && !rfcValidation.valid ? (
-                                    <p className="text-[11px] text-red-600 mt-1.5 flex items-start gap-1 font-medium">
-                                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                                        <span>{rfcValidation.message}</span>
-                                    </p>
-                                ) : formData.rfc && rfcValidation.valid ? (
-                                    <p className="text-[11px] text-emerald-600 mt-1.5 flex items-center gap-1 font-medium">
-                                        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                                        <span>Estructura de RFC verificada conforme a lineamientos oficiales del SAT.</span>
-                                    </p>
-                                ) : (
-                                    <p className="text-[11px] text-slate-500 mt-1">12 caracteres para empresas (Persona Moral) o 13 para Persona Física con homoclave.</p>
-                                )}
+                            </form>
+                        </div>
+
+                        {/* Columna Lateral: Guía y Soporte */}
+                        <aside className="lg:col-span-4 space-y-5">
+                            <div className="bg-white border border-slate-300/90 rounded-2xl shadow-[0_6px_28px_rgba(15,42,71,0.06)] p-6">
+                                <div className="flex items-center gap-2.5 pb-3.5 mb-4 border-b border-slate-200">
+                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A47] text-white flex items-center justify-center">
+                                        <ShieldCheck className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-[#0F2A47]">
+                                        Antes de enviar tus datos
+                                    </h3>
+                                </div>
+
+                                <ul className="space-y-4 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+                                    <li className="flex items-start gap-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1982C4]/15 text-[#0F2A47] font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            1
+                                        </span>
+                                        <span>
+                                            Ten a la mano tu <strong className="text-[#0F2A47]">Constancia de Situación Fiscal</strong> actualizada.
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1982C4]/15 text-[#0F2A47] font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            2
+                                        </span>
+                                        <span>
+                                            En <strong className="text-[#0F2A47]">CFDI 4.0</strong> el Nombre o Razón Social debe ir sin régimen societario (sin S.A. de C.V.).
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1982C4]/15 text-[#0F2A47] font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            3
+                                        </span>
+                                        <span>
+                                            Al finalizar recibirás un <strong className="text-[#0F2A47]">folio de seguimiento</strong> para cualquier aclaración.
+                                        </span>
+                                    </li>
+                                </ul>
                             </div>
 
-                            {/* 2. Razón Social */}
-                            <div>
-                                <label htmlFor="razon_social" className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                    2. Razón Social o Nombre Completo <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    id="razon_social"
-                                    type="text"
-                                    name="razon_social"
-                                    value={formData.razon_social}
-                                    onChange={handleChange}
-                                    placeholder="Ej. SERVICIOS DE LIMPIEZA AMERICA ó JUAN PEREZ LOPEZ"
-                                    required
-                                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 text-sm uppercase placeholder-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-2xs"
-                                />
-                                <p className="text-[11px] text-slate-500 mt-1">
-                                    En CFDI 4.0 debe registrarse sin siglas societarias (omita <em>S.A. de C.V.</em>, <em>S. de R.L.</em>, etc.).
+                            <div className="bg-[#0F2A47] text-white rounded-2xl p-6 shadow-[0_6px_24px_rgba(15,42,71,0.12)]">
+                                <h4 className="text-sm font-bold text-white mb-1">
+                                    ¿Necesitas ayuda con tu factura?
+                                </h4>
+                                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                                    Si tienes dudas sobre tus datos fiscales o el estatus de tu comprobante, contáctanos directamente.
                                 </p>
-                            </div>
-
-                            {/* 3. Código Postal */}
-                            <div>
-                                <label htmlFor="codigo_postal" className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                    3. Código Postal Fiscal <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    id="codigo_postal"
-                                    type="text"
-                                    name="codigo_postal"
-                                    value={formData.codigo_postal}
-                                    onChange={handleChange}
-                                    placeholder="45170"
-                                    maxLength={5}
-                                    required
-                                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 text-sm font-mono placeholder-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-2xs"
-                                />
-                                <p className="text-[11px] text-slate-500 mt-1">Debe contener 5 dígitos numéricos.</p>
-                            </div>
-
-                            {/* 4. Régimen Fiscal */}
-                            <div>
-                                <label htmlFor="regimen_fiscal" className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                    4. Régimen Fiscal <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        id="regimen_fiscal"
-                                        name="regimen_fiscal"
-                                        value={formData.regimen_fiscal}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 pr-9 text-slate-900 text-xs sm:text-sm appearance-none focus:border-blue-600 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-2xs cursor-pointer"
-                                    >
-                                        <option value="" disabled className="text-slate-400">Seleccione su régimen fiscal...</option>
-                                        {availableRegimenes.map(r => (
-                                            <option key={r.code} value={r.code}>
-                                                {r.code} — {r.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-blue-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                </div>
-                            </div>
-
-                            {/* 5. Uso de CFDI */}
-                            <div>
-                                <label htmlFor="uso_cfdi" className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                    5. Uso de CFDI <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        id="uso_cfdi"
-                                        name="uso_cfdi"
-                                        value={formData.uso_cfdi}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 pr-9 text-slate-900 text-xs sm:text-sm appearance-none focus:border-blue-600 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-2xs cursor-pointer"
-                                    >
-                                        <option value="" disabled className="text-slate-400">Seleccione el uso que dará al CFDI...</option>
-                                        {availableUsos.map(u => (
-                                            <option key={u.code} value={u.code}>
-                                                {u.code} — {u.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-blue-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                </div>
-                            </div>
-
-                            {/* 6. Folio de Cotización o Servicio (Opcional) */}
-                            <div className="pt-2">
-                                <label htmlFor="observaciones" className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                    Folio de cotización o servicio <span className="text-slate-400 font-normal text-xs">(opcional)</span>
-                                </label>
-                                <input
-                                    id="observaciones"
-                                    type="text"
-                                    name="observaciones"
-                                    value={formData.observaciones}
-                                    onChange={handleChange}
-                                    placeholder="Ej. Cotización #1204, Ticket #552 o Nota de Venta"
-                                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 text-sm placeholder-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-2xs"
-                                />
-                                <p className="text-[11px] text-slate-500 mt-1">Indique el número de referencia para identificar su pago o servicio.</p>
-                            </div>
-
-                            {/* 7. Correo Electrónico (Opcional) */}
-                            <div>
-                                <label htmlFor="correo" className="block text-[13px] font-semibold text-slate-700 mb-1.5">
-                                    Correo electrónico <span className="text-slate-400 font-normal text-xs">(opcional)</span>
-                                </label>
-                                <input
-                                    id="correo"
-                                    type="email"
-                                    name="correo"
-                                    value={formData.correo}
-                                    onChange={handleChange}
-                                    placeholder="facturacion@empresa.com"
-                                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 text-sm lowercase placeholder-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-2xs"
-                                />
-                                <p className="text-[11px] text-slate-500 mt-1">
-                                    A esta dirección enviaremos los archivos XML y PDF una vez emitida su factura.
-                                </p>
-                            </div>
-
-                            {/* Botón de Envío */}
-                            <div className="pt-4 border-t border-slate-100">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-3.5 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm transition-all shadow-sm shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                <a
+                                    href="https://wa.me/529241040806"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#1982C4] hover:bg-[#146CA3] text-white text-xs font-bold transition-colors"
                                 >
-                                    {loading ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin text-white" />
-                                            <span>Registrando solicitud...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Send className="w-4 h-4" />
-                                            <span>Enviar Datos para Facturación</span>
-                                        </>
-                                    )}
-                                </button>
+                                    <Phone className="w-3.5 h-3.5" />
+                                    <span>WhatsApp: 924 104 0806</span>
+                                </a>
                             </div>
-                        </form>
+                        </aside>
                     </div>
                 )}
             </main>
 
             {/* Pie de Página */}
-            <footer className="w-full border-t border-slate-200/90 bg-white py-5 text-center text-xs">
-                <div className="max-w-3xl mx-auto px-4 flex items-center justify-center">
-                    <span className="text-blue-700 font-medium">© 2026, CUBI Servicios Facturación</span>
+            <footer className="w-full border-t border-slate-300/80 bg-white py-5 text-center text-xs">
+                <div className="max-w-5xl mx-auto px-4 flex items-center justify-center">
+                    <span className="text-[#1982C4] font-semibold">© 2026, CUBI Servicios Facturación</span>
                 </div>
             </footer>
         </div>
