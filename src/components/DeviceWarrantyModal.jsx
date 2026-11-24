@@ -316,25 +316,21 @@ const DeviceWarrantyModal = ({
 
     if (!isOpen) return null;
 
-    const inputClass = `w-full px-3.5 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-        darkMode
-            ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500'
-            : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-blue-500'
-    }`;
+    const inputClass = `w-full px-3.5 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${darkMode
+        ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500'
+        : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-blue-500'
+        }`;
 
-    const labelClass = `block text-[11px] font-bold uppercase tracking-wider mb-1.5 ${
-        darkMode ? 'text-slate-400' : 'text-slate-500'
-    }`;
+    const labelClass = `block text-[11px] font-bold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'
+        }`;
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
-            <div className={`w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-auto border ${
-                darkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-            }`}>
-                {/* Header */}
-                <div className={`px-6 py-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                    darkMode ? 'bg-slate-800/60 border-slate-800' : 'bg-gradient-to-r from-teal-50 via-blue-50 to-white border-slate-200'
+            <div className={`w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-auto border ${darkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
                 }`}>
+                {/* Header */}
+                <div className={`px-6 py-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${darkMode ? 'bg-slate-800/60 border-slate-800' : 'bg-gradient-to-r from-teal-50 via-blue-50 to-white border-slate-200'
+                    }`}>
                     <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-lg shadow-teal-600/20">
                             <ShieldCheck className="w-6 h-6" />
@@ -361,22 +357,20 @@ const DeviceWarrantyModal = ({
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('register')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                        activeTab === 'register'
-                                            ? 'bg-teal-600 text-white shadow-sm'
-                                            : (darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')
-                                    }`}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'register'
+                                        ? 'bg-teal-600 text-white shadow-sm'
+                                        : (darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')
+                                        }`}
                                 >
                                     Registrar Orden
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('lookup')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                        activeTab === 'lookup'
-                                            ? 'bg-blue-600 text-white shadow-sm'
-                                            : (darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')
-                                    }`}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'lookup'
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : (darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')
+                                        }`}
                                 >
                                     Verificar Equipo (S/N)
                                 </button>
@@ -395,11 +389,10 @@ const DeviceWarrantyModal = ({
                 {/* Body */}
                 <div className="p-6 max-h-[82vh] overflow-y-auto space-y-6">
                     {feedback && (
-                        <div className={`p-3.5 rounded-2xl border flex items-center gap-3 text-sm font-medium ${
-                            feedback.type === 'success'
-                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                : 'bg-rose-50 border-rose-200 text-rose-800'
-                        }`}>
+                        <div className={`p-3.5 rounded-2xl border flex items-center gap-3 text-sm font-medium ${feedback.type === 'success'
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                            : 'bg-rose-50 border-rose-200 text-rose-800'
+                            }`}>
                             {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />}
                             <span>{feedback.message}</span>
                         </div>
@@ -432,11 +425,10 @@ const DeviceWarrantyModal = ({
                                             return (
                                                 <div
                                                     key={part.id || idx}
-                                                    className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${
-                                                        formData.nombre_producto === name
-                                                            ? (darkMode ? 'bg-teal-900/30 border-teal-500' : 'bg-teal-50 border-teal-400')
-                                                            : (darkMode ? 'bg-slate-900 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-blue-300')
-                                                    }`}
+                                                    className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${formData.nombre_producto === name
+                                                        ? (darkMode ? 'bg-teal-900/30 border-teal-500' : 'bg-teal-50 border-teal-400')
+                                                        : (darkMode ? 'bg-slate-900 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-blue-300')
+                                                        }`}
                                                 >
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-sm font-bold truncate" title={name}>{name}</p>
@@ -666,9 +658,8 @@ const DeviceWarrantyModal = ({
                                         <button
                                             type="button"
                                             onClick={onClose}
-                                            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-                                                darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                                            }`}
+                                            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                                                }`}
                                         >
                                             Cerrar
                                         </button>
