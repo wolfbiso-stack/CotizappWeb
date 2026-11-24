@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock, Receipt, FileCheck } from 'lucide-react';
+import { Eye, Home, Download, User, Users, Check, Copy, Trash2, Edit2, Plus, Search, FileText, X, Settings, Sun, Moon, Building2, Zap, Share2, Phone, ArrowUpDown, ArrowUp, ArrowDown, Loader, ScrollText, Mail, ArrowLeft, ShoppingCart, LogOut, ArrowUpRight, Video, Printer, Smartphone, Monitor, Globe, RefreshCw, Image, QrCode, ChevronDown, ChevronUp, GripVertical, Calendar, Menu, ThumbsUp, ThumbsDown, AlertTriangle, Wifi, BarChart2, BarChart3, TrendingUp, DollarSign, Filter, Trophy, Crown, MoreVertical, Bell, Clock, Receipt, FileCheck, ShieldCheck } from 'lucide-react';
 import Login from './components/Login';
 import SupabaseConfigError from './components/SupabaseConfigError';
 import { supabase } from '../utils/supabase';
@@ -36,6 +36,7 @@ import ConfigCercosView from './components/ConfigCercosView';
 import FenceDesigner from './components/FenceDesigner/FenceDesigner';
 import NotasDeVentaView from './components/NotasDeVentaView';
 import FacturasAdminView from './components/FacturasAdminView';
+import DeviceWarrantyModal, { hasServiceMaterials } from './components/DeviceWarrantyModal';
 import { STATUS_OPTIONS, ELECTRIC_FENCE_STATUS_OPTIONS, ALL_STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
@@ -3062,6 +3063,7 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
     const [selectedServiceForQR, setSelectedServiceForQR] = useState(null);
     const [showReceipt, setShowReceipt] = useState(false);
     const [selectedServiceForReceipt, setSelectedServiceForReceipt] = useState(null);
+    const [showWarrantyModal, setShowWarrantyModal] = useState(false);
 
     const handleShowQR = (service) => {
         setSelectedServiceForQR(service);
@@ -3273,9 +3275,21 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                         {/* Materiales Utilizados */}
                         {(service.inventario_materiales && service.inventario_materiales !== '[]') && (
                             <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <ShoppingCart className="w-5 h-5 text-slate-600" />
-                                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">Materiales Utilizados</h3>
+                                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <ShoppingCart className="w-5 h-5 text-slate-600" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">Materiales Utilizados</h3>
+                                    </div>
+                                    {hasServiceMaterials(service) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowWarrantyModal(true)}
+                                            className="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm no-print"
+                                        >
+                                            <ShieldCheck className="w-4 h-4" />
+                                            Registro de dispositivos para garantias
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex text-xs font-bold text-slate-500 border-b border-slate-200 pb-2 mb-2">
@@ -3408,6 +3422,13 @@ const CCTVServiceView = ({ service, onBack, onEdit, darkMode, company }) => {
                     </div>
                 )}
             </div>
+
+            <DeviceWarrantyModal
+                isOpen={showWarrantyModal}
+                onClose={() => setShowWarrantyModal(false)}
+                service={{ ...service, tipo_servicio: 'CCTV' }}
+                darkMode={darkMode}
+            />
 
             {/* QR Ticket Modal */}
             {
@@ -4385,6 +4406,9 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [statusFilter, setStatusFilter] = useState('Todas');
     const [showActionsModal, setShowActionsModal] = useState(false);
     const [selectedServiceForActions, setSelectedServiceForActions] = useState(null);
+    const [showWarrantyModal, setShowWarrantyModal] = useState(false);
+    const [warrantyModalService, setWarrantyModalService] = useState(null);
+    const [warrantyInitialTab, setWarrantyInitialTab] = useState('register');
     const [showTechnicalReport, setShowTechnicalReport] = useState(false);
     const [selectedServiceForReport, setSelectedServiceForReport] = useState(null);
     const [showServiceLabel, setShowServiceLabel] = useState(false);
@@ -4695,6 +4719,18 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                             className={`w-full pl-10 pr-4 py-2 text-sm rounded-full border transition-all ${darkMode ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'} focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
                         />
                     </div>
+                    <button
+                        onClick={() => {
+                            setWarrantyModalService(null);
+                            setWarrantyInitialTab('lookup');
+                            setShowWarrantyModal(true);
+                        }}
+                        className="w-full sm:w-auto px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-full shadow-sm transition-all whitespace-nowrap flex items-center justify-center gap-2"
+                        title="Verificar si un equipo fue vendido por nosotros"
+                    >
+                        <ShieldCheck className="w-4 h-4" />
+                        Verificar Garantía
+                    </button>
                     <button
                         onClick={() => setShowNewServiceModal(true)}
                         className="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-full shadow-sm transition-all whitespace-nowrap"
@@ -5426,6 +5462,23 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                             </div>
                                             <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Reporte Técnico</span>
                                         </button>
+
+                                {selectedServiceForActions.type === 'CCTV' && hasServiceMaterials(selectedServiceForActions.original) && (
+                                    <button
+                                        onClick={() => {
+                                            setWarrantyModalService({ ...selectedServiceForActions.original, tipo_servicio: 'CCTV' });
+                                            setWarrantyInitialTab('register');
+                                            setShowWarrantyModal(true);
+                                            setShowActionsModal(false);
+                                        }}
+                                        className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-teal-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-teal-500 hover:bg-white'}`}
+                                    >
+                                        <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600">
+                                            <ShieldCheck className="w-5 h-5" />
+                                        </div>
+                                        <span className={`font-bold text-left ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Registro de dispositivos para garantias</span>
+                                    </button>
+                                )}
                                   {selectedServiceForActions.type !== 'CCTV' && selectedServiceForActions.type !== 'Redes' && (
                                     <>
                                         <button
@@ -5512,6 +5565,15 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                     </div>
                 </div>
             )}
+
+            <DeviceWarrantyModal
+                isOpen={showWarrantyModal}
+                onClose={() => setShowWarrantyModal(false)}
+                service={warrantyModalService}
+                darkMode={darkMode}
+                user={user}
+                initialTab={warrantyInitialTab}
+            />
         </div >
     );
 };

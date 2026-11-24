@@ -61,8 +61,19 @@ const pathname = window.location.pathname;
 // Determine if we should show the App (Private Dashboard)
 let isAppRoute = false;
 
-// If it's a tracking, quote or invoice URL, it must ALWAYS go to PublicApp
-if (/^\/(?:cotizacion|factura|facturacion)(?:\/|$)/.test(pathname) || pathname.includes('/facturacion') || hash.includes('#/facturacion') || pathname.includes('/factura') || hash.includes('#/factura') || hash.includes('#/track/') || pathname.includes('/track/')) {
+// If it's a tracking, quote, invoice, or public page URL, it must ALWAYS go to PublicApp
+const isPublicPath = /^\/(?:cotizacion|factura|facturacion|servicios|categoria|contacto|nosotros)(?:\/|$)/.test(pathname) ||
+    pathname.includes('/facturacion') || hash.includes('#/facturacion') ||
+    pathname.includes('/factura') || hash.includes('#/factura') ||
+    pathname.includes('/servicios') || hash.includes('#/servicios') ||
+    pathname.includes('/categoria') || hash.includes('#/categoria') ||
+    pathname.includes('/contacto') || hash.includes('#/contacto') ||
+    pathname.includes('/nosotros') || hash.includes('#/nosotros') ||
+    hash.includes('#/track/') || pathname.includes('/track/');
+
+if (isPublicPath) {
+    isAppRoute = false;
+} else if (searchParams.get('landing') === 'true' || searchParams.get('app') === 'false') {
     isAppRoute = false;
 } else if (searchParams.get('app') === 'true') {
     isAppRoute = true;

@@ -75,15 +75,155 @@ const USOS_CFDI: Record<string, SatCatalogItem> = {
 // ------------------------------------------------------------------------------
 // ENVÍO DE EMAIL CON RESEND
 // ------------------------------------------------------------------------------
-async function sendConfirmationEmail(resendApiKey: string, solicitud: {
-  folio: string;
-  rfc: string;
-  razon_social: string;
-  correo: string;
-  regimen_fiscal: string;
-  uso_cfdi: string;
-}) {
-  const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "facturacion@cubiservicios.lat";
+
+// 1. Notificación al Administrador con todos los datos fiscales ingresados
+async function sendAdminInvoiceNotificationEmail(
+  resendApiKey: string,
+  adminRecipient: string,
+  solicitud: {
+    folio: string;
+    rfc: string;
+    razon_social: string;
+    codigo_postal: string;
+    regimen_fiscal: string;
+    uso_cfdi: string;
+    correo?: string | null;
+    observaciones?: string | null;
+    created_at?: string;
+  }
+) {
+  const fromEmail = Deno.env.get("RESEND_FACTURACION_FROM_EMAIL") || "facturacion@cubiservicios.lat";
+  const businessName = Deno.env.get("BUSINESS_NAME") || "CUBI Servicios";
+
+  const regimenDesc = REGIMENES_FISCALES[solicitud.regimen_fiscal]?.descripcion || solicitud.regimen_fiscal;
+  const usoDesc = USOS_CFDI[solicitud.uso_cfdi]?.descripcion || solicitud.uso_cfdi;
+  const fechaStr = new Date(solicitud.created_at || Date.now()).toLocaleString("es-MX", {
+    timeZone: "America/Mexico_City",
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8">
+      <title>Nueva Solicitud de Factura ${solicitud.folio}</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 24px 12px; }
+        .card { background-color: #ffffff; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+        .header { background: linear-gradient(135deg, #16304C 0%, #1987C6 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+        .header p { margin: 8px 0 0; font-size: 13px; opacity: 0.9; }
+        .content { padding: 28px 24px; }
+        .folio-pill { display: inline-block; background-color: #e0f2fe; color: #0284c7; padding: 6px 14px; border-radius: 9999px; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; font-family: monospace; }
+        .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; font-weight: 700; margin: 20px 0 8px 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .data-table td { padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 14px; }
+        .data-table td.label { color: #64748b; width: 35%; font-weight: 500; }
+        .data-table td.value { color: #0f172a; font-weight: 600; text-align: right; }
+        .notes-box { background-color: #f8fafc; border-left: 4px solid #1987C6; padding: 14px; border-radius: 8px; font-size: 13px; color: #334155; line-height: 1.5; margin-top: 8px; }
+        .footer { background-color: #f8fafc; padding: 18px 24px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="header">
+          <h1>${businessName}</h1>
+          <p>Solicitud de Facturación Electrónica (CFDI 4.0)</p>
+        </div>
+        <div class="content">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <span class="folio-pill">FOLIO: ${solicitud.folio}</span>
+          </div>
+
+          <div class="section-title">Datos Fiscales del Contribuyente</div>
+          <table class="data-table">
+            <tr>
+              <td class="label">RFC:</td>
+              <td class="value" style="font-family: monospace; font-size: 15px; color: #1987C6;">${solicitud.rfc}</td>
+            </tr>
+            <tr>
+              <td class="label">Nombre / Razón Social:</td>
+              <td class="value">${solicitud.razon_social}</td>
+            </tr>
+            <tr>
+              <td class="label">Código Postal Fiscal:</td>
+              <td class="value" style="font-family: monospace;">${solicitud.codigo_postal}</td>
+            </tr>
+            <tr>
+              <td class="label">Régimen Fiscal:</td>
+              <td class="value">${solicitud.regimen_fiscal} - ${regimenDesc}</td>
+            </tr>
+            <tr>
+              <td class="label">Uso de CFDI:</td>
+              <td class="value">${solicitud.uso_cfdi} - ${usoDesc}</td>
+            </tr>
+            <tr>
+              <td class="label">Correo de Envío:</td>
+              <td class="value">
+                ${solicitud.correo ? `<a href="mailto:${solicitud.correo}" style="color: #1987C6; text-decoration: none;">${solicitud.correo}</a>` : '<span style="color: #94a3b8; font-weight: normal;">No proporcionado</span>'}
+              </td>
+            </tr>
+            <tr>
+              <td class="label">Fecha y Hora:</td>
+              <td class="value">${fechaStr}</td>
+            </tr>
+          </table>
+
+          ${
+            solicitud.observaciones
+              ? `<div class="section-title">Observaciones / Nota de Venta</div>
+                 <div class="notes-box">${solicitud.observaciones.replace(/\n/g, "<br>")}</div>`
+              : ""
+          }
+        </div>
+
+        <div class="footer">
+          Enviado automáticamente por el portal de facturación de ${businessName} · cubiservicios.lat/facturacion
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: `${businessName} Facturación <${fromEmail}>`,
+      to: [adminRecipient],
+      reply_to: solicitud.correo || undefined,
+      subject: `Nueva Solicitud de Factura [${solicitud.folio}] - ${solicitud.rfc} (${solicitud.razon_social})`,
+      html: htmlContent,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Resend API Error al notificar admin (${res.status}): ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+// 2. Acuse de recepción formal al Cliente (si proporcionó su correo)
+async function sendClientConfirmationEmail(
+  resendApiKey: string,
+  solicitud: {
+    folio: string;
+    rfc: string;
+    razon_social: string;
+    codigo_postal: string;
+    correo: string;
+    regimen_fiscal: string;
+    uso_cfdi: string;
+  }
+) {
+  const fromEmail = Deno.env.get("RESEND_FACTURACION_FROM_EMAIL") || "facturacion@cubiservicios.lat";
   const businessName = Deno.env.get("BUSINESS_NAME") || "CUBI Servicios";
 
   const regimenDesc = REGIMENES_FISCALES[solicitud.regimen_fiscal]?.descripcion || solicitud.regimen_fiscal;
@@ -97,14 +237,14 @@ async function sendConfirmationEmail(resendApiKey: string, solicitud: {
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 24px; }
         .card { background-color: #ffffff; border-radius: 16px; max-width: 580px; margin: 0 auto; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
-        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
-        .header p { margin: 8px 0 0; font-size: 14px; opacity: 0.9; }
+        .header { background: linear-gradient(135deg, #16304C 0%, #1987C6 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 13px; opacity: 0.9; }
         .content { padding: 32px 24px; }
         .badge { display: inline-block; background-color: #eff6ff; color: #1d4ed8; padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 600; margin-bottom: 20px; border: 1px solid #bfdbfe; }
-        .folio-box { background-color: #f1f5f9; border-left: 4px solid #2563eb; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
+        .folio-box { background-color: #f1f5f9; border-left: 4px solid #1987C6; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
         .folio-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600; }
-        .folio-number { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px; }
+        .folio-number { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px; font-family: monospace; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
         .data-table td { padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         .data-table td.label { color: #64748b; width: 40%; font-weight: 500; }
@@ -125,12 +265,16 @@ async function sendConfirmationEmail(resendApiKey: string, solicitud: {
             <div class="folio-number">${solicitud.folio}</div>
           </div>
           <p style="font-size: 14px; line-height: 1.6; color: #475569;">
-            Hola <strong>${solicitud.razon_social}</strong>, hemos recibido tu solicitud de factura electrónica correctamente. Nuestro equipo administrativo la revisará y emitirá tu CFDI 4.0 a la brevedad.
+            Hola <strong>${solicitud.razon_social}</strong>, hemos recibido tu solicitud de factura electrónica correctamente. Revisaremos los datos y emitiremos tu CFDI 4.0 a la brevedad.
           </p>
           <table class="data-table">
             <tr>
               <td class="label">RFC:</td>
-              <td class="value">${solicitud.rfc}</td>
+              <td class="value" style="font-family: monospace; color: #1987C6;">${solicitud.rfc}</td>
+            </tr>
+            <tr>
+              <td class="label">Código Postal Fiscal:</td>
+              <td class="value" style="font-family: monospace;">${solicitud.codigo_postal}</td>
             </tr>
             <tr>
               <td class="label">Régimen Fiscal:</td>
@@ -146,7 +290,7 @@ async function sendConfirmationEmail(resendApiKey: string, solicitud: {
           </p>
         </div>
         <div class="footer">
-          © ${new Date().getFullYear()} ${businessName}. Este es un correo automático generado por Cotizapp Web.
+          © ${new Date().getFullYear()} ${businessName}. Este es un correo automático generado por Cotizapp Web · cubiservicios.lat
         </div>
       </div>
     </body>
@@ -156,20 +300,21 @@ async function sendConfirmationEmail(resendApiKey: string, solicitud: {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${resendApiKey}`,
+      Authorization: `Bearer ${resendApiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `${businessName} <${fromEmail}>`,
+      from: `${businessName} Facturación <${fromEmail}>`,
       to: [solicitud.correo],
-      subject: `Acuse de Solicitud de Factura - ${solicitud.folio}`,
+      reply_to: fromEmail,
+      subject: `Acuse de Solicitud de Factura [${solicitud.folio}] - ${businessName}`,
       html: htmlContent,
     }),
   });
 
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(`Resend API Error (${res.status}): ${errorText}`);
+    throw new Error(`Resend API Error al confirmar al cliente (${res.status}): ${errorText}`);
   }
 
   return await res.json();
@@ -200,6 +345,43 @@ serve(async (req: Request) => {
         JSON.stringify({ success: false, error: "Cuerpo de solicitud JSON inválido." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // 0. Trampa de honeypot anti-bot
+    if (body.hp_check) {
+      console.warn("Honeypot de facturación activado por bot automatizado.");
+      return new Response(
+        JSON.stringify({ success: true, message: "Solicitud registrada con éxito.", data: { folio: "FAC-OK" } }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 0.1 Verificación de Cloudflare Turnstile
+    const turnstileSecret = Deno.env.get("CLOUDFLARE_TURNSTILE_SECRET_KEY");
+    const cfToken = body.cf_token;
+
+    if (turnstileSecret && cfToken) {
+      try {
+        const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            secret: turnstileSecret,
+            response: cfToken,
+            remoteip: req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "",
+          }),
+        });
+        const verifyJson = await verifyRes.json();
+        if (!verifyJson.success) {
+          console.warn("Validación de Turnstile rechazada por Cloudflare en facturación:", verifyJson);
+          return new Response(
+            JSON.stringify({ success: false, error: "Validación de seguridad humana fallida. Por favor recarga e intenta de nuevo." }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (cfErr: any) {
+        console.error("Fallo al contactar servidor de Turnstile:", cfErr.message);
+      }
     }
 
     const {
@@ -354,43 +536,65 @@ serve(async (req: Request) => {
       );
     }
 
-    // 10. Envío de notificación por correo si Resend está configurado y hay correo del solicitante
+    // 10. Envío de correos vía Resend (Notificación al Administrador + Acuse al Cliente)
     let emailStatus = "pendiente";
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const adminRecipient =
+      Deno.env.get("FACTURACION_RECIPIENT_EMAIL") ||
+      Deno.env.get("COTIZACIONES_RECIPIENT_EMAIL") ||
+      Deno.env.get("NOTIFICATION_EMAIL");
 
-    if (resendApiKey && cleanCorreo) {
-      try {
-        await sendConfirmationEmail(resendApiKey, {
-          folio: record.folio,
-          rfc: record.rfc,
-          razon_social: record.razon_social,
-          correo: cleanCorreo,
-          regimen_fiscal: record.regimen_fiscal,
-          uso_cfdi: record.uso_cfdi,
-        });
-
-        emailStatus = "enviado";
-
-        // Actualizar estado de correo en la base de datos
-        await supabaseAdmin
-          .from("solicitudes_factura")
-          .update({
-            email_status: "enviado",
-            email_sent_at: new Date().toISOString(),
-          })
-          .eq("id", record.id);
-
-      } catch (mailErr: any) {
-        console.error("Error al enviar correo vía Resend:", mailErr.message);
-        emailStatus = "error";
-
-        await supabaseAdmin
-          .from("solicitudes_factura")
-          .update({
-            email_status: "error",
-          })
-          .eq("id", record.id);
+    if (resendApiKey) {
+      // 10.1 Notificación al Administrador (A MÍ) con todos los datos fiscales ingresados
+      if (adminRecipient) {
+        try {
+          await sendAdminInvoiceNotificationEmail(resendApiKey, adminRecipient, {
+            folio: record.folio,
+            rfc: record.rfc,
+            razon_social: record.razon_social,
+            codigo_postal: record.codigo_postal,
+            regimen_fiscal: record.regimen_fiscal,
+            uso_cfdi: record.uso_cfdi,
+            correo: cleanCorreo,
+            observaciones: cleanObservaciones,
+            created_at: record.created_at,
+          });
+          emailStatus = "enviado";
+          console.log(`Notificación de solicitud de factura enviada al administrador (${adminRecipient}) vía Resend.`);
+        } catch (adminMailErr: any) {
+          console.error("Error al notificar al administrador vía Resend:", adminMailErr.message);
+          emailStatus = "error";
+        }
+      } else {
+        console.warn("AVISO: FACTURACION_RECIPIENT_EMAIL no configurado en los secrets de Supabase.");
       }
+
+      // 10.2 Acuse formal al Cliente (si introdujo su correo)
+      if (cleanCorreo) {
+        try {
+          await sendClientConfirmationEmail(resendApiKey, {
+            folio: record.folio,
+            rfc: record.rfc,
+            razon_social: record.razon_social,
+            codigo_postal: record.codigo_postal,
+            correo: cleanCorreo,
+            regimen_fiscal: record.regimen_fiscal,
+            uso_cfdi: record.uso_cfdi,
+          });
+          console.log(`Acuse de recibo de factura enviado al cliente (${cleanCorreo}) vía Resend.`);
+        } catch (clientMailErr: any) {
+          console.error("Error al enviar acuse de factura al cliente vía Resend:", clientMailErr.message);
+        }
+      }
+
+      // Actualizar estado de correo en la base de datos
+      await supabaseAdmin
+        .from("solicitudes_factura")
+        .update({
+          email_status: emailStatus,
+          email_sent_at: emailStatus === "enviado" ? new Date().toISOString() : null,
+        })
+        .eq("id", record.id);
     }
 
     // 11. Respuesta exitosa

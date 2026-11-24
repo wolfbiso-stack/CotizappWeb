@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../utils/supabase';
 import { getProgressFromStatus, STATUS_OPTIONS } from '../utils/statusMapper';
-import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock, Package, Image as ImageIcon, FileSearch, ClipboardCheck, X, Activity } from 'lucide-react';
+import { Loader, User, Phone, Monitor, XCircle, Building2, Mail, MapPin, Wrench, CheckCircle2, Clock, Package, Image as ImageIcon, FileSearch, ClipboardCheck, X, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PublicRepairTracking = () => {
     // Modified for Hash Routing compatibility
@@ -64,7 +64,78 @@ const PublicRepairTracking = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [photos, setPhotos] = useState([]);
-    const [selectedPhoto, setSelectedPhoto] = useState(null);
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
+    const [dragStartX, setDragStartX] = useState(null);
+    const [dragOffset, setDragOffset] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const openPhoto = useCallback((index) => {
+        setSelectedPhotoIndex(index);
+        setDragOffset(0);
+        setDragStartX(null);
+        setIsDragging(false);
+    }, []);
+
+    const closePhoto = useCallback(() => {
+        setSelectedPhotoIndex(null);
+        setDragOffset(0);
+        setDragStartX(null);
+        setIsDragging(false);
+    }, []);
+
+    const goToPrevPhoto = useCallback(() => {
+        if (photos.length <= 1) return;
+        setSelectedPhotoIndex((prev) => (prev === null ? null : (prev - 1 + photos.length) % photos.length));
+        setDragOffset(0);
+    }, [photos.length]);
+
+    const goToNextPhoto = useCallback(() => {
+        if (photos.length <= 1) return;
+        setSelectedPhotoIndex((prev) => (prev === null ? null : (prev + 1) % photos.length));
+        setDragOffset(0);
+    }, [photos.length]);
+
+    useEffect(() => {
+        if (selectedPhotoIndex === null) return;
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') closePhoto();
+            else if (e.key === 'ArrowLeft') goToPrevPhoto();
+            else if (e.key === 'ArrowRight') goToNextPhoto();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedPhotoIndex, closePhoto, goToPrevPhoto, goToNextPhoto]);
+
+    const handleSwipeStart = (clientX) => {
+        setDragStartX(clientX);
+        setIsDragging(true);
+    };
+
+    const handleSwipeMove = (clientX) => {
+        if (!isDragging || dragStartX === null) return;
+        setDragOffset(clientX - dragStartX);
+    };
+
+    const handleSwipeEnd = () => {
+        if (!isDragging) return;
+        const swipeThreshold = 50;
+        if (dragOffset > swipeThreshold) {
+            goToPrevPhoto();
+        } else if (dragOffset < -swipeThreshold) {
+            goToNextPhoto();
+        }
+        setDragStartX(null);
+        setDragOffset(0);
+        setIsDragging(false);
+    };
 
     useEffect(() => {
         if (token) {
@@ -140,9 +211,16 @@ const PublicRepairTracking = () => {
                     console.log('No company data available', err);
                 }
 
+                const normalizePhotos = (items) => {
+                    if (!Array.isArray(items)) return [];
+                    return items
+                        .map((item) => (typeof item === 'string' ? item : item?.uri || item?.url || ''))
+                        .filter((uri) => typeof uri === 'string' && uri.trim() !== '');
+                };
+
                 // Fetch photos - Now handled by the updated get_service_by_token RPC!
-                if (serviceData && serviceData.fotos_array) {
-                    setPhotos(serviceData.fotos_array);
+                if (serviceData && Array.isArray(serviceData.fotos_array)) {
+                    setPhotos(normalizePhotos(serviceData.fotos_array));
                 } else {
                     // Fallback in case they haven't run the SQL script yet
                     try {
@@ -152,7 +230,7 @@ const PublicRepairTracking = () => {
                             .eq('servicio_id', serviceData.id);
 
                         if (photosData && !photosError) {
-                            setPhotos(photosData.map(p => p.uri));
+                            setPhotos(normalizePhotos(photosData));
                         }
                     } catch (err) {
                         console.log('Error fetching photos', err);
@@ -550,24 +628,33 @@ const PublicRepairTracking = () => {
                         {/* Photos Gallery */}
                         {photos && photos.length > 0 && (
                             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 overflow-hidden">
-                                <div className="bg-slate-50/50 px-8 py-5 border-b border-white/50 flex items-center">
+                                <div className="bg-slate-50/50 px-8 py-5 border-b border-white/50 flex items-center justify-between">
                                     <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
                                         <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
                                             <ImageIcon className="w-5 h-5" />
                                         </div>
                                         Evidencia Fotográfica
                                     </h2>
+                                    <span className="px-3 py-1 bg-purple-100/80 text-purple-700 text-xs font-bold rounded-full">
+                                        {photos.length} {photos.length === 1 ? 'foto' : 'fotos'}
+                                    </span>
                                 </div>
-                                <div className="p-8">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <div className="p-6 sm:p-8">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                                         {photos.map((uri, idx) => (
-                                            <div
+                                            <button
+                                                type="button"
                                                 key={idx}
-                                                className="aspect-square rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md hover:scale-105 transition-all border border-slate-200 bg-slate-100"
-                                                onClick={() => setSelectedPhoto(uri)}
+                                                className="group relative aspect-square rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.03] transition-all border border-slate-200 bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                onClick={() => openPhoto(idx)}
                                             >
-                                                <img src={uri} alt={`Evidencia ${idx + 1}`} className="w-full h-full object-cover" />
-                                            </div>
+                                                <img
+                                                    src={uri}
+                                                    alt={`Evidencia ${idx + 1}`}
+                                                    loading="lazy"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -584,23 +671,83 @@ const PublicRepairTracking = () => {
             </div>
 
             {/* Photo Modal */}
-            {selectedPhoto && (
+            {selectedPhotoIndex !== null && photos[selectedPhotoIndex] && (
                 <div
-                    className="fixed inset-0 z-[500] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300"
-                    onClick={() => setSelectedPhoto(null)}
+                    className="fixed inset-0 z-[500] flex flex-col items-center justify-center bg-black/95 select-none animate-in fade-in duration-200"
+                    onClick={closePhoto}
                 >
-                    <button
-                        onClick={() => setSelectedPhoto(null)}
-                        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-                    <img
-                        src={selectedPhoto}
-                        alt="Evidencia Ampliada"
-                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                    {/* Top Bar: Counter & Close */}
+                    <div
+                        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-4 sm:px-6 sm:py-5"
                         onClick={(e) => e.stopPropagation()}
-                    />
+                    >
+                        <div className="px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-semibold tracking-wide">
+                            {selectedPhotoIndex + 1}/{photos.length}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={closePhoto}
+                            aria-label="Cerrar"
+                            className="p-2.5 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    {/* Previous Button */}
+                    {photos.length > 1 && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                goToPrevPhoto();
+                            }}
+                            aria-label="Foto anterior"
+                            className="hidden sm:flex absolute left-4 z-20 p-3 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
+                        >
+                            <ChevronLeft className="w-7 h-7" />
+                        </button>
+                    )}
+
+                    {/* Swipeable Image Container */}
+                    <div
+                        className="w-full h-full flex items-center justify-center p-4 sm:p-16 touch-pan-y overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => handleSwipeStart(e.touches[0].clientX)}
+                        onTouchMove={(e) => handleSwipeMove(e.touches[0].clientX)}
+                        onTouchEnd={handleSwipeEnd}
+                        onTouchCancel={handleSwipeEnd}
+                        onMouseDown={(e) => handleSwipeStart(e.clientX)}
+                        onMouseMove={(e) => handleSwipeMove(e.clientX)}
+                        onMouseUp={handleSwipeEnd}
+                        onMouseLeave={handleSwipeEnd}
+                    >
+                        <img
+                            src={photos[selectedPhotoIndex]}
+                            alt={`Evidencia ${selectedPhotoIndex + 1} de ${photos.length}`}
+                            draggable={false}
+                            style={{
+                                transform: `translateX(${dragOffset}px)`,
+                                transition: isDragging ? 'none' : 'transform 200ms ease-out'
+                            }}
+                            className="max-w-full max-h-[82vh] object-contain rounded-lg shadow-2xl cursor-grab active:cursor-grabbing"
+                        />
+                    </div>
+
+                    {/* Next Button */}
+                    {photos.length > 1 && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                goToNextPhoto();
+                            }}
+                            aria-label="Foto siguiente"
+                            className="hidden sm:flex absolute right-4 z-20 p-3 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
+                        >
+                            <ChevronRight className="w-7 h-7" />
+                        </button>
+                    )}
                 </div>
             )}
         </div>
