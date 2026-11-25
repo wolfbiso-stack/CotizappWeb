@@ -37,6 +37,7 @@ import FenceDesigner from './components/FenceDesigner/FenceDesigner';
 import NotasDeVentaView from './components/NotasDeVentaView';
 import FacturasAdminView from './components/FacturasAdminView';
 import DeviceWarrantyModal, { hasServiceMaterials } from './components/DeviceWarrantyModal';
+import InvoiceInvitationModal from './components/InvoiceInvitationModal';
 import { STATUS_OPTIONS, ELECTRIC_FENCE_STATUS_OPTIONS, ALL_STATUS_OPTIONS, getStatusLabel } from './utils/statusMapper';
 import { formatCurrency, formatServiceDate, formatDateForInput } from './utils/format';
 import { generateToken } from './utils/token';
@@ -4409,6 +4410,8 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
     const [showWarrantyModal, setShowWarrantyModal] = useState(false);
     const [warrantyModalService, setWarrantyModalService] = useState(null);
     const [warrantyInitialTab, setWarrantyInitialTab] = useState('register');
+    const [showInvoiceInviteModal, setShowInvoiceInviteModal] = useState(false);
+    const [selectedServiceForInvoiceInvite, setSelectedServiceForInvoiceInvite] = useState(null);
     const [showTechnicalReport, setShowTechnicalReport] = useState(false);
     const [selectedServiceForReport, setSelectedServiceForReport] = useState(null);
     const [showServiceLabel, setShowServiceLabel] = useState(false);
@@ -5553,6 +5556,20 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                                     </div>
                                     <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Nota de Venta</span>
                                 </button>
+
+                                <button
+                                    onClick={() => {
+                                        setSelectedServiceForInvoiceInvite(selectedServiceForActions);
+                                        setShowInvoiceInviteModal(true);
+                                        setShowActionsModal(false);
+                                    }}
+                                    className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all hover:translate-x-1 ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500 hover:bg-slate-755' : 'bg-slate-50 border-slate-100 hover:border-emerald-500 hover:bg-white'}`}
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                        <Receipt className="w-5 h-5" />
+                                    </div>
+                                    <span className={`font-bold text-left ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Enviar invitación factura</span>
+                                </button>
                             </div>
 
                             <button
@@ -5573,6 +5590,29 @@ const ServiciosView = ({ darkMode, company, onNavigate, setSelectedService, setE
                 darkMode={darkMode}
                 user={user}
                 initialTab={warrantyInitialTab}
+            />
+
+            <InvoiceInvitationModal
+                isOpen={showInvoiceInviteModal}
+                onClose={() => {
+                    setShowInvoiceInviteModal(false);
+                    setSelectedServiceForInvoiceInvite(null);
+                }}
+                service={selectedServiceForInvoiceInvite}
+                darkMode={darkMode}
+                user={user}
+                onTokenGenerated={(targetService, newToken) => {
+                    setUnifiedServices(prev =>
+                        prev.map(item =>
+                            item.tableName === targetService.tableName && item.id === targetService.id
+                                ? { ...item, token: newToken, original: { ...item.original, token: newToken } }
+                                : item
+                        )
+                    );
+                    setSelectedServiceForInvoiceInvite(prev =>
+                        prev ? { ...prev, token: newToken, original: { ...prev.original, token: newToken } } : prev
+                    );
+                }}
             />
         </div >
     );
@@ -11676,6 +11716,9 @@ const App = () => {
                                     <FacturasAdminView
                                         user={session?.user}
                                         darkMode={isDark}
+                                        clients={savedClients}
+                                        quotations={quotations}
+                                        services={services}
                                     />
                                 )}
                                 {activeTab === 'clientes' && (

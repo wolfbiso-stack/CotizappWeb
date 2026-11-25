@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
+import { formatCurrency } from '../utils/format';
 import {
     CheckCircle2,
     AlertCircle,
@@ -14,7 +15,10 @@ import {
     FileCheck2,
     Phone,
     FileText,
-    Mail
+    Mail,
+    User,
+    DollarSign,
+    Lock
 } from 'lucide-react';
 
 // Catálogos oficiales SAT CFDI 4.0
@@ -134,7 +138,37 @@ export const validateRFC = (rawRfc) => {
     };
 };
 
+const extractSolicitudTokenFromUrl = () => {
+    if (typeof window === 'undefined') return '';
+
+    const pathMatch = window.location.pathname.match(/^\/(?:facturacion|factura)\/solicitud\/([^/?#]+)/i);
+    if (pathMatch && pathMatch[1]) {
+        try {
+            return decodeURIComponent(pathMatch[1]).trim();
+        } catch {
+            return pathMatch[1].trim();
+        }
+    }
+
+    const hashMatch = window.location.hash.match(/\/(?:facturacion|factura)\/solicitud\/([^/?#]+)/i);
+    if (hashMatch && hashMatch[1]) {
+        try {
+            return decodeURIComponent(hashMatch[1]).trim();
+        } catch {
+            return hashMatch[1].trim();
+        }
+    }
+
+    return '';
+};
+
 const PublicInvoiceRequest = () => {
+    const solicitudToken = useMemo(() => extractSolicitudTokenFromUrl(), []);
+
+    const [serviceInfo, setServiceInfo] = useState(null);
+    const [loadingService, setLoadingService] = useState(Boolean(solicitudToken));
+    const [serviceNotFound, setServiceNotFound] = useState(false);
+
     const [formData, setFormData] = useState({
         rfc: '',
         razon_social: '',
@@ -144,6 +178,95 @@ const PublicInvoiceRequest = () => {
         observaciones: '',
         correo: ''
     });
+
+    const isFolioLocked = Boolean(solicitudToken && serviceInfo && serviceInfo.folio);
+
+    useEffect(() => {
+        if (!solicitudToken || !supabase) {
+            setLoadingService(false);
+            return;
+        }
+
+        let cancelled = false;
+
+        const fetchServiceByToken = async () => {
+            setLoadingService(true);
+            setServiceNotFound(false);
+
+            try {
+                let normalized = null;
+
+                // 1. Intentar RPC dedicada para facturación (cubre los 6 tipos de servicio)
+                const { data: invoiceRpcData, error: invoiceRpcError } = await supabase
+                    .rpc('get_service_for_invoice_by_token', { token_input: solicitudToken });
+
+                if (!invoiceRpcError && invoiceRpcData) {
+                    const folioValue = String(invoiceRpcData.folio || '').trim();
+                    normalized = {
+                        tipo_servicio: invoiceRpcData.tipo_servicio || 'Servicio',
+                        folio: folioValue,
+                        cliente_nombre: String(invoiceRpcData.cliente_nombre || '').trim(),
+                        cliente_telefono: String(invoiceRpcData.cliente_telefono || '').trim(),
+                        total: Number(invoiceRpcData.total) || 0,
+                        token: invoiceRpcData.token || solicitudToken
+                    };
+                } else {
+                    // 2. Fallback a RPC existente get_service_by_token (PC, Impresoras, Celulares)
+                    const { data: legacyData, error: legacyError } = await supabase
+                        .rpc('get_service_by_token', { token_input: solicitudToken });
+
+                    if (!legacyError && legacyData) {
+                        const isCCTV = Boolean(legacyData.servicio_numero && !legacyData.orden_numero);
+                        const folioValue = String(
+                            isCCTV
+                                ? legacyData.servicio_numero
+                                : (legacyData.orden_numero || legacyData.servicio_numero || '')
+                        ).trim();
+
+                        normalized = {
+                            tipo_servicio: isCCTV ? 'CCTV' : (legacyData.tipo_servicio || 'Servicio'),
+                            folio: folioValue,
+                            cliente_nombre: String(legacyData.cliente_nombre || '').trim(),
+                            cliente_telefono: String(legacyData.cliente_telefono || '').trim(),
+                            total: Number(legacyData.total) || 0,
+                            token: legacyData.token || solicitudToken
+                        };
+                    }
+                }
+
+                if (cancelled) return;
+
+                if (normalized) {
+                    setServiceInfo(normalized);
+                    if (normalized.folio) {
+                        setFormData(prev => ({
+                            ...prev,
+                            observaciones: normalized.folio
+                        }));
+                    }
+                } else {
+                    setServiceInfo(null);
+                    setServiceNotFound(true);
+                }
+            } catch (err) {
+                console.error('Error al consultar servicio por token:', err);
+                if (!cancelled) {
+                    setServiceInfo(null);
+                    setServiceNotFound(true);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoadingService(false);
+                }
+            }
+        };
+
+        fetchServiceByToken();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [solicitudToken]);
 
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -179,6 +302,8 @@ const PublicInvoiceRequest = () => {
             setFormData(prev => ({ ...prev, codigo_postal: val }));
         } else if (name === 'razon_social') {
             setFormData(prev => ({ ...prev, razon_social: value.toUpperCase() }));
+        } else if (name === 'observaciones' && isFolioLocked) {
+            return;
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -232,7 +357,9 @@ const PublicInvoiceRequest = () => {
                 regimen_fiscal: formData.regimen_fiscal,
                 uso_cfdi: formData.uso_cfdi,
                 correo: formData.correo.trim() || null,
-                observaciones: formData.observaciones.trim() || null
+                observaciones: formData.observaciones.trim() || null,
+                invitacion: Boolean(solicitudToken),
+                servicio_token: solicitudToken || null
             };
 
             let responseData = null;
@@ -299,7 +426,7 @@ const PublicInvoiceRequest = () => {
             codigo_postal: '',
             regimen_fiscal: '',
             uso_cfdi: '',
-            observaciones: '',
+            observaciones: isFolioLocked ? serviceInfo.folio : '',
             correo: ''
         });
         setSuccessData(null);
@@ -317,7 +444,7 @@ const PublicInvoiceRequest = () => {
                 <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <img
-                            src="LogoEmpresa.png"
+                            src="/LogoEmpresa.png"
                             alt="CUBI Servicios"
                             className="h-14 sm:h-16 w-auto object-contain"
                         />
@@ -337,9 +464,16 @@ const PublicInvoiceRequest = () => {
             {/* Franja Corporativa en Azul Marino del Logotipo (#0F2A47) */}
             <section className="w-full bg-[#0F2A47] text-white pt-8 pb-20 sm:pt-10 sm:pb-24 px-4 sm:px-8 border-b-4 border-[#1982C4]">
                 <div className="max-w-5xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-sky-200 mb-3">
-                        <span className="w-2 h-2 rounded-xs bg-[#78B833]" />
-                        <span>Facturación Electrónica · CFDI 4.0</span>
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-widest text-sky-200">
+                            <span className="w-2 h-2 rounded-xs bg-[#78B833]" />
+                            <span>Facturación Electrónica · CFDI 4.0</span>
+                        </div>
+                        {serviceInfo && serviceInfo.folio && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#1982C4]/30 border border-sky-300/30 text-[11px] font-bold uppercase tracking-wider text-white font-mono">
+                                <span>{serviceInfo.tipo_servicio} · Folio #{serviceInfo.folio}</span>
+                            </div>
+                        )}
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         Solicitud de Factura
@@ -479,6 +613,81 @@ const PublicInvoiceRequest = () => {
                     </div>
                 ) : (
                     /* DISEÑO EDITORIAL DE 2 COLUMNAS (FORMULARIO + GUÍA LATERAL) */
+                    <div className="space-y-6">
+                        {/* Resumen del Servicio (SOLO cuando se accede mediante token de servicio) */}
+                        {solicitudToken && loadingService && (
+                            <div className="bg-white border border-slate-300/90 rounded-2xl shadow-[0_6px_24px_rgba(15,42,71,0.08)] p-5 flex items-center gap-3 text-sm text-[#0F2A47]">
+                                <Loader2 className="w-5 h-5 animate-spin text-[#1982C4] flex-shrink-0" />
+                                <span className="font-semibold">Cargando datos del servicio vinculado...</span>
+                            </div>
+                        )}
+
+                        {solicitudToken && !loadingService && serviceInfo && (
+                            <div className="bg-white border border-slate-300/90 rounded-2xl shadow-[0_6px_28px_rgba(15,42,71,0.08)] overflow-hidden">
+                                <div className="bg-[#F4F7FA] border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-1.5 h-6 rounded-full bg-[#78B833]" />
+                                        <div>
+                                            <h2 className="text-sm sm:text-base font-bold text-[#0F2A47]">
+                                                Datos del Servicio a Facturar
+                                            </h2>
+                                            <p className="text-xs text-slate-600">
+                                                Información verificada automáticamente desde tu orden de servicio
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#0F2A47] text-white text-xs font-bold font-mono">
+                                        <span>{serviceInfo.tipo_servicio}</span>
+                                        {serviceInfo.folio && <span>• #{serviceInfo.folio}</span>}
+                                    </span>
+                                </div>
+
+                                <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="p-4 rounded-xl bg-[#F8FAFC] border border-slate-200/90">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                                            <User className="w-3.5 h-3.5 text-[#1982C4]" />
+                                            <span>Nombre</span>
+                                        </div>
+                                        <p className="text-sm sm:text-[15px] font-bold text-[#0F2A47] break-words">
+                                            {serviceInfo.cliente_nombre || 'No registrado'}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-[#F8FAFC] border border-slate-200/90">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                                            <Phone className="w-3.5 h-3.5 text-[#1982C4]" />
+                                            <span>Teléfono</span>
+                                        </div>
+                                        <p className="text-sm sm:text-[15px] font-bold text-[#0F2A47] font-mono">
+                                            {serviceInfo.cliente_telefono || 'No registrado'}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-[#0F2A47] text-white border border-[#0F2A47]">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-300 mb-1">
+                                            <DollarSign className="w-3.5 h-3.5" />
+                                            <span>Monto a Facturar</span>
+                                        </div>
+                                        <p className="text-lg sm:text-xl font-black font-mono tracking-tight text-white">
+                                            ${formatCurrency(serviceInfo.total)} <span className="text-xs font-semibold text-sky-200">MXN</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {solicitudToken && !loadingService && serviceNotFound && (
+                            <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 text-xs sm:text-sm flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-bold">No se encontró un servicio asociado a este enlace.</p>
+                                    <p className="text-amber-800 mt-0.5">
+                                        Puedes capturar tus datos fiscales y el folio de tu servicio manualmente en el formulario.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                         {/* Columna Principal: Formulario */}
                         <div className="lg:col-span-8 bg-white border border-slate-300/90 rounded-2xl shadow-[0_6px_28px_rgba(15,42,71,0.08)] overflow-hidden">
@@ -697,9 +906,17 @@ const PublicInvoiceRequest = () => {
 
                                     {/* 6. Folio de cotización o servicio */}
                                     <div>
-                                        <label htmlFor="observaciones" className="block text-[13.5px] font-bold text-[#0F2A47] mb-1.5">
-                                            Folio de cotización o servicio
-                                        </label>
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                            <label htmlFor="observaciones" className="block text-[13.5px] font-bold text-[#0F2A47]">
+                                                Folio de cotización o servicio
+                                            </label>
+                                            {isFolioLocked && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F2A47] bg-slate-200/80 border border-slate-300 px-2 py-0.5 rounded-md">
+                                                    <Lock className="w-3 h-3 text-[#1982C4]" />
+                                                    <span>Vinculado al servicio</span>
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="relative">
                                             <input
                                                 id="observaciones"
@@ -707,13 +924,24 @@ const PublicInvoiceRequest = () => {
                                                 name="observaciones"
                                                 value={formData.observaciones}
                                                 onChange={handleChange}
+                                                readOnly={isFolioLocked}
+                                                disabled={isFolioLocked}
                                                 placeholder="Ej. Cotización #1204, Ticket #552 o Nota de Venta"
-                                                className="w-full bg-white border-[1.5px] border-slate-300 rounded-lg pl-10 pr-4 py-3 text-[#0F2A47] text-[14.5px] font-medium placeholder:text-slate-400 placeholder:font-normal focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15 outline-none transition-all"
+                                                className={`w-full border-[1.5px] rounded-lg pl-10 pr-10 py-3 text-[14.5px] font-medium outline-none transition-all ${
+                                                    isFolioLocked
+                                                        ? 'bg-slate-200/70 border-slate-300 text-[#0F2A47] font-mono font-bold cursor-not-allowed select-all'
+                                                        : 'bg-white border-slate-300 text-[#0F2A47] placeholder:text-slate-400 placeholder:font-normal focus:border-[#1982C4] focus:ring-4 focus:ring-[#1982C4]/15'
+                                                }`}
                                             />
                                             <FileText className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                            {isFolioLocked && (
+                                                <Lock className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                            )}
                                         </div>
                                         <p className="text-xs text-slate-600 mt-1.5">
-                                            Ayuda a identificar rápidamente tu pago, servicio o nota de venta.
+                                            {isFolioLocked
+                                                ? 'Este folio se asignó automáticamente desde tu servicio y no puede modificarse.'
+                                                : 'Ayuda a identificar rápidamente tu pago, servicio o nota de venta.'}
                                         </p>
                                     </div>
 
@@ -821,6 +1049,7 @@ const PublicInvoiceRequest = () => {
                                 </a>
                             </div>
                         </aside>
+                    </div>
                     </div>
                 )}
             </main>

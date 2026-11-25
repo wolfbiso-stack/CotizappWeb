@@ -392,6 +392,8 @@ serve(async (req: Request) => {
       uso_cfdi,
       correo,
       observaciones,
+      invitacion,
+      servicio_token,
     } = body;
 
     const errors: Record<string, string> = {};
@@ -481,8 +483,10 @@ serve(async (req: Request) => {
       }
     }
 
-    // 7. Observaciones (opcional)
+    // 7. Observaciones (opcional) y metadatos de invitación
     const cleanObservaciones = typeof observaciones === "string" ? observaciones.trim().slice(0, 1000) : null;
+    const cleanServicioToken = typeof servicio_token === "string" && servicio_token.trim() ? servicio_token.trim().slice(0, 64) : null;
+    const isInvitacion = Boolean(invitacion) || Boolean(cleanServicioToken);
 
     // Si existen errores de validación, retornar 422 Unprocessable Entity
     if (Object.keys(errors).length > 0) {
@@ -522,10 +526,12 @@ serve(async (req: Request) => {
         uso_cfdi: cleanUso,
         correo: cleanCorreo,
         observaciones: cleanObservaciones,
+        invitacion: isInvitacion,
+        servicio_token: cleanServicioToken,
         estado: "pendiente",
         email_status: "pendiente",
       })
-      .select("id, folio, rfc, razon_social, codigo_postal, regimen_fiscal, uso_cfdi, correo, observaciones, estado, email_status, created_at")
+      .select("id, folio, rfc, razon_social, codigo_postal, regimen_fiscal, uso_cfdi, correo, observaciones, invitacion, servicio_token, estado, email_status, created_at")
       .single();
 
     if (dbError) {
